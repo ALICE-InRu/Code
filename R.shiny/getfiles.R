@@ -2,7 +2,7 @@ library('stringr')
 library('plyr')
 library('reshape2')
 library('data.table')
-library('readr')
+#library('readr') # not working properly due to Rcpp package on server
 
 getOPTs <- function(){
   OPT=getfiles('../OPT',updateRho = F); colnames(OPT)[grep('Makespan',colnames(OPT))]='Optimum'
@@ -20,7 +20,7 @@ getfiles=function(dir, pattern = 'rnd|rndn|mc|mxc|jc', fileName = F,updateRho = 
 
   allDat=NULL;
   for(file in files){
-    pdat=read_csv(file)
+    pdat=read.csv(file)
 
     if(!('Set' %in% colnames(pdat))){ pdat$Set='train' }
     str=str_match(file, "[a-z].[a-z]*.[0-9]+x[0-9]+.[A-Z]{2}[A-Z0-9]+")
@@ -95,7 +95,7 @@ getSingleCDR=function(logFile,NrFeat,Model,problem=NULL,dimension=NULL,set='trai
 
   fname=paste('../liblinear','CDR',logFile,paste(paste('F',NrFeat,sep=''),paste('Model',Model,sep=''),'on',problem,dimension,set,'csv',sep='.'),sep='/')
   if(!file.exists(fname)){return(NULL)}
-  dat=read_csv(fname)
+  dat=read.csv(fname)
   dat$Problem=problem
   dat$NrFeat=NrFeat
   dat$Model=Model
