@@ -473,3 +473,56 @@ liblinearXtable = function(dat.fronts,onlyPareto=F){
   return(xtable(tmp))#,include.rownames=FALSE,sanitize.text.function=function(x){x})
 }
 
+
+ks.matrix <- function(dat,var,label){
+  ks.mat=matrix(nrow=length(dat[,label]),ncol=length(dat[,label]))
+  rownames(ks.mat)=dat[,label]
+  colnames(ks.mat)=dat[,label]
+
+  for(c1 in 1:ncol(ks.mat)){
+    for(c2 in 1:ncol(ks.mat)){
+      ks.mat[c1,c2]=ks.test(dat[c1,var][[1]], dat[c2,var][[1]])$p.value
+    }
+  }
+
+  ks.mat <- round(ks.mat, digits = 2)
+  return(ks.mat)
+}
+
+liblinearKolmogorov <- function(dat.fronts,problem,onlyPareto=T,SDR=NULL){
+
+  if(onlyPareto){
+    dat=unique(dat.fronts[dat.fronts$Pareto.front,])
+  } else {
+    dat=unique(dat.fronts)
+  }
+  dat=subset(dat,Problem==problem)
+
+  dat.Acc=NULL
+  dat.Rho=NULL
+  for(use in 1:nrow(dat)){
+    tmp=subset(getOptimaltyAccuracy(dat[use,'File'],F),NrFeat==dat[use,'NrFeat'] & Model==dat[use,'Model'])
+    tmp$Problem=dat[use,'Problem']
+    tmp$CDRlbl=dat[use,'CDRlbl']
+    dat.Acc=rbind(dat.Acc,tmp)
+
+    tmp=getSingleCDR(dat[use,'File'],dat[use,'NrFeat'],dat[use,'Model'])
+    tmp$CDRlbl=dat[use,'CDRlbl']
+    dat.Rho=rbind(dat.Rho,tmp)
+  }
+  dat.Rho=formatData(dat.Rho)
+
+  if(!is.null(SDR)){
+    SDR <- subset(SDR, Name %in% dat.Rho$Name)
+    SDR$CDRlbl=SDR$SDR
+    dat.Rho=rbind(dat.Rho[,c('Problem','CDRlbl','Rho','Set','PID')],SDR[,c('Problem','CDRlbl','Rho','Set','PID')])
+  } else { dat.Rho=dat.Rho[,c('Problem','CDRlbl','Rho','Set','PID')] }
+
+  stat.Rho=ddply(dat.Rho,~Problem+CDRlbl+Set, function(X) data.frame(Rho=I(list(unlist(X$Rho)))))
+  stat.Acc=ddply(dat.Acc,~Problem+CDRlbl, function(X) data.frame(isOptimal=I(list(unlist(X$validation.isOptimal)))))
+
+  ks.Acc = ks.matrix(stat.Acc,'isOptimal','CDRlbl')
+  ks.Rho.train=ks.matrix(subset(stat.Rho, Set=='train'),'Rho','CDRlbl')
+  ks.Rho.test=ks.matrix(subset(stat.Rho, Set=='test'),'Rho','CDRlbl')
+  return(list('Acc'=ks.Acc,'Rho.test'=ks.Rho.test,'Rho.train'=ks.Rho.train))
+}

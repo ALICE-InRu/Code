@@ -17,7 +17,15 @@ output$tabPref.exhaustive <- renderUI({
           helpText('Normalised weights for CDR models, models are grouped w.r.t. its dimensionality, $d$. Note, a triangle indicates a solution on the Pareto front.'),
           plotOutput("plot.pareto.phi", height = 250)),
       box(title='Pareto front', collapsible=TRUE, width=12,
-          tableOutput("table.paretoFront"))
+          tableOutput("table.paretoFront")),
+      box('Kolmogorov-Smirnov Tests for main distribution', collapsible = TRUE, width=12,height=1000,
+          helpText('p-values for two-sided Kolmogorov-Smirnov test.'),
+          box(title='w.r.t. $\\rho$ for training set', width=6,
+              tableOutput("table.liblinearKolmogorov.Rho.train")),
+          box(title='w.r.t. $\\rho$ for test set', width=6,
+              tableOutput("table.liblinearKolmogorov.Rho.test")),
+          box(title='w.r.t. training accuracy', width=6,
+              tableOutput("table.liblinearKolmogorov.Acc")))
     )
   )
 })
@@ -267,3 +275,25 @@ output$plot.exhaust.best <- renderPlot({
 output$table.paretoFront <- renderTable({
   return(liblinearXtable(Pareto.front()))
 }, include.rownames=FALSE, sanitize.text.function=function(x){x})
+
+ks.liblinearKolmogorov <- reactive({
+  dat.fronts=Pareto.front()
+  if(is.null(dat.fronts)){return(NULL)}
+  liblinearKolmogorov(dat.fronts,input$problem,onlyPareto = F,SDR=NULL)
+})
+
+output$table.liblinearKolmogorov.Rho.train <- renderTable({
+  ks=ks.liblinearKolmogorov()
+  if(is.null(ks)){return(NULL)}
+  return(ks$Rho.train)
+},sanitize.text.function=function(x){x})
+output$table.liblinearKolmogorov.Rho.test <- renderTable({
+  ks=ks.liblinearKolmogorov()
+  if(is.null(ks)){return(NULL)}
+  return(ks$Rho.test)
+},sanitize.text.function=function(x){x})
+output$table.liblinearKolmogorov.Acc <- renderTable({
+  ks=ks.liblinearKolmogorov()
+  if(is.null(ks)){return(NULL)}
+  return(ks$Acc)
+},sanitize.text.function=function(x){x})
