@@ -37,7 +37,7 @@ formatData = function(dat,updateRho=T){
   if('SDR' %in% cols){ dat$SDR=factor(dat$SDR,levels=sdrs) }
   if('Track' %in% cols){
     dat$Extended=grepl('EXT',dat$Track)
-    if (T|any(grepl('SUP',dat$Track))){
+    if (any(grepl('SUP',dat$Track))){
       if(!('Supervision' %in% cols)){
         dat$Supervision=ifelse(grepl('UNSUP',dat$Track),'Unsupervised',ifelse(grepl('FIX',dat$Track),'Fixed','Decreasing'))
         dat$Supervision=as.factor(dat$Supervision)
@@ -50,7 +50,11 @@ formatData = function(dat,updateRho=T){
       dat$Iter[is.na(dat$Iter)]=0
       ils=paste('IL',1:max(dat$Iter),sep='')
       dat$Track=factor(dat$Track, levels=c(sdrs,'OPT','RND','ALL',ils))
-    } else { dat$Track=factor(dat$Track, levels=c(sdrs,'OPT','RND','ALL')) }
+    } else {
+      dat$Track=factor(dat$Track, levels=c(sdrs,'OPT','RND','ALL'))
+      dat$Supervision=ifelse(grepl('OPT',dat$Track),'Supervised','Unsupervised')
+      dat$Iter=0
+    }
   }
   if('Set' %in% cols) { dat$Set=factor(dat$Set,levels=c('train','test')) }
 

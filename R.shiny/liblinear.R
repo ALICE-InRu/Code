@@ -79,10 +79,9 @@ rho.statistic <- function(model,minNum=697){
   return(rho.stats)
 }
 
-getTrainingData <- function(problem,dim,rank,track,scale){
+getTrainingDataRaw  <- function(problem,dim,rank,track,useDiff){
 
-  useDiff=T
-  if(track=='ALL'){ track='*'}
+  if(track=='ALL'){ track=paste0('(',paste(c('OPT','RND',sdrs),collapse = '|'),')') }
   if(substr(track,1,2)=='IL'){
     print(track)
     m=regexpr('IL(?<iter>[0-9]+)(?<track>[A-Z]+)',track,perl=T)
@@ -96,6 +95,16 @@ getTrainingData <- function(problem,dim,rank,track,scale){
   if(is.null(dat)){return(NULL)}
   dat = subset(dat,Set=='train')
   if(exists('iter')){ if(max(dat$Iter)!=iter){return(NULL)} }
+
+  return(dat)
+}
+
+getTrainingData <- function(problem,dim,rank,track,scale){
+
+  useDiff=T
+  dat <- getTrainingDataRaw(problem,dim,rank,track,useDiff)
+  if(is.null(dat)){ return(NULL) }
+
   if(useDiff) { label = sign(dat$ResultingOptMakespan) } else { label = as.numeric(dat$Rho == 0); }
 
   features=dat[,grep('phi',colnames(dat))];
@@ -447,5 +456,20 @@ pareto.ranking.wrtNrFeat <- function(pref){
   }
   pfront=pareto.ranking(pfront,'Validation.Accuracy.Optimality')$Ranked
   return(pfront)
+}
+
+liblinearXtable = function(dat.fronts,onlyPareto=F){
+  if(is.null(dat.fronts)){return(NULL)}
+  if(onlyPareto){dat.fronts=subset(dat.fronts,Pareto.front==T)}
+  library('xtable')
+  tmp=ddply(dat.fronts,~Problem+NrFeat+Model+Prob,summarise,
+            Accuracy.Optimality=round(Validation.Accuracy.Optimality,digit=2),
+            Accuracy.Classification=round(Validation.Accuracy.Classification,digit=2),
+            Rho=round(Validation.Rho,digit=2),
+            Pareto=Pareto.front)
+  #sort
+  tmp=tmp[order(tmp$Problem,tmp$Rho,-tmp$Accuracy.Optimality,-tmp$Accuracy.Classification),];
+  tmp$Pareto=factor(tmp$Pareto, levels=c(T,F), labels=c('$\\blacktriangle$',''))
+  return(xtable(tmp))#,include.rownames=FALSE,sanitize.text.function=function(x){x})
 }
 

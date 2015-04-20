@@ -3,7 +3,6 @@ output$tabPref.exhaustive <- renderUI({
     fluidRow(helpText('Using main problem distribution and preferably 10x10 dimension...')),
     fluidRow(
       box(title = "Pareto front", collapsible = TRUE, width=12,
-          #withMathJax(),
           #tags$head( tags$script(src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full", type = 'text/javascript'),tags$script( "MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});", type='text/x-mathjax-config')),
           helpText('Scatter plot for validation accuracy (%) against its corresponding mean expected $\\rho$ (%) for all', choose(16,16)+choose(16,1)+choose(16,2)+choose(16,3), 'linear models, based on either one, two, three or all $d$ combinations of features. Pareto fronts for each active feature count based on maximum validation accuracy and minimum mean expected $\\rho$ (%), and labelled with their model ID. Moreover, actual Pareto front over all models is marked with triangles.'),
           plotOutput("plot.pareto.front", height = 250)),
@@ -16,7 +15,9 @@ output$tabPref.exhaustive <- renderUI({
       #,plotOutput("plot.exhaust.best.diff", height = 250)),
       box(title = "Normalised weights", collapsible = TRUE, width=12,
           helpText('Normalised weights for CDR models, models are grouped w.r.t. its dimensionality, $d$. Note, a triangle indicates a solution on the Pareto front.'),
-          plotOutput("plot.pareto.phi", height = 250))
+          plotOutput("plot.pareto.phi", height = 250)),
+      box(title='Pareto front', collapsible=TRUE, width=12,
+          tableOutput("table.paretoFront"))
     )
   )
 })
@@ -262,3 +263,7 @@ output$plot.exhaust.best <- renderPlot({
   }
   return(p)
 }, height="auto")
+
+output$table.paretoFront <- renderTable({
+  return(liblinearXtable(Pareto.front()))
+}, include.rownames=FALSE, sanitize.text.function=function(x){x})
