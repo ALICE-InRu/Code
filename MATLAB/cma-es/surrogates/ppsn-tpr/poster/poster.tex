@@ -1,0 +1,62 @@
+
+\documentclass[a0,portrait]{a0poster}
+\input{sections/style}
+
+\newcommand{\norm}[1]{\lVert#1\rVert}
+\renewcommand{\vec}[1]{{\mbox{\boldmath$#1$}}}
+\newcommand{\mat}[1]{{\mbox{\boldmath$#1$}}}
+\newcommand{\reals}{{\mathbb R}}
+\newcommand{\strng}[1]{{\mbox{\tt #1}}}
+\newcommand{\inner}[2]{\big<\vec{#1}\cdot\vec{#2}\big>}
+
+\def\argmax{\mathop{\rm argmax}}
+\def\argmin{\mathop{\rm argmin}}
+
+\begin{document}
+
+\vspace{1cm}
+\input{sections/header}
+\vspace{1cm}
+
+
+% ----------------------------------------------------------------
+
+
+\begin{multicols}{2}
+
+\fcolorbox{black}{white}{\parbox{1.0\columnwidth}
+{\input{sections/intro}}}
+
+\vspace{1cm}
+\fcolorbox{black}{backgrey}{\parbox{1.0\columnwidth}
+{\input{sections/method1}}}
+
+\vspace{1cm}
+\fcolorbox{black}{backblue}{\parbox{1.0\columnwidth}
+{\input{sections/method2}\vspace{0.8cm}}}
+
+\vspace{1cm}
+\fcolorbox{black}{backblue}{\parbox{1.0\columnwidth}
+{\input{sections/method3}\vspace{0.8cm}}}
+
+\vspace{1cm}
+\fcolorbox{black}{white}{\parbox{1.0\columnwidth}
+{\input{sections/results}}}
+
+\vspace{1cm}
+\fcolorbox{black}{backyellow}{\parbox{1.0\columnwidth}
+{\input{sections/conc}}}
+
+\end{multicols}
+
+
+% ----------------------------------------------------------------
+
+
+%\vspace{-1cm}
+%\small\input{sections/biblio}\normalsize
+
+\vspace{0.5cm}
+\input{sections/footer}
+
+\end{document}

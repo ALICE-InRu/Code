@@ -1,0 +1,2 @@
+Problem,NrFeat,Model,Prob,TimeIndependent,Training.Rho,NTrain,Validation.Rho,NValidation,Test.Rho,NTest
+j.rnd,16,1,equal,TRUE,20.91235,400,20.16537,100,20.71482,500

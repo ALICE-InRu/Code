@@ -1,0 +1,22 @@
+
+\section{Model Improvement}
+
+\begin{enumerate}
+\item Estimate the ranking of a population of points of unknown
+  fitness using the current surrogate. Let the point with the
+  highest ranking be a test point, $\vec{x}_t$. Rank this test
+  point with respect to the points in the training set using the
+  current surrogate.
+\item Evaluate the test point using the true fitness function
+  and evaluate its true rank among the training points.
+\item Compare the rankings by computing the rank
+  correlation $\tau_k$ (Kendall's $\tau$) for the ranking in 1 and 2.
+\item Add this new point to the training set.
+\item If $\tau_k$ is equal to $1$ the model is said to be
+  sufficiently accurate. This is a simple cross-validation
+on a single test point.
+\item If $\tau_k < 1$ the model is not sufficiently accurate. In
+  this case update the surrogate using the new training set.
+  Repeated the steps above until $\tau=1$ or all points of
+  unknown fitness have been evaluated.
+\end{enumerate}

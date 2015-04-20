@@ -1,0 +1,23 @@
+Pareto front exhaust.j.rndn.10x10.OPT.bcs.weights w.r.t. Training.Rho and Training.Acc
+
+Number of features: 1 and total number of models: 16 
+Problem NrFeat Model Training.Rho NTrain Validation.Rho NTest Dimension Track Validation.Acc Training.Acc Pareto.front
+2 1 334 18.83669 300 18.01215 200 1 1 39.83 55.6 TRUE
+2 1 68 19.66463 300 19.59873 200 1 1 39.84 55.82 TRUE
+
+Number of features: 16 and total number of models: 1 
+Problem NrFeat Model Training.Rho NTrain Validation.Rho NTest Dimension Track Validation.Acc Training.Acc Pareto.front
+2 2 1 56.68995 300 54.01005 200 1 1 45.96 58.86 TRUE
+
+Number of features: 2 and total number of models: 120 
+Problem NrFeat Model Training.Rho NTrain Validation.Rho NTest Dimension Track Validation.Acc Training.Acc Pareto.front
+2 3 20 14.10645 300 14.15038 200 1 1 40.83 57.69 TRUE
+
+Number of features: 3 and total number of models: 560 
+Problem NrFeat Model Training.Rho NTrain Validation.Rho NTest Dimension Track Validation.Acc Training.Acc Pareto.front
+2 4 455 14.07446 300 14.07203 200 1 1 40.84 57.71 TRUE
+2 4 453 14.66852 300 14.39683 200 1 1 41.31 57.9 TRUE
+2 4 458 15.49277 300 15.36625 200 1 1 43.65 58.02 TRUE
+2 4 350 16.74983 300 16.36704 200 1 1 41.4 58.09 TRUE
+2 4 509 16.78926 300 16.54765 200 1 1 41.23 58.2 TRUE
+2 4 456 58.12199 300 56.39437 200 1 1 41.31 58.22 TRUE

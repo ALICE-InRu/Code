@@ -1,0 +1,30 @@
+
+\section{Ordinal Regression}
+
+The ranking problem is specified by a set $S =
+\{(\vec{x}_i,y_i)\}_{i=1}^\ell \subset X \times Y$ of point/rank
+pairs, where $Y=\{r_1,\ldots,r_\ell\}$ is the outcome space with
+ordered ranks $r_1> r_2,> \ldots > r_\ell$.
+
+\ \\ 
+In ordinal regression the task is to obtain a function  that
+can for a given pair $(\vec{x}_i,y_i)$ and $(\vec{x}_j,y_j)$
+distinguish between two different outcomes: $y_i > y_j$ and $y_j
+> y_i$.
+
+\ \\
+The training set is as follows:
+$$S' = \big\{(\vec{x}_k^{(1)},
+\vec{x}_k^{(2)}),t_k=\text{sign}(y_k^{(1)} -
+y_k^{(2)})\big\}_{k=1}^{\ell'}$$
+where $(y_k^{(1)} = r_i) \wedge
+(y_k^{(2)} = r_{i+1})$ (and vice versa $(y_k^{(1)} = r_{i+1})
+\wedge (y_k^{(2)} = r_{i})$) resulting in $\ell'=2(\ell-1)$
+possible adjacently ranked training pairs. The rank difference
+is denoted by $t_k\in[-1,1]$.
+
+\ \\
+A Support Vector Machine (SVM) is used on the above training
+data.
+
+\ \\

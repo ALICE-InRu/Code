@@ -1,0 +1,3 @@
+Lets look at an optimal trajectory up to some dispatch step, e.g. k=50, for j.rnd 10x10
+
+Draw all possible different dispatches, i.e. lookaheads

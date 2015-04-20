@@ -1,0 +1,25 @@
+
+\section{Model Selection}
+
+Two kernel types  are investigated, the
+\emph{polynomial kernel}
+\begin{equation}
+\kappa(\vec{x}_i,\vec{x}_j) = (1 + \inner{x_i}{x_j})^d
+\end{equation}
+and \emph{Gaussian kernel}
+\begin{equation}
+\kappa(\vec{x}_i,\vec{x}_j) = \exp\big(-\gamma \norm{\vec{x}_i-\vec{x}_j}^2\big).
+\end{equation}
+
+\ \\
+When applying kernel methods it is important to scale the
+points $\vec{x}$ first. A standard method of doing so is to
+scale the training set such that all points are in some range,
+typically $[-1,1]$. That is, scaled $\tilde{\vec{x}}$ is
+\begin{equation}
+\tilde x_i = 2 (x_i - \underline{x}_i) / (\overline{x}_i -
+\underline{x}_i) - 1 ~~~ i = 1,\ldots,n
+\end{equation}
+where $\underline{x}_i$, $\overline{x}_i$ are the maximum and
+minimum values of variable $i$ in set $S$.
+

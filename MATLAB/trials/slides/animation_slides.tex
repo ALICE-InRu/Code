@@ -1,0 +1,467 @@
+
+\documentclass{beamer}
+%\documentclass[a4paper,9pt]{extarticle}
+%\usepackage{beamerarticle}
+%\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+%\usepackage{amssymb}
+%\usepackage[dvips]{graphicx}
+%\usepackage[dvips]{graphicx,psfrag}
+%\usepackage{comment}
+\def\argmax{\mathop{\rm argmax}}
+\def\argmin{\mathop{\rm argmin}}
+
+
+%\pgfpagesuselayout{2 on 1}[a4paper,border shrink=5mm] 
+% This file is a solution template for:
+
+% - Giving a talk on some subject.
+% - The talk is between 15min and 45min long.
+% - Style is ornate.
+
+
+
+% Copyright 2004 by Till Tantau <tantau@users.sourceforge.net>.
+%
+% In principle, this file can be redistributed and/or modified under
+% the terms of the GNU Public License, version 2.
+%
+% However, this file is supposed to be a template to be modified
+% for your own needs. For this reason, if you use this file as a
+% template and not specifically distribute it as part of a another
+% package/program, I grant the extra permission to freely copy and
+% modify this file as you see fit and even to delete this copyright
+% notice. 
+
+
+\mode<presentation>
+{
+  \usetheme{Warsaw}
+  % or ...
+
+  \setbeamercovered{transparent}
+  % or whatever (possibly just delete it)
+}
+
+
+\usepackage[english]{babel}
+% or whatever
+
+\usepackage[latin1]{inputenc}
+% or whatever
+
+%\usepackage{times}
+%\usepackage[T1]{fontenc}
+% Or whatever. Note that the encoding and the font should match. If T1
+% does not look nice, try deleting the line with the fontenc.
+
+\title[Data Driven Decision Making] % (optional, use only with long paper titles)
+{Data Driven Decision Making}
+
+\subtitle
+{subtitle}
+%{LGM, Reykjavik, 2013}
+%{LION 5, Italy 2011}
+%Learning and Intelligent OptimizatioN 
+%{Granada, Spain 2009} % (optional)
+%{PPSN 2008 Workshop \\ Hyper-Heuristics Automating the Heuristic Design Process} % (optional)
+
+\author[] % (optional, use only with lots of authors)
+{Thomas Philip Runarsson
+}
+% - Use the \inst{?} command only if the authors have different
+%   affiliation.
+
+\institute[University of Iceland] % (optional, but mostly needed)
+{
+  School of Engineering and Natural Sciences\\ University of Iceland
+}
+% - Use the \inst command only if there are several affiliations.
+% - Keep it simple, no one is interested in your street address.
+
+\date[Short Occasion] % (optional)
+{}
+
+%\subject{Talks}
+% This is only inserted into the PDF information catalog. Can be left
+% out. 
+
+
+
+% If you have a file called "university-logo-filename.xxx", where xxx
+% is a graphic format that can be processed by latex or pdflatex,
+% resp., then you can add a logo as follows:
+
+% \pgfdeclareimage[height=0.5cm]{university-logo}{university-logo-filename}
+% \logo{\pgfuseimage{university-logo}}
+
+
+
+% Delete this, if you do not want the table of contents to pop up at
+% the beginning of each subsection:
+%\AtBeginSubsection[]
+%{
+%  \begin{frame}<beamer>{Outline}
+%    \tableofcontents[currentsection,currentsubsection]
+%  \end{frame}
+%}
+
+
+% If you wish to uncover everything in a step-wise fashion, uncomment
+% the following command: 
+
+%\beamerdefaultoverlayspecification{<+->}
+
+
+\begin{document}
+
+%\begin{frame}
+%  \titlepage
+%\end{frame}
+
+%\begin{frame}{Outline}
+%  \tableofcontents
+%  % You might wish to add the option [pausesections]
+%\end{frame}
+
+
+% Since this a solution template for a generic talk, very little can
+% be said about how it should be structured. However, the talk length
+% of between 15min and 45min and the theme suggest that you stick to
+% the following rules:  
+
+% - Exactly two or three sections (other than the summary).
+% - At *most* three subsections per section.
+% - Talk about 30s to 2min per frame. So there should be between about
+%   15 and 30 frames, all told.
+
+%\section{Introduction}
+
+
+%\subsection{Multi-armed bandits}
+
+\begin{frame}{Optimal schedules for job lookaheads at decision step 10}
+  
+\begin{center}
+\includegraphics<1>[height=0.9\textheight]{../step_10_1.eps}%
+\includegraphics<2>[height=0.9\textheight]{../step_10_2.eps}%
+\includegraphics<3>[height=0.9\textheight]{../step_10_3.eps}%
+\includegraphics<4>[height=0.9\textheight]{../step_10_4.eps}%
+\includegraphics<5>[height=0.9\textheight]{../step_10_5.eps}%
+%\includegraphics<6>[height=0.9\textheight]{../step_10_6.eps}%
+\includegraphics<7>[height=0.9\textheight]{../step_10_7.eps}%
+\includegraphics<8>[height=0.9\textheight]{../step_10_8.eps}%
+\includegraphics<9>[height=0.9\textheight]{../step_10_9.eps}%
+\includegraphics<10>[height=0.9\textheight]{../step_10_10.eps}%
+
+\end{center}
+
+\end{frame}
+
+\begin{frame}{Optimal schedules for job lookaheads at decision step 40}
+  
+\begin{center}
+\includegraphics<1>[height=0.9\textheight]{../step_40_1.eps}%
+\includegraphics<2>[height=0.9\textheight]{../step_40_2.eps}%
+\includegraphics<3>[height=0.9\textheight]{../step_40_3.eps}%
+\includegraphics<4>[height=0.9\textheight]{../step_40_4.eps}%
+\includegraphics<5>[height=0.9\textheight]{../step_40_5.eps}%
+\includegraphics<6>[height=0.9\textheight]{../step_40_6.eps}%
+\includegraphics<7>[height=0.9\textheight]{../step_40_7.eps}%
+\includegraphics<8>[height=0.9\textheight]{../step_40_8.eps}%
+\includegraphics<9>[height=0.9\textheight]{../step_40_9.eps}%
+\includegraphics<10>[height=0.9\textheight]{../step_40_10.eps}%
+
+\end{center}
+
+\end{frame}
+
+\begin{frame}{Optimal schedules for job lookaheads at decision step 60}
+  
+\begin{center}
+\includegraphics<1>[height=0.9\textheight]{../step_60_1.eps}%
+\includegraphics<2>[height=0.9\textheight]{../step_60_2.eps}%
+\includegraphics<3>[height=0.9\textheight]{../step_60_3.eps}%
+\includegraphics<4>[height=0.9\textheight]{../step_60_4.eps}%
+\includegraphics<5>[height=0.9\textheight]{../step_60_5.eps}%
+\includegraphics<6>[height=0.9\textheight]{../step_60_6.eps}%
+\includegraphics<7>[height=0.9\textheight]{../step_60_7.eps}%
+\includegraphics<8>[height=0.9\textheight]{../step_60_8.eps}%
+\includegraphics<9>[height=0.9\textheight]{../step_60_9.eps}%
+
+\end{center}
+
+\end{frame}
+
+\begin{frame}{Optimal schedules for job lookaheads at decision step 80}
+  
+\begin{center}
+\includegraphics<1>[height=0.9\textheight]{../step_80_1.eps}%
+\includegraphics<2>[height=0.9\textheight]{../step_80_2.eps}%
+\includegraphics<3>[height=0.9\textheight]{../step_80_3.eps}%
+\includegraphics<4>[height=0.9\textheight]{../step_80_4.eps}%
+\includegraphics<5>[height=0.9\textheight]{../step_80_5.eps}%
+\includegraphics<6>[height=0.9\textheight]{../step_80_6.eps}%
+\includegraphics<7>[height=0.9\textheight]{../step_80_7.eps}%
+\includegraphics<8>[height=0.9\textheight]{../step_80_8.eps}%
+\ %includegraphics<9>[height=0.9\textheight]{../step_80_9.eps}%
+
+\end{center}
+
+\end{frame}
+
+
+\begin{frame}{Optimal schedules for job lookaheads at decision step 90}
+  
+\begin{center}
+%\includegraphics<1>[height=0.9\textheight]{../step_90_1.eps}%
+\includegraphics<2>[height=0.9\textheight]{../step_90_2.eps}%
+\includegraphics<3>[height=0.9\textheight]{../step_90_3.eps}%
+\includegraphics<4>[height=0.9\textheight]{../step_90_4.eps}%
+\includegraphics<5>[height=0.9\textheight]{../step_90_5.eps}%
+\includegraphics<6>[height=0.9\textheight]{../step_90_6.eps}%
+\includegraphics<7>[height=0.9\textheight]{../step_90_7.eps}%
+\includegraphics<8>[height=0.9\textheight]{../step_90_8.eps}%
+
+\end{center}
+
+\end{frame}
+
+
+\end{document}
+
+\begin{frame}{Multi-Armed Bandits}
+  \begin{itemize}
+  \item There are $K$ arms which may be pulled repeatedly in any order. Each pull may result in a success or a failure.  \pause
+  \item For arm $i$ the result is a Bernoulli process with unknown success probability $\theta_i$. \pause
+  \item The aim is to minimize the regret (Robbins, 1952)
+  $$\rho = n \max_{k}{\theta_k} - \sum_{k=1}^{K} \theta_k n_k$$
+  where $n_k$ is the number of times arm $k$ is pulled and $n$ the total number of trials.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Exploration versus Exploitation}
+
+\begin{itemize}
+\item In AI (reinforcement learning) applications it common to use an $\epsilon$-greedy approach, select any arm with $\epsilon$ probability, else select the arm with the greatest average reward $\bar{r}_k$. \pause
+\item In recent years it has become popular to use a technique known as Upper Confidence Bounds (Auer, 2002):
+$$\bar{r}_k + \sqrt{\frac{2\ln n}{n_k}}$$
+where the arm that maximizes this value is pulled. Works for an arbitrary reward distribution with bounded support.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}{Motivation -- game playing strategies}
+
+\begin{itemize}
+\item Games with an win/loss(draw) outcome. \\ \ \\ \pause
+\item Monte-Carlo rollouts - players play uniformly randomly from a given game state (eg. Monte-Carlo Go). \\ \ \\ \pause
+\item Estimating confidence bounds for games with strong versus weak players difficult. \\ \ \\ \pause
+\item Let $\theta_i \sim $ Beta$(\alpha_i,\beta_i)$.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Optimal Sampling Strategy (Gittins and Jones in 1971)}
+
+The dynamic programming recurrence equation for the expected total reward
+under an optimal policy (two arms):
+
+\begin{eqnarray*}
+R(\alpha_1,\beta_1,\alpha_2,\beta_2) & = & \max\Big\{  \frac{\alpha_1}{\alpha_1+\beta_1}\big[1+\gamma R(\alpha_1+1,\beta_1,\alpha_2,\beta_2)\big]\\
+ & & +\frac{\beta_1}{\alpha_1+\beta_1}\big[\gamma R (\alpha_1,\beta_1+1,\alpha_2,\beta_2) \big] \quad , \\
+ & & \frac{\alpha_2}{\alpha_2+\beta_2}\big[1+\gamma R (\alpha_1,\beta_1,\alpha_2+1,\beta_2) \big] \\
+ & & +\frac{\beta_2}{\alpha_2+\beta_2}\big[\gamma R (\alpha_1,\beta_1,\alpha_2,\beta_2+1) \big]\Big\}
+\end{eqnarray*}
+
+$R$ is the  sum of discounted future rewards E$[r_1+\gamma r_2+\gamma^2r_3+\ldots]$.
+\end{frame}
+
+
+
+\begin{frame}{Gittins Indices}
+
+\begin{itemize}
+\item The idea is that we continue sampling a bandit or stopping and switching to a process that pays a reward $\nu$, whose discounted retirement value will be $\nu/(1-\gamma)$.\pause
+\item For large $\alpha+\beta$ we say $R(\alpha,\beta,\nu)\approx R(\alpha+1,\beta,\nu)\approx R(\alpha,\beta+1,\nu)$ then:
+$$R(\alpha,\beta,\nu) = \max\Big[\frac{\nu}{1-\gamma},\frac{\alpha}{\alpha+\beta}+\gamma R(\alpha,\beta,\nu)\Big]$$\pause
+\item We want to compute $\nu$ that makes us indifferent to stopping and accepting reward $\nu$ (forever). Gittins index is this $\nu$ value.\pause
+\item The Gittens policy is to chose arm $\argmax_{k=1,\ldots,K}\nu_k$.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Bayes - UCB (2012)}
+
+The quantile from the Beta$(\alpha_k,\beta_k)$ of order $p$:  
+$$q_k = Q(p,\alpha_k,\beta_k)$$
+The policy is to select the arm
+$$\argmax_{k=1,\ldots,K} q_k$$
+
+\pause
+
+\begin{itemize}
+\item Kaufmann et. al. (2012) conclude from numerous experiments that using a quantile at $p=1-1/t$ is best. \\ \ \\ \pause
+\item We will use also a fixed value for $p$ in our experiments.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Thompson Sampling (1933)}
+  
+\begin{itemize}
+\item For each arm $k$ draw a $\theta'_k$ according to Beta$(\alpha_k,\beta_k)$
+\item Pull the arm with $\argmax_{k=1,\ldots,K}\theta'_k$ \pause
+\end{itemize}
+
+Other variants:
+\begin{itemize}
+\item Opportunistic sampling: draw a $\theta'_k$ according to Beta$(\alpha_k,\beta_k)$, but if less than the mean $\alpha_k/(\alpha_k+\beta_k)$ then $\theta'_k$ takes the value of the mean. \pause
+\item Perform Thompson sampling more than once and let $\theta'_k$ take the average of these values (even quantile).
+\end{itemize}
+
+
+\end{frame}
+
+
+
+
+%\subsection{Two Multi-armed Bandits Simulations}
+
+
+\begin{frame}{Cumulative Regret for $\theta_1=0.1,\theta_2=0.2$}
+  
+\includegraphics<1>[width=8.cm]{r1020_1.eps}%
+\includegraphics<2>[width=8.cm]{r1020_2.eps}%
+\includegraphics<3>[width=8.cm]{r1020_3.eps}%
+\includegraphics<4>[width=8.cm]{r1020_4.eps}%
+\includegraphics<5>[width=8.cm]{r1020_5.eps}%
+\includegraphics<6>[width=8.cm]{r1020_6.eps}%
+
+
+\end{frame}
+
+
+\begin{frame}{Cumulative Regret for $\theta_1=0.20,\theta_2=0.25$}
+  
+\includegraphics<1>[width=8.cm]{r2025_1.eps}%
+\includegraphics<2>[width=8.cm]{r2025_2.eps}%
+\includegraphics<3>[width=8.cm]{r2025_3.eps}%
+\includegraphics<4>[width=8.cm]{r2025_4.eps}%
+\includegraphics<5>[width=8.cm]{r2025_5.eps}%
+\includegraphics<6>[width=8.cm]{r2025_6.eps}%
+
+
+\end{frame}
+
+
+
+\begin{frame}{Cumulative Regret for $\theta_1=0.45,\theta_2=0.55$}
+\includegraphics<1>[width=8.cm]{r4555_1.eps}%
+\includegraphics<2>[width=8.cm]{r4555_2.eps}%
+\includegraphics<3>[width=8.cm]{r4555_3.eps}%
+\includegraphics<4>[width=8.cm]{r4555_4.eps}%
+\includegraphics<5>[width=8.cm]{r4555_5.eps}%
+\includegraphics<6>[width=8.cm]{r4555_6.eps}%  
+
+\end{frame}
+
+
+%\subsection{Simulation for Zero sum games using Monte-Carlo rollouts}
+
+\begin{frame}{The Game Othello/Reversi}
+  
+
+\includegraphics<1>[width=6.cm]{othello.eps}%
+
+
+\end{frame}
+
+\begin{frame}{Monte-Carlo Rollouts -- (the Bernoulli trial)}
+
+\begin{itemize}
+\item Rollouts were first introduced by Tesauro and Galperin (1997) to
+  improve the on-line performance of a backgammon player. \\ \ \\ \pause
+\item We are not so concerned with minimizing the cumulative regret or maximizing the sum of (discounted) future rewards. \\ \ \\ \pause
+\item After sampling the different moves with a budget of $n$ (often expensive) rollouts, a move must be made:
+$$\argmax_{move_k\in\mathcal{M}(\mbox{game board})} \frac{\alpha_k}{\alpha_k+\beta_k}$$\pause
+\item In practice one may use: $\argmax_{move_k\in\mathcal{M}(\mbox{game board})} n_k$
+\end{itemize}
+
+
+\end{frame}
+
+
+
+\begin{frame}{Round Robin League}
+
+\begin{itemize}
+\item Each player uses a different sampling strategy with a budget of $n=50$ MC games. \\ \ \pause
+\item Each sampling strategy is played against another for 1000 games in each colour. \\ \ \pause
+\item We then use R\'emi Coulom's BayesElo  to rank the players.
+\end{itemize}
+
+\end{frame}
+
+
+%1Heuristic         -        1554         353         347         365         364         356         357         363         440
+%2Random          446           -          61          45          35          54          32          45          45          86
+%3Thompson       1647        1939           -         934         958        1027         914        1037         953        1243
+%4BayesUCB(1/t)  1653        1955        1066           -        1047        1053        1028        1113         977        1292
+%5BayesUCB       1635        1965        1042         953           -        1093         987        1128        1054        1248
+%6ThompsonOpp    1636        1946         973         947         907           -         973        1067         939        1218
+%7Gittins        1644        1968        1086         972        1013        1027           -        1096        1013        1225
+%8ThompsonMean   1643        1955         963         887         872         933         904           -         877        1117
+%9               1637        1955        1047        1023         946        1061         987        1123           -        1183
+%Uniform        1560        1914         757         708         752         782         775         883         817           -
+
+\begin{frame}{Results}
+
+\tt  \footnotesize
+ResultSet-EloRating>
+\begin{tabular}{rrrrrrrr}
+   Rank & Name &    Elo &  +  &   -  & games  & score & oppo. \\
+   1 & BayesUCB(1/t) &  151 &    5  &   5 & 22230 &   65\% &   -32\\
+   2 & BayesUCB     &   146 &    5   &  5 & 22225 &   64\% &   -32\\
+   3 & Gittins      &   141 &    5    & 5 & 22100 &   64\% &   -33\\
+   4 & Thompson(8/10) & 136 &    5 &    5 & 22096 &   63\% &   -32\\
+   5 & Thompson 1   &   113 &    5 &    5 & 22134 &   61\% &   -32\\
+   6 & Thompson Opp  &  110 &    5 &    5 & 22128 &   61\% &   -32\\
+   7 & Thompson 10  &    78 &    5 &    5 & 22279 &   58\% &   -30\\
+   8 & Uniform    &       1 &    5 &    5 & 23000 &   50\% &   -22\\
+   9 & Heuristic   &   -263 &    6 &    6 & 25609 &   24\% &     9\\
+  10 & Random      &   -612  &   9 &    9 & 28151 &    7\% &    25\\
+\end{tabular}  
+
+%\end{verbatim}
+
+\end{frame}
+
+
+%\section{Summary and Outlook}
+
+\begin{frame}{Summary}
+
+  % Keep the summary *very short*.
+  \begin{itemize}
+  \item The aim is to minimize the number of expensive trials $n$ needed to discover the move (arm) with the highest probability of winning when both players play randomly from then on. \\ \ \\ \pause
+  \item Gittins has solved the multi-armed bandit problem, but for \underline{discounted} regret.\\ \ \\ \pause
+  \item The BayesUCB seems to have the edge over the other Bayesian approaches (Gittins and Thompson). 
+  \end{itemize}
+ \end{frame}
+
+
+
+\begin{frame}{Outlook}
+  % Keep the summary *very short*.
+  \begin{itemize}
+  \item Our current hunch is that we can do better, i.e. probability that $\theta_1>\theta_2)$ ? \\ \ \\ \pause
+  \item For games, UCB applied to trees has been extremely successful for games, successive winner of the general game playing competitions. \\ \ \\ \pause
+  \item Not aware that the Bayesian approach has been applied to trees, we aim to look into this...  \pause
+  \end{itemize}
+ 
+\end{frame}
+
+
+\end{document}	
