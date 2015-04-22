@@ -37,6 +37,9 @@ formatData = function(dat,updateRho=T){
   if('SDR' %in% cols){ dat$SDR=factor(dat$SDR,levels=sdrs) }
   if('Track' %in% cols){
     dat$Extended=grepl('EXT',dat$Track)
+    ix=dat$Track=='OPTEXT'
+    if(any(ix)){dat$Track[ix]='OPT'}
+
     if (any(grepl('SUP',dat$Track))){
       if(!('Supervision' %in% cols)){
         dat$Supervision=ifelse(grepl('UNSUP',dat$Track),'Unsupervised',ifelse(grepl('FIX',dat$Track),'Fixed','Decreasing'))

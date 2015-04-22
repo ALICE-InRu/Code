@@ -38,7 +38,7 @@ output$compareImitationLearning.weights <- renderPlot({
 })
 output$compareImitationLearning.stats <- renderDataTable({
   compareImitationLearning.stats(input$problem,input$dimension,input$rank,input$probability,input$timedependent)
-},  options = list(paging = FALSE, searching = FALSE))
+},  options = list(paging = FALSE, searching = T))
 
 getSummaryFileNamesIL <- function(problem,dim,rank,probability,timedependent){
   times=ifelse(timedependent,'timedependent','timeindependent')
