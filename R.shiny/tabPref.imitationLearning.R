@@ -97,7 +97,8 @@ compareImitationLearning.weights <- function(problem,dim,rank,probability,timede
   #print(ddply(w,~Iter+Supervision,'summarise',norm=sqrt(sum(sc.value^2)),min=min(sc.value),max=max(sc.value)))
   p=ggplot(w,aes(x=Iter,y=sc.value,color=Featurelbl,group=Feature))+geom_line()+geom_point()+
     facet_grid(Supervision~Problem)+
-    ggplotCommon(NULL,'iteration',expression('Scaled weights for'*~phi))+
+    xlab('iteration')+
+    ylab(expression('Scaled weights for'*~phi))+
     scale_x_discrete(expand=c(0,-1))+
     guides(color = guide_legend(nrow = 4))+
     scale_color_discrete(expression('Feature'*~phi[i]*~''))

@@ -97,7 +97,9 @@ output$plot.pareto.front <- renderPlot({
     p=p+geom_line(data=front,size=1)+
       guides(size=FALSE)+ggplotColor('Feature count',length(unique(dat$NrFeat)))+
       geom_text(data=front,aes(label=Model),color='black',size=3)+
-      ggplotCommon(NULL,ylabel=expression('Expected mean for'*~rho*~'(%)'),xlabel='Mean stepwise optimality accuracy (%)')+themeVerticalLegend+ guides(
+      xlab('Mean stepwise optimality accuracy (%)')+
+      ylab(expression('Expected mean for'*~rho*~'(%)'))+
+      themeVerticalLegend+guides(
         colour = guide_legend(ncol = 2, byrow = T),
         shape = guide_legend(ncol = 1, byrow = T)
       )
@@ -129,7 +131,10 @@ output$plot.training.acc <- renderPlot({
     geom_point(aes(y=Validation.Accuracy.Classification,color='classification',shape=Prob))+
     geom_point(aes(y=Validation.Accuracy.Optimality,color='optimality',shape=Prob))+
     ggplotColor(name = "Mean stepwise", num=2)+
-    ggplotCommon(NULL,xlabel=expression('Expected mean for'*~rho*~'(%)'),ylabel='Validation accuracy (%)')+themeVerticalLegend
+    xlab(expression('Expected mean for'*~rho*~'(%)'))+
+    ylab('Validation accuracy (%)')+
+    themeVerticalLegend
+
   if(Probability()!='all'){p=p+scale_shape_discrete(guide = F)}
 
   if(input$save!='NA'){
@@ -165,7 +170,7 @@ output$plot.pareto.phi <- renderPlot({
                            high = muted("blue"), midpoint = 0, space = "rgb",
                            na.value = "grey50", guide = "colourbar")+
       facet_grid(Problem~NrFeat,scales='free_x',space='free_x')+
-      ggplotCommon(NULL,ylabel=expression('Feature'*~phi),xlabel='')+
+      ylab(expression('Feature'*~phi))+xlab('')+
       theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
             legend.position = 'right', legend.direction='vertical')
 
@@ -240,8 +245,7 @@ output$plot.exhaust.best.diff <- renderPlot({
   best2=dcast(best$Stepwise,Step+Problem+Accuracy~variable,value.var = 'value')
   p=ggplot(best2,aes(x=Step,y=Max.Accuracy.Optimality-Min.Rho))+facet_grid(Accuracy~Problem,scale='free')+
     geom_hline(aes(yintercept=0),color='red')+geom_line()+
-    ggplotColor("Best",2)+scale_size_discrete(range=c(0.5,1.2))+
-    ggplotCommon(best2)
+    ggplotColor("Best",2)+scale_size_discrete(range=c(0.5,1.2))
 
   if(input$save != 'NA'){
     fname=paste(paste(subdir,'trdat',sep='/'),'prob.moveIsOptimal',input$dimension,'OPT',Probability(),'best.diff',extension,sep='.')

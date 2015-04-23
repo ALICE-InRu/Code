@@ -57,8 +57,11 @@ output$plot.SDR <- renderPlot({
   p=ggplot(dat,aes(fill=SDR,colour=Set))+
     ggplotColor("Data set",length(unique(dat$Set)))+
     ggplotFill("Simple priority dispatching rule",4,sdrNames)+
-    ggplotCommon(NULL,'',rhoLabel)+
-    facet_wrap(ncol=2,~Problem+Dimension,scales='free_y')
+    ylab(rhoLabel)+
+    facet_wrap(ncol=2,~Problem+Dimension,scales='free_y')+
+    guides(fill = guide_legend(order=1, direction = "vertical", title.position = "top"),
+           colour = guide_legend(order=2, direction = "vertical", title.position = "top")
+    )
 
   p=p+switch(input$sdr.plot,
              'boxplot'=geom_boxplot(aes(x=SDR,y=Rho)),
@@ -83,7 +86,10 @@ output$plot.BDR <- renderPlot({
   BDR=paste(input$bdr.firstSDR,'(first',input$bdr.split,'%),',input$bdr.secSDR,'(last',100-input$bdr.split,'%)')
   p = ggplot(dat, aes(x=SDR,y=Rho,fill=SDR,color=Set))+geom_boxplot()+
     facet_wrap(~Problem+Dimension,ncol=2,scales='free_y')+
-    ggplotCommon(NULL,'',rhoLabel)+
+    ylab(rhoLabel)+
+    guides(fill = guide_legend(order=1, direction = "vertical", title.position = "top"),
+           colour = guide_legend(order=2, direction = "vertical", title.position = "top")
+    )+
     ggplotColor('Data set',1)+
     ggplotFill('Dispatching rule',3,c(BDR,sdrNames[grep(unique(dat$SDR)[2],sdrs)],sdrNames[grep(unique(dat$SDR)[3],sdrs)]))
 

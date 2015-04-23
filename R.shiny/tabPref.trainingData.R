@@ -13,7 +13,7 @@ plot.trainingDataSize <- function(problem,dim,rank){
 
   p=p+geom_line(size=1,position=position_jitter(w=0.25, h=0))+
     facet_wrap(~Problem,ncol=4)+
-    ggplotCommon(stats.raw,ylabel = expression('Size of training set, |' * Phi * '|'))+
+    ylab(expression('Size of training set, |' * Phi * '|'))+
     theme(legend.justification=c(1,0), legend.position=c(1,-0.1))
 
   fname=paste(paste(subdir,'trdat',sep='/'),'size',dim,extension,sep='.')
@@ -40,7 +40,7 @@ plot.preferenceSetSize <- function(problems,dim){
     #facet_grid(Problem~Rank,scales='free_y',labeller = label_parsed)+
     facet_grid(.~Rank,scales='free_y',labeller = label_both)+
     ggplotColor('Track',num = length(levels(stats$Track)))+
-    ggplotCommon(stats,ylabel = expression('Size of preference set, |' * S * '|'))
+    ylab(expression('Size of preference set, |' * S * '|'))
 
   fname=paste(paste(subdir,'prefdat',sep='/'),'size',dim,extension,sep='.')
   ggsave(fname,p,width=Width,height=Height.full,dpi=dpi,units=units)

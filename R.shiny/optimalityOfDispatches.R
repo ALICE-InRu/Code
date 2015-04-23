@@ -119,9 +119,10 @@ plotStepwiseUniqueness <- function(Stepwise,smooth){
   } else {
     p=p+geom_line(size=1)
   }
-  p=p+
-    ggplotColor('Problem',length(probs))+
-    ggplotCommon(Stepwise$Stats,ylab='Number of unique optimal dispatches')
+  p=p+ggplotColor('Problem',length(probs))+
+    ylab('Number of unique optimal dispatches')+
+    axisStep(Stepwise$Stats$Step)+axisCompact
+
   return(p)
 }
 
@@ -137,7 +138,10 @@ plotStepwiseOptimality <- function(Stepwise,simple,smooth){
       p=p+geom_line(size=1)
     }
   }
-  p=p+ggplotColor('Problem',length(problems))+ggplotCommon(Stepwise$Stats,ylab='Probability of choosing optimal move')
+  p=p+ggplotColor('Problem',length(problems))+
+    ylab('Probability of choosing optimal move')+
+    axisStep(Stepwise$Stats$Step)+axisProbability
+
   return(p)
 }
 
@@ -156,7 +160,8 @@ plotStepwiseBestWorst <- function(problems,dimension,track){
     p = ggplot(stat, aes(x=Step))+
       ggplotColor(name='Problem',num=length(levels(stat$Problem)))+
       ggplotFill(name='Problem',num=length(levels(stat$Problem)))+
-      facet_grid(Track~Shop)
+      facet_grid(Track~Shop)+
+      axisStep(stat$Step)+axisCompact
 
     p=p+geom_ribbon(aes(ymin=best.mu,ymax=worst.mu,fill=Problem,color=Problem),alpha=0.2)
     p=p+geom_line(aes(y=mu,color=Problem),size=1,linetype='dashed')
@@ -166,7 +171,8 @@ plotStepwiseBestWorst <- function(problems,dimension,track){
     p = ggplot(subset(stat,Followed==F), aes(x=Step))+
       ggplotColor(name='Trajectory',num=length(levels(stat$Track)))+
       ggplotFill(name='Trajectory',num=length(levels(stat$Track)))+
-      facet_grid(Problem~.,scales= 'free_y')
+      facet_grid(Problem~.,scales= 'free_y')+
+      axisStep(stat$Step)+axisCompact
 
     p=p+geom_ribbon(aes(ymin=best.mu,ymax=worst.mu,fill=Track,color=Track),alpha=0.5)
     p=p+geom_line(data=subset(stat,Followed==T),aes(y=best.mu,color=Track),size=1,linetype='dashed')
@@ -195,9 +201,8 @@ plotStepwiseSDR.wrtOPT <- function(Stepwise,Extremal,smooth){
   }
 
   p=p+ggplotColor('SDR',4)+facet_grid(Problem~.)+
-    ggplotCommon(dat = SDR, probability = T,ylabel = 'Probability of SDR being optimal')
-
-  p=p+scale_size_discrete(guide = FALSE)
+    ylab('Probability of SDR being optimal')+
+    scale_size_discrete(guide = FALSE)
 
   return(p)
 }
@@ -214,12 +219,7 @@ plotStepwiseSDR.wrtTrack <- function(Stepwise,Extremal,problems,dim,smooth){
 
   p=plotStepwiseSDR.wrtOPT(Stepwise,Extremal,F)
   p=p+geom_line(data=SDR,aes(y=rnd.mu,color=Track,size='SDR'))
-  p=p+facet_wrap(~Problem,ncol=2)
-  p=p+theme(legend.position = c(1, 0),
-            legend.justification = c(1,0),
-            legend.margin=unit(0,"lines"), legend.box="horizontal",
-            legend.key.size=unit(1,"lines"), legend.text.align=0,
-            legend.title.align=0)
+  p=p+facet_grid(Problem~.)+axisProbability
   p=p+scale_size_manual('Track', values=c(0.5,1.2))
 
   return(p)
@@ -236,8 +236,7 @@ plotStepwiseExtremal <- function(Stepwise,Extremal,smooth){
   }
 
   p=p+facet_wrap(~Featurelbl,ncol=3)+scale_color_brewer(palette = 'Set1')+
-    ggplotCommon(dat = Extremal$Stats, probability = T,
-                 ylabel = expression('Probability of extremal feature '* ~ phi[i] * ~ ' being optimal'))
+    ylab(expression('Probability of extremal feature '* ~ phi[i] * ~ ' being optimal'))
 
   return(p)
 }
@@ -249,10 +248,11 @@ plotStepwiseFeatures <- function(problem,dim,global){
     p=ggplot(stat,aes(x=Step,color=Track,fill=Track))+
       geom_line(data=stat,aes(y=mu),size=1)+
       facet_wrap(~Featurelbl,ncol = 4, scales = 'free_y')+
-      ggplotCommon(dat = stat,
-                   xlabel = ifelse(Type=='Local','','step'),
-                   ylabel = paste(Type,'features'))+
-      ggplotColor(name='Trajectory',num=length(unique(stat$Track)))
+      xlab(ifelse(Type=='Local','','step'))+
+      ylab(paste(Type,'features'))+
+      ggplotColor(name='Trajectory',num=length(unique(stat$Track)))+
+      axisStep(stat$Step)+axisCompact
+
     if(Type=='Local'){p=p+theme(legend.position='none')}
     return(p)
   }

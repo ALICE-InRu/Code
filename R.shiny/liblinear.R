@@ -308,7 +308,7 @@ liblinearBoxplot <- function(CDR,SDR=NULL,ColorVar,xVar='CDRlbl',xText='CDR',til
   if(!is.null(SDR)){ p=p+geom_boxplot(data=SDR,aes(fill=SDR))+ggplotFill('SDR',4);}
   p=p+facet_grid(Set~Problem,scale='free_x') +
     ggplotColor(xText,length(unique(CDR$ColorVar))) +
-    ggplotCommon(NULL,xlabel = '',ylabel = rhoLabel)
+    xlab('')+ylab(rhoLabel)
 
   if(tiltText){ p=p+theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) }
   return(p)

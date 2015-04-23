@@ -40,7 +40,11 @@ mytheme <- theme_update(axis.text.y = element_blank(),
 theme_set(mytheme)
 themeVerticalLegend <- theme_set(mytheme) # + theme(legend.position='right', legend.box = 'vertical')
 mytheme <- theme_update(legend.justification='center',legend.position='bottom',legend.box = "horizontal")
-
+axisCompact <- list(
+  scale_x_continuous(expand=c(0,0)), scale_y_continuous(expand=c(0,0)))
+axisProbability <- list(
+  scale_x_continuous(expand=c(0,0)), scale_y_continuous(limits=c(0,1), expand=c(0,0)))
+axisStep <- function(STEP){ list(expand_limits(x = c(1,ceiling(max(STEP)/10)*10))) }
 
 #legend.justification='center',legend.position='right',legend.box = "vertical", # right
 #legend.justification = c(1, 0),legend.position = c(1, 0),legend.box = "horizontal", # lower right hand corner
@@ -64,38 +68,6 @@ ggplotColor <- function(name,num,labels=NULL){
   } else {
     return(list(scale_color_manual(values=mypalette,name=name,labels=labels)))
   }
-}
-
-ggplotCommon <- function(dat,xlabel='step',ylabel=NULL,probability=F,fullRange=F){
-
-  l=list(guides(fill = guide_legend(order=1, direction = "vertical", title.position = "top"),
-                colour = guide_legend(order=2, direction = "vertical", title.position = "top"),
-                shape = guide_legend(order=3, direction = "vertical", title.position = "top"),
-                size = guide_legend(order=4, direction = "vertical", title.position = "top")
-  ))
-
-  if(!is.null(ylabel)){
-    l=list(l,ylab(ylabel))
-  }
-
-  if(probability==T){
-    TightX=T
-    if(fullRange){ l=list(l,coord_cartesian(ylim=c(0, 1)))}
-    l=list(l,scale_y_continuous(expand=c(0,0), breaks=seq(0, 1, 0.25)))
-  }
-
-  if(!is.null(dat)){
-    minStep=min(dat$Step)
-    maxStep=max(dat$Step)
-    discreteStep=25
-
-    if(maxStep<discreteStep*2){
-      discreteStep=10;
-    }
-    l=list(l,scale_x_discrete(expand = c(0, 0), limits=c(minStep,seq(discreteStep,maxStep,by=discreteStep),maxStep),xlabel))
-  } else { l=list(l,xlab(xlabel))}
-
-  return(l)
 }
 
 clc <- function() cat(rep("\n",50)); clc()
