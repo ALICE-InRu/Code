@@ -63,7 +63,7 @@ Liblinear.Summary <- reactive({
   pref=NULL
   for(model in models){ pref=rbind(pref,getPrefInfo(substr(model,9,100))) }
   if(is.null(pref)){return(NULL)}
-  return(droplevels(pref))
+  return(pref)
 })
 
 Pareto.front <- reactive({
@@ -234,7 +234,7 @@ best.pref.models <- reactive({
     best=rbind(best,rho)
   }
 
-  return(list('Summary'=droplevels(best.model),'Stepwise'=droplevels(best)))
+  return(list('Summary'=best.model,'Stepwise'=best))
 })
 
 output$plot.exhaust.best.diff <- renderPlot({

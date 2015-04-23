@@ -38,7 +38,7 @@ trdat$Job=as.numeric(getAttribute(trdat$Dispatch,m,1))+1
 trdat$Rho=round(trdat$Rho,2)
 trdat$phi.mac=trdat$phi.mac-min(trdat$phi.mac)+1
 trdat$x=trdat$phi.startTime+(trdat$phi.endTime-trdat$phi.startTime)/2
-return(droplevels(trdat))
+return(trdat)
 }
 
 plotStep <- function(trdat,step){

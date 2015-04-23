@@ -5,6 +5,7 @@ findStepwiseOptimality <- function(problems,dim,track='OPT',LastStep=-1){
 
     if(file.exists(fname)){ split=read.csv(fname) } else {
       dat=getfilesTraining(useDiff = F,pattern = paste(problem,dim,track,sep='.'),Global = F)
+      if(is.null(dat)){ return(NULL) }
       dat$isOPT=dat$Rho==0
 
       split=ddply(dat,~Problem+Dimension+Step+PID,summarise,
@@ -40,8 +41,10 @@ findStepwiseOptimality <- function(problems,dim,track='OPT',LastStep=-1){
 
   for(problem in problems){
     tmp=findSingleStepwiseOptimality(problem)
-    Stepwise$Raw=rbind(Stepwise$Raw,tmp$Raw)
-    Stepwise$Stats=rbind(Stepwise$Stats,tmp$Stats)
+    if(!is.null(tmp)){
+      Stepwise$Raw=rbind(Stepwise$Raw,tmp$Raw)
+      Stepwise$Stats=rbind(Stepwise$Stats,tmp$Stats)
+    }
   }
   return(Stepwise)
 }
@@ -221,18 +224,21 @@ plotStepwiseSDR.wrtOPT <- function(Stepwise,Extremal,smooth){
 plotStepwiseSDR.wrtTrack <- function(Stepwise,Extremal,dim,smooth,lastStep=-1){
 
   problems=unique(Stepwise$Stats$Problem)
-  spt=findStepwiseOptimality(problems,dim,'SPT',lastStep)$Stats; spt$Track='SPT'
-  lpt=findStepwiseOptimality(problems,dim,'LPT',lastStep)$Stats; lpt$Track='LPT'
-  lwr=findStepwiseOptimality(problems,dim,'LWR',lastStep)$Stats; lwr$Track='LWR'
-  mwr=findStepwiseOptimality(problems,dim,'MWR',lastStep)$Stats; mwr$Track='MWR'
-
-  SDR=rbind(spt,lpt,lwr,mwr)
-  SDR=formatData(SDR)
+  SDR=NULL
+  for(sdr in sdrs){
+    tmp=findStepwiseOptimality(problems,dim,sdr,lastStep)$Stats
+    if(!is.null(tmp)){
+      tmp$Track=sdr
+      SDR=rbind(SDR,tmp)
+    } else {print('gaur')}
+  }
 
   p=plotStepwiseSDR.wrtOPT(Stepwise,Extremal,F)
-  p=p+geom_line(data=SDR,aes(y=rnd.mu,color=Track,size='SDR'))
-  p=p+facet_grid(Problem~.)+axisProbability
-  p=p+scale_size_manual('Track', values=c(0.5,1.2))
+  if(!is.null(SDR)){
+    SDR=formatData(SDR)
+    p=p+geom_line(data=SDR,aes(y=rnd.mu,color=Track,size='SDR'))
+    p=p+scale_size_manual('Track', values=c(0.5,1.2))
+  }
 
   return(p)
 }
