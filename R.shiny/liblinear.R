@@ -79,30 +79,10 @@ rho.statistic <- function(model,minNum=697){
   return(rho.stats)
 }
 
-getTrainingDataRaw  <- function(problem,dim,rank,track,useDiff){
-
-  if(track=='ALL'){ track=paste0('(',paste(c('OPT','RND',sdrs),collapse = '|'),')') }
-  if(substr(track,1,2)=='IL'){
-    print(track)
-    m=regexpr('IL(?<iter>[0-9]+)(?<track>[A-Z]+)',track,perl=T)
-    iter=getAttribute(track,m,1)
-    super=getAttribute(track,m,2)
-    track=paste('(OPT|IL[0-',iter,']',super,')',sep='')
-    print(track)
-  }
-
-  dat <- getfilesTraining(Global = F, pattern = paste(problem,dim,track,sep='.'), useDiff = useDiff, rank = rank)
-  if(is.null(dat)){return(NULL)}
-  dat = subset(dat,Set=='train')
-  if(exists('iter')){ if(max(dat$Iter)!=iter){return(NULL)} }
-
-  return(dat)
-}
-
 getTrainingData <- function(problem,dim,rank,track,scale){
 
   useDiff=T
-  dat <- getTrainingDataRaw(problem,dim,rank,track,useDiff)
+  dat <- getTrainingDataRaw(problem,dim,track,rank,useDiff)
   if(is.null(dat)){ return(NULL) }
 
   if(useDiff) { label = sign(dat$ResultingOptMakespan) } else { label = as.numeric(dat$Rho == 0); }

@@ -82,6 +82,30 @@ getfilesTraining=function(pattern='rnd|rndn|mc|mxc|jc',Global=T,useDiff=F, rank)
   } else { return(lDAT) }
 }
 
+getTrainingDataRaw  <- function(problems,dim,track,rank='p',useDiff=F){
+
+  if(length(problems)>1){ problems=paste0('(',paste(problems,collapse='|'),')') }
+
+  if(track=='ALL'){ track=paste0('(',paste(c('OPT','RND',sdrs),collapse = '|'),')') }
+  if(substr(track,1,2)=='IL'){
+    print(track)
+    m=regexpr('IL(?<iter>[0-9]+)(?<track>[A-Z]+)',track,perl=T)
+    iter=getAttribute(track,m,1)
+    super=getAttribute(track,m,2)
+    track=paste('(OPT|IL[0-',iter,']',super,')',sep='')
+    print(track)
+  }
+
+  dat <- getfilesTraining(Global = F, pattern = paste(problems,dim,track,sep='.'), useDiff = useDiff, rank = rank)
+
+  if(is.null(dat)){return(NULL)}
+
+  dat = subset(dat,Set=='train')
+  if(exists('iter')){ if(max(dat$Iter)!=iter){return(NULL)} }
+
+  return(dat)
+}
+
 getSingleCDR=function(logFile,NrFeat,Model,problem=NULL,dimension=NULL,set='train'){
 
   if(grepl('.csv$',logFile)){logFile=substr(logFile,1,str_length(logFile)-4)}

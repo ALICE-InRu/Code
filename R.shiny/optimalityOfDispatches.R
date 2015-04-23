@@ -1,12 +1,3 @@
-getBWCaseScenario <- function(pat){
-  allDat=getfilesTraining(useDiff = F,pattern = pat,Global = F)
-  allDat=subset(allDat,Rho>0)
-  stat=stepwise.Stat(allDat)
-  stat$Shop=factor(substr(stat$Problem,1,1),levels=c('j','f'),labels=c('JSP','FSP'))
-  stat$Track=factor(stat$Track,levels='OPT',labels=('mean best and worst case scenario'))
-  return(stat)
-}
-
 findStepwiseOptimality <- function(problems,dim,track='OPT'){
 
   findSingleStepwiseOptimality <- function(problem){
@@ -44,20 +35,35 @@ findStepwiseOptimality <- function(problems,dim,track='OPT'){
   return(Stepwise)
 }
 
-stepwise.Stat <- function(dat){
+stepwise.Stat <- function(problems,dimension){
 
-  split=ddply(dat,~Problem+Dimension+Step+PID+Track,summarise,
-              best=min(Rho),
-              worst=max(Rho),
-              mu=mean(Rho),
-              .progress = "text")
+  allStat=NULL
+  for(problem in problems){
+    fname = paste('../trainingData/bw.summary',problem,dimension,'csv',sep='.')
+    if(file.exists(fname)){
+      stat=read.csv(fname)
+    } else {
 
-  #  BW = melt(split,measure.vars = colnames(split)[grep('best|worst',colnames(split))], variable.name = 'casescenario')
-  #  stat=ddply(BW,~Problem+Track+Step+casescenario,summarise,mu=mean(value),Q1=quantile(value,.025),Q3=quantile(value,.75))
+      trdat=getTrainingDataRaw(problem,dimension,'ALL')
+      if(!is.null(trdat)){
 
-  stat=ddply(split,~Problem+Track+Step,summarise,best.mu=mean(best),worst.mu=mean(worst),mu=mean(mu))
+        trdat=formatData(trdat)
 
-  return(formatData(stat))
+        trdat=ddply(trdat,~Track,transform,Followed=(Track!='OPT' & Followed==T) | (Track=='OPT' & Rho==0))
+
+        split=ddply(trdat,~Problem+Dimension+Step+PID+Track+Followed,summarise,
+                    best=min(Rho),
+                    worst=max(Rho),
+                    mu=mean(Rho),
+                    .progress = "text")
+
+        stat=ddply(split,~Problem+Track+Step+Followed,summarise,best.mu=mean(best),worst.mu=mean(worst),mu=mean(mu))
+        write.csv(stat,fname,row.names=F,quote=F)
+      } else {stat=NULL}
+    }
+    allStat=rbind(allStat,stat)
+  }
+  return(formatData(allStat))
 }
 
 findStepwiseExtremal <- function(problems,dim){
@@ -135,38 +141,37 @@ plotStepwiseOptimality <- function(Stepwise,simple,smooth){
   return(p)
 }
 
-plotStepwiseBestWorst <- function(dim,problems,onlyOPT){
-  if(onlyOPT){
-    pat=paste(paste('(',paste(problems,collapse='|'),')',sep=''),dim,'OPT',sep='.')
-    stat=getBWCaseScenario(pat)
+plotStepwiseBestWorst <- function(problems,dimension,track){
+
+  stat=stepwise.Stat(problems,dimension)
+  if(is.null(stat)){return(NULL)}
+
+  if(track=='OPT')
+  {
+    stat=subset(stat,Track=='OPT' & Followed==F)
+
+    stat$Shop=factor(substr(stat$Problem,1,1),levels=c('j','f'),labels=c('JSP','FSP'))
+    stat$Track=factor(stat$Track,levels='OPT',labels=('mean best and worst case scenario'))
 
     p = ggplot(stat, aes(x=Step))+
-      ggplotColor(name='Problem',num=length(unique(stat$Problem)))+
-      ggplotFill(name='Problem',num=length(unique(stat$Problem)))+
+      ggplotColor(name='Problem',num=length(levels(stat$Problem)))+
+      ggplotFill(name='Problem',num=length(levels(stat$Problem)))+
       facet_grid(Track~Shop)
 
     p=p+geom_ribbon(aes(ymin=best.mu,ymax=worst.mu,fill=Problem,color=Problem),alpha=0.2)
     p=p+geom_line(aes(y=mu,color=Problem),size=1,linetype='dashed')
 
   } else {
-    pat=paste(paste('(',paste(problems[1],collapse='|'),')',sep=''),dim,'(OPT|SPT|LPT|MWR|LWR)',sep='.')
-    print(pat)
-    allDat=getfilesTraining(useDiff = F,pattern = pat, Global = F)
-    if(is.null(allDat)){ return(NULL) }
-    allDatNotF=subset(allDat, (Track!='OPT' & Followed==F) | (Track=='OPT' & Rho>0))
 
-    stat=stepwise.Stat(allDatNotF)
-    stat.followed=stepwise.Stat(subset(allDat,Followed==T))
-
-    p = ggplot(stat, aes(x=Step))+
-      ggplotColor(name='Trajectory',num=length(unique(stat$Track)))+
-      ggplotFill(name='Trajectory',num=length(unique(stat$Track)))+
-      facet_grid(Problem~.)
+    p = ggplot(subset(stat,Followed==F), aes(x=Step))+
+      ggplotColor(name='Trajectory',num=length(levels(stat$Track)))+
+      ggplotFill(name='Trajectory',num=length(levels(stat$Track)))+
+      facet_grid(Problem~.,scales= 'free_y')
 
     p=p+geom_ribbon(aes(ymin=best.mu,ymax=worst.mu,fill=Track,color=Track),alpha=0.5)
-    p=p+geom_line(data=stat.followed,aes(y=best.mu,color=Track),size=1,linetype='dashed')
+    p=p+geom_line(data=subset(stat,Followed==T),aes(y=best.mu,color=Track),size=1,linetype='dashed')
   }
-  p=p+ggplotCommon(stat,ylabel=rhoLabel)
+  p=p+ylab(rhoLabel)
   return(p)
 }
 
