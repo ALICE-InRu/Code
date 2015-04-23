@@ -1,10 +1,9 @@
 output$tabSDR <- renderUI({
   dashboardBody(
     fluidRow(
-      tabBox(width="1000px", side= "right",
-             tabPanel("Plot", plotOutput("plot.SDR")), # Figure A.1
-             tabPanel("Settings", radioButtons("sdr.plot", "Plot type", c("Box plot"="boxplot","Density plot"="density")))
-      )
+      box(title="Settings", width=3,
+          radioButtons("sdr.plot", "Plot type", c("Box plot"="boxplot","Density plot"="density"))),
+      box(plotOutput("plot.SDR")) # Figure A.1
     )
   )
 })
