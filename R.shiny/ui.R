@@ -13,10 +13,10 @@ sidebar <- dashboardSidebar(
                          selected='j.rnd')
              ),
     menuItem("General", icon = icon("home"),
-             menuSubItem("Gantt charts", tabName = "gantt", icon = icon("car")),
-             menuSubItem("SDR", tabName = "sdr", icon = icon("car")),
-             menuSubItem("BDR", tabName = "bdr", icon = icon("car")),
-             menuSubItem("Difficulty", tabName = "sdrDifficulty", icon = icon("car"))
+             menuSubItem("SDR", tabName = "sdr", icon = icon("chain")),
+             menuSubItem("Gantt charts", tabName = "gantt", icon = icon("clock-o")),
+             menuSubItem("BDR", tabName = "bdr", icon = icon("code-fork")),
+             menuSubItem("Difficulty", tabName = "sdrDifficulty", icon = icon("trophy"))
              ),
     menuItem("Preference models", icon = icon("plane"),
              menuSubItem("LIBLINEAR settings", tabName = "prefSettings", icon = icon("car")),
