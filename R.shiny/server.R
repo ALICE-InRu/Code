@@ -11,6 +11,7 @@ server <- function(input, output, session) {
   source('tabPref.settings.R',local=T)
   source('tabPref.exhaustive.R',local=T)
   source('tabPref.imitationLearning.R',local=T)
+  source('tabGantt.R',local=T)
 
   observe({
     lvs = levels(droplevels(subset(dataset.OPT,Dimension==input$dimension))$Problem)

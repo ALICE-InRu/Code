@@ -12,12 +12,17 @@ sidebar <- dashboardSidebar(
                          levels(dataset.OPT$Problem),
                          selected='j.rnd')
              ),
+    menuItem("General", icon = icon("home"),
+             menuSubItem("Gantt charts", tabName = "gantt", icon = icon("car")),
+             menuSubItem("SDR", tabName = "sdr", icon = icon("car")),
+             menuSubItem("BDR", tabName = "bdr", icon = icon("car")),
+             menuSubItem("Difficulty", tabName = "sdrDifficulty", icon = icon("car"))
+             ),
     menuItem("Preference models", icon = icon("plane"),
              menuSubItem("LIBLINEAR settings", tabName = "prefSettings", icon = icon("car")),
              menuSubItem("Feature reduction", tabName = "prefExhaustive", icon = icon("car")),
              menuSubItem("Imitation learning", tabName = "prefImitationLearning", icon = icon("university"))
     ),
-    menuItem("General", tabName = "sdr", icon = icon("home")),
     menuItem("Optimality", tabName = "opt", icon = icon("bold")),
     menuItem("Features", tabName = "feat", icon = icon("binoculars"),
              badgeLabel = "new", badgeColor = "green"),
@@ -33,6 +38,9 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(
   tabItems(
     tabItem(tabName = "sdr", uiOutput("tabSDR")),
+    tabItem(tabName = "bdr", uiOutput("tabBDR")),
+    tabItem(tabName = "sdrDifficulty", uiOutput("tabDifficulty")),
+    tabItem(tabName = "gantt", uiOutput("tabGantt")),
     tabItem(tabName = "opt", uiOutput("tabOpt")),
     tabItem(tabName = "feat", uiOutput("tabFEAT")),
     tabItem(tabName = "table", uiOutput("tabTable")),

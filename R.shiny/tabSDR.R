@@ -1,38 +1,45 @@
 output$tabSDR <- renderUI({
   dashboardBody(
-    tabsetPanel(id ="tabsSDR",
-                tabPanel("SDR",
-                         fluidRow(
-                           tabBox(width="1000px", side= "right",
-                             tabPanel("Plot", plotOutput("plot.SDR")), # Figure A.1
-                             tabPanel("Settings", radioButtons("sdr.plot", "Plot type", c("Box plot"="boxplot","Density plot"="density")))
-                           )
-                         )
-                ),
-                tabPanel("BDR",
-                         box(title='Settings',
-                             selectInput("bdr.firstSDR", "First SDR", choices = c('SPT','LPT','MWR','LWR')),
-                             selectInput("bdr.secSDR", "Second SDR", choices = c('MWR','LWR','SPT','LPT')),
-                             sliderInput("bdr.split", "Cut off point:", min=0, max=100, value=40),
-                             helpText('Currently only applicable for 10x10',
-                                      'and the current default settings.')
-                         ),
-                         box(title='Plot', plotOutput("plot.BDR"))
-                ),
-                tabPanel("Difficulty",
-                         box(title='Quartiles', tableOutput('diff.Quartiles'),
-                             helpText('Instances with rho lower than 1st.Qu. are catagorised as easy.',
-                                       'Likewise, instances with rho higher than 3rd.Qu. are catagorised as hard.')),
-                         box(title='Split', tableOutput('diff.Split')),
-                         box(title='Easy', tableOutput('diff.Easy'), helpText('Use main problem distribution.')),
-                         box(title='Hard', tableOutput('diff.Hard'), helpText('Use main problem distribution.'))
-                )
+    fluidRow(
+      tabBox(width="1000px", side= "right",
+             tabPanel("Plot", plotOutput("plot.SDR")), # Figure A.1
+             tabPanel("Settings", radioButtons("sdr.plot", "Plot type", c("Box plot"="boxplot","Density plot"="density")))
+      )
+    )
+  )
+})
+
+output$tabBDR <- renderUI({
+  dashboardBody(
+    fluidRow(
+      box(title='Settings',
+          selectInput("bdr.firstSDR", "First SDR", choices = c('SPT','LPT','MWR','LWR')),
+          selectInput("bdr.secSDR", "Second SDR", choices = c('MWR','LWR','SPT','LPT')),
+          sliderInput("bdr.split", "Cut off point:", min=0, max=100, value=40),
+          helpText('Currently only applicable for 10x10',
+                   'and the current default settings.')
+      ),
+      box(title='Plot', plotOutput("plot.BDR"))
+    )
+  )
+})
+
+output$tabDifficulty <- renderUI({
+  dashboardBody(
+    fluidRow(
+      helpText('Use main problem distribution.'),
+      box(title='Quartiles', tableOutput('diff.Quartiles'),
+          helpText('Instances with rho lower than 1st.Qu. are catagorised as easy.',
+                   'Likewise, instances with rho higher than 3rd.Qu. are catagorised as hard.')),
+      box(title='Split', tableOutput('diff.Split')),
+      box(title='Easy', tableOutput('diff.Easy')),
+      box(title='Hard', tableOutput('diff.Hard'))
     )
   )
 })
 
 dataset.diff <- reactive({
-  dat=subset(dataset.SDR(),Set=='train')
+  dat=subset(dataset.SDR(), Set=='train' & Dimension==input$dimension & Problem==input$problem)
   checkDifficulty(dat)
 })
 dataset.SDR <- reactive({
@@ -41,8 +48,8 @@ dataset.SDR <- reactive({
 
 output$diff.Quartiles <- renderTable({ xtable(dataset.diff()$Quartiles) }, include.rownames = FALSE)
 output$diff.Split <- renderTable({ xtable(dataset.diff()$Split) }, include.rownames = FALSE)
-output$diff.Easy <- renderTable({ xtable(splitSDR(subset(dataset.diff()$Easy))) })
-output$diff.Hard <- renderTable({ xtable(splitSDR(subset(dataset.diff()$Hard))) })
+output$diff.Easy <- renderTable({ xtable(splitSDR(dataset.diff()$Easy)) })
+output$diff.Hard <- renderTable({ xtable(splitSDR(dataset.diff()$Hard)) })
 
 output$plot.SDR <- renderPlot({
 
@@ -106,7 +113,7 @@ checkDifficulty <- function(dat){
   return(list('Quartiles'=quartiles,'Split'=split,'Easy'=Easy,'Hard'=Hard))
 }
 
-splitSDR <- function(dat){
+splitSDR <- function(dat,problem,dim){
   sdrs=unique(dat$SDR)
   N=length(sdrs)
 
