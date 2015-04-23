@@ -19,12 +19,24 @@ output$tabGantt <- renderUI({
   )
 })
 
-trdat.SPT <- reactive({ dispatchData(input$problem,'6x5','SPT',input$pid) })
-trdat.LPT <- reactive({ dispatchData(input$problem,'6x5','LPT',input$pid) })
-trdat.LWR <- reactive({ dispatchData(input$problem,'6x5','LWR',input$pid) })
-trdat.MWR <- reactive({ dispatchData(input$problem,'6x5','MWR',input$pid) })
-trdat.OPT <- reactive({ dispatchData(input$problem,'6x5','OPT',input$pid) })
-trdat.RND <- reactive({ dispatchData(input$problem,'6x5','RND',input$pid) })
+trdat.SPT <- reactive({
+  withProgress(message = 'Loading SPT schedules', value = 0, {
+    dispatchData(input$problem,'6x5','SPT',input$pid)}) })
+trdat.LPT <- reactive({
+  withProgress(message = 'Loading LPT schedules', value = 0, {
+    dispatchData(input$problem,'6x5','LPT',input$pid) }) })
+trdat.LWR <- reactive({
+  withProgress(message = 'Loading LWR schedules', value = 0, {
+    dispatchData(input$problem,'6x5','LWR',input$pid) }) })
+trdat.MWR <- reactive({
+  withProgress(message = 'Loading MWR schedules', value = 0, {
+    dispatchData(input$problem,'6x5','MWR',input$pid) }) })
+trdat.OPT <- reactive({
+  withProgress(message = 'Loading OPT schedules', value = 0, {
+    dispatchData(input$problem,'6x5','OPT',input$pid) }) })
+trdat.RND <- reactive({
+  withProgress(message = 'Loading RND schedules', value = 0, {
+    dispatchData(input$problem,'6x5','RND',input$pid) }) })
 
 maxMakespan <- reactive({
   m=c(max(trdat.SPT()$phi.makespan), max(trdat.LPT()$phi.makespan),
