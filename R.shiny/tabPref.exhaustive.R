@@ -1,6 +1,6 @@
 output$tabPref.exhaustive <- renderUI({
   dashboardBody(
-    fluidRow(helpText('Using main problem distribution and preferably 10x10 dimension...')),
+    fluidRow(helpText('Using main problem distribution and preferably 10x10 dimension. Check settings to set trajectory used.')),
     fluidRow(
       box(title = "Pareto front", collapsible = TRUE, width=12,
           #tags$head( tags$script(src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full", type = 'text/javascript'),tags$script( "MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});", type='text/x-mathjax-config')),
@@ -45,6 +45,7 @@ Problem <- reactive({
 
 Liblinear.Summary <- reactive({
   tracks=input$tracks
+  if(is.null(tracks)){ return(NULL) }
   probabilities=input$probability
   problems=input$problems
   timedependent=input$timedependent
@@ -53,16 +54,15 @@ Liblinear.Summary <- reactive({
 
   ix=grepl('IL',tracks)
   if(any(ix)){ tracks[ix]=paste0(substr(tracks[ix],1,2),'[0-9]+',substr(tracks[ix],3,100)) }
-  tracks=paste0('(',paste(tracks,collapse = '|'),')')
-
-  models=list.files('..//liblinear/CDR',paste('^summary','exhaust',
-                                              paste0('(',paste(problems,collapse = '|'),')'),dim,rank,
-                                              paste0('(',paste(tracks,collapse = '|'),')'),
-                                              paste0('(',paste(probabilities,collapse='|'),')'),'weights',
-                                              ifelse(timedependent,'timedependent','timeindependent'),'csv$',sep='.'))
+  pat=paste('^summary','exhaust',
+            paste0('(',paste(problems,collapse = '|'),')'),dim,rank,
+            paste0('(',paste(tracks,collapse = '|'),')'),
+            paste0('(',paste(probabilities,collapse='|'),')'),'weights',
+            ifelse(timedependent,'timedependent','timeindependent'),'csv$',sep='.')
+  models=list.files('..//liblinear/CDR',pat)
   pref=NULL
-  for(model in models){ pref=rbind(pref,getPrefInfo(substr(model,9,100))) }
-  if(is.null(pref)){return(NULL)}
+  for(model in models){ pref=rbind(pref,getPrefInfo(substr(model,9,100))); }
+if(is.null(pref)){return(NULL)}
   return(pref)
 })
 
