@@ -506,3 +506,44 @@ liblinearKolmogorov <- function(dat.fronts,problem,onlyPareto=T,SDR=NULL){
   ks.Rho.test=ks.matrix(subset(stat.Rho, Set=='test'),'Rho','CDRlbl')
   return(list('Acc'=ks.Acc,'Rho.test'=ks.Rho.test,'Rho.train'=ks.Rho.train))
 }
+
+plot.trainingDataSize <- function(problem,dim,track){
+  trdat <- getTrainingDataRaw(problem,dim,track)
+
+  stats.raw=ddply(trdat,~Problem+Step+Track,function(X) nrow(X))
+  stats.raw=formatData(stats.raw)
+
+  #p=ggplot(stats.raw, aes(x=Step,y=V1,linetype=Track))
+  p=ggplot(stats.raw, aes(x=Step,y=V1,color=Track))+
+    ggplotColor('Track',num = length(levels(stats.raw$Track)))
+
+  p=p+geom_line(size=1,position=position_jitter(w=0.25, h=0))+
+    facet_wrap(~Problem,ncol=4)+
+    ylab(expression('Size of training set, |' * Phi * '|'))+
+    axisStep(stats.raw$Step)+axisCompact
+
+}
+
+plot.preferenceSetSize <- function(problems,dim,track,ranks){
+  stats=NULL;
+  for(problem in problems){
+    for(rank in ranks){
+      tmp <- getTrainingDataRaw(problem,dim,track,rank,useDiff = T)
+      tmp$Rank=rank
+      tmp=ddply(tmp,~Problem+Step+Rank+Track,function(X) nrow(X))
+      stats=rbind(stats,tmp)
+    }
+  }
+  stats=formatData(stats)
+
+  #stats$Rank <- factor(stats$Rank, levels=levels(stats$Rank), labels=paste0('S[',levels(stats$Rank),']'))
+
+  p=ggplot(stats, aes(x=Step,y=V1,color=Track))+
+    geom_line(size=1)+
+    #facet_grid(Problem~Rank,scales='free_y',labeller = label_parsed)+
+    facet_grid(.~Rank,scales='free_y',labeller = label_both)+
+    ggplotColor('Track',num = length(levels(stats$Track)))+
+    ylab(expression('Size of preference set, |' * S * '|'))+
+    axisStep(stats$Step)+axisCompact
+
+}

@@ -20,6 +20,7 @@ getfiles=function(dir, pattern = 'rnd|rndn|mc|mxc|jc', fileName = F,updateRho = 
 
   allDat=NULL;
   for(file in files){
+    print(file)
     pdat=read.csv(file)
 
     if(!('Set' %in% colnames(pdat))){ pdat$Set='train' }
@@ -57,18 +58,16 @@ getfilesTraining=function(pattern='rnd|rndn|mc|mxc|jc',Global=T,useDiff=F, rank)
 
     gDAT=NULL;
     for(file in global){
-      gDAT = rbind(gDAT,getfiles('../trainingData',file))
+      gDAT = rbind(gDAT,getfiles('../trainingData',file,updateRho = F))
     }
-    print(summary(gDAT$Track))
   } else {
     gDAT=NULL;
   }
 
   lDAT=NULL;
   for(file in local){
-    lDAT = rbind(lDAT,getfiles('../trainingData',file))
+    lDAT = rbind(lDAT,getfiles('../trainingData',file,updateRho = F))
   }
-  print(summary(lDAT$Track))
 
   if(!is.null(gDAT)){
     mDAT=join(lDAT,gDAT,by=colnames(gDAT)[colnames(gDAT) %in% colnames(lDAT)])
@@ -82,28 +81,39 @@ getfilesTraining=function(pattern='rnd|rndn|mc|mxc|jc',Global=T,useDiff=F, rank)
   } else { return(lDAT) }
 }
 
-getTrainingDataRaw  <- function(problems,dim,track,rank='p',useDiff=F){
+getTrainingDataRaw  <- function(problems,dim,tracks,rank='p',useDiff=F){
 
   if(length(problems)>1){ problems=paste0('(',paste(problems,collapse='|'),')') }
 
-  if(track=='ALL'){ track=paste0('(',paste(c('OPT','RND',sdrs),collapse = '|'),')') }
-  if(substr(track,1,2)=='IL'){
-    print(track)
-    m=regexpr('IL(?<iter>[0-9]+)(?<track>[A-Z]+)',track,perl=T)
-    iter=getAttribute(track,m,1)
-    super=getAttribute(track,m,2)
-    track=paste('(OPT|IL[0-',iter,']',super,')',sep='')
-    print(track)
+  ix = tracks=='ALL'
+  if(any(ix)){
+    tracks=c(tracks,paste(c('OPT','RND',sdrs)))
   }
 
-  dat <- getfilesTraining(Global = F, pattern = paste(problems,dim,track,sep='.'), useDiff = useDiff, rank = rank)
+  ix=substr(tracks,1,2)=='IL'
+  if(any(ix)){
+    print(tracks[ix])
+    m=regexpr('IL(?<iter>[0-9]+)(?<track>[A-Z]+)',tracks[ix],perl=T)
+    iter=getAttribute(tracks[ix],m,1)
+    super=getAttribute(tracks[ix],m,2)
+    tracks[ix]=paste0('IL[0-',iter,']',super)
+    tracks=c('OPT',tracks)
+  }
 
-  if(is.null(dat)){return(NULL)}
+  allDat=NULL
+  for(track in unique(tracks)){
+    dat <- getfilesTraining(Global = F, pattern = paste(problems,dim,track,sep='.'), useDiff = useDiff, rank = rank)
+    allDat=rbind(allDat,dat)
+  }
 
-  dat = subset(dat,Set=='train')
-  if(exists('iter')){ if(max(dat$Iter)!=iter){return(NULL)} }
+  if(is.null(allDat)){return(NULL)}
 
-  return(dat)
+  allDat = subset(allDat,Set=='train')
+  print(summary(allDat$Track))
+
+  if(exists('iter')){ if(max(allDat$Iter)!=iter){return(NULL)} }
+
+  return(allDat)
 }
 
 getSingleCDR=function(logFile,NrFeat,Model,problem=NULL,dimension=NULL,set='train'){

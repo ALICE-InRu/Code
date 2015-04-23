@@ -93,12 +93,12 @@ formatData = function(dat,updateRho=T){
   if('Model' %in% cols){ dat$Model <- as.factor(dat$Model)}
 
   if(all(c('Problem','Dimension','Set','PID') %in% colnames(dat))){
-    Ntrain10x10=300
 
-    if(!any(dat$Extended) | !updateRho){
+    if(!any(dat$Extended)){
       dat=subset(dat,!(Dimension=='10x10' & Set=='test'))
       ix=dat$Dimension=='10x10'
       if(any(ix)){
+        Ntrain10x10=300
         print('Updating sets for 10x10 data')
         dat$Set[ix]=ifelse(dat$PID[ix]<=Ntrain10x10,'train','test')
       }
@@ -108,12 +108,14 @@ formatData = function(dat,updateRho=T){
     dat$Name = interaction(dat$Problem,dat$Dimension,dat$Set,dat$PID)
   }
 
-  if('Makespan' %in% colnames(dat) & updateRho){
-    dat <- join(dat,dataset.OPT[,c('Name','Optimum')],by='Name',type='inner')
-    dat$Rho =  (dat$Makespan-dat$Optimum)/dat$Optimum*100
-  } else if('ResultingOptMakespan' %in% colnames(dat) & updateRho){
-    dat <- join(dat,dataset.OPT[,c('Name','Optimum')],by='Name',type='inner')
-    dat$Rho = (dat$ResultingOptMakespan-dat$Optimum)/dat$Optimum*100
+  if(updateRho){
+    if('Makespan' %in% colnames(dat)){
+      dat <- join(dat,dataset.OPT[,c('Name','Optimum')],by='Name',type='inner')
+      dat$Rho =  (dat$Makespan-dat$Optimum)/dat$Optimum*100
+    } else if('ResultingOptMakespan' %in% colnames(dat)){
+      dat <- join(dat,dataset.OPT[,c('Name','Optimum')],by='Name',type='inner')
+      dat$Rho = (dat$ResultingOptMakespan-dat$Optimum)/dat$Optimum*100
+    }
   }
 
   # make isMWR etc. logical
