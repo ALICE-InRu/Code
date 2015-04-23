@@ -1,114 +1,80 @@
 output$tabGantt <- renderUI({
   dashboardBody(
+    fluidRow(helpText('Gantt charts that illustrate the (temporal partial) job-shop',
+                      'schedule for a given DR. Numbers in the boxes represent the',
+                      'job identification j. The width of the box illustrates the','
+                      processing times for a given job for a particular machine a',
+                      '(on the vertical axis). The dashed boxes represent the resulting',
+                      'partial schedule for when a particular job is scheduled next.',
+                      'Moreover, the current Cmax is denoted with a dotted line.')),
     fluidRow(
       box(sliderInput("pid", "Problem instance:", min=1, max=500, value=10)),
-      box(sliderInput("step", "Step:", min=0, max=30, value=30))
+      box(sliderInput("step", "Step during the dispatching process:", min=0, max=30, value=30))
       ),
-    fluidRow(helpText('Simple Priority Dispatching Rules')),
     fluidRow(
-      box(title='Shortest Processing Time (SPT)', plotOutput('gantt.SPT',height = 200)),
-      box(title='Largest Processing Time (LPT)', plotOutput('gantt.LPT',height = 200)),
-      box(title='Least Work Remaining (LWR)', plotOutput('gantt.LWR',height = 200)),
-      box(title='Most Work Remaining (MWR)', plotOutput('gantt.MWR',height = 200))
-      ),
-    fluidRow(helpText('Schedules from training data')),
-    fluidRow(
-      box(title='Random optimal trajectory', plotOutput('gantt.OPT',height = 200)),
-      box(title='Random trajectory', plotOutput('gantt.RND',height = 200))
-    )
+      box(width=12, plotOutput('gantt.schedules', height = 700))
+      )
   )
 })
 
-trdat.SPT <- reactive({
-  withProgress(message = 'Loading SPT schedules', value = 0, {
-    dispatchData(input$problem,'6x5','SPT',input$pid)}) })
-trdat.LPT <- reactive({
-  withProgress(message = 'Loading LPT schedules', value = 0, {
-    dispatchData(input$problem,'6x5','LPT',input$pid) }) })
-trdat.LWR <- reactive({
-  withProgress(message = 'Loading LWR schedules', value = 0, {
-    dispatchData(input$problem,'6x5','LWR',input$pid) }) })
-trdat.MWR <- reactive({
-  withProgress(message = 'Loading MWR schedules', value = 0, {
-    dispatchData(input$problem,'6x5','MWR',input$pid) }) })
-trdat.OPT <- reactive({
-  withProgress(message = 'Loading OPT schedules', value = 0, {
-    dispatchData(input$problem,'6x5','OPT',input$pid) }) })
-trdat.RND <- reactive({
-  withProgress(message = 'Loading RND schedules', value = 0, {
-    dispatchData(input$problem,'6x5','RND',input$pid) }) })
 
-maxMakespan <- reactive({
-  m=c(max(trdat.SPT()$phi.makespan), max(trdat.LPT()$phi.makespan),
-      max(trdat.LWR()$phi.makespan), max(trdat.MWR()$phi.makespan),
-      max(trdat.OPT()$phi.makespan), max(trdat.RND()$phi.makespan))
-  return(max(m)+50)
-})
+all.dat.schedules <- reactive({
+  withProgress(message = 'Loading schedules', value = 0, {
+    dispatchData(input$problem,'6x5','ALL')}) })
 
-output$gantt.SPT <- renderPlot({
-  plotStep(trdat.SPT(),input$step,maxMakespan()) })
-output$gantt.LPT <- renderPlot({
-  plotStep(trdat.LPT(),input$step, maxMakespan()) })
-output$gantt.LWR <- renderPlot({
-  plotStep(trdat.LWR(),input$step, maxMakespan()) })
-output$gantt.MWR <- renderPlot({
-  plotStep(trdat.MWR(),input$step, maxMakespan()) })
-output$gantt.OPT <- renderPlot({
-  plotStep(trdat.OPT(),input$step, maxMakespan()) })
-output$gantt.RND <- renderPlot({
-  plotStep(trdat.RND(),input$step, maxMakespan()) })
+dat.schedules <- reactive({ subset(all.dat.schedules(),PID==input$pid) })
 
-dispatchData <- function(problem,dimension,SDR,plotPID=1){
-  trdat <- getTrainingDataRaw(problem,dimension,'p',SDR,F)
-  trdat <- subset(trdat,PID==plotPID)
-  if(nrow(trdat)<1){return(NULL)}
+output$gantt.schedules <- renderPlot({ plotStep(dat.schedules(),input$step) })
 
-  m=regexpr('(?<Job>[0-9]+).(?<Mac>[0-9]+).(?<StarTime>[0-9]+)',trdat$Dispatch,perl = T)
-  trdat$Step=trdat$Step-min(trdat$Step)
-  trdat$Job=as.numeric(getAttribute(trdat$Dispatch,m,1))+1
-  trdat$Rho=round(trdat$Rho,2)
-  trdat$phi.mac=trdat$phi.mac-min(trdat$phi.mac)+1
+dispatchData <- function(problem,dimension,SDR,plotPID=-1){
+trdat <- getTrainingDataRaw(problem,dimension,'p',SDR,F)
+if(plotPID>0){ trdat <- subset(trdat,PID==plotPID) }
+if(nrow(trdat)<1){return(NULL)}
 
-  return(trdat)
+m=regexpr('(?<Job>[0-9]+).(?<Mac>[0-9]+).(?<StarTime>[0-9]+)',trdat$Dispatch,perl = T)
+trdat=formatData(trdat)
+trdat$Step=trdat$Step-min(trdat$Step)
+trdat$Job=as.numeric(getAttribute(trdat$Dispatch,m,1))+1
+trdat$Rho=round(trdat$Rho,2)
+trdat$phi.mac=trdat$phi.mac-min(trdat$phi.mac)+1
+trdat$x=trdat$phi.startTime+(trdat$phi.endTime-trdat$phi.startTime)/2
+return(droplevels(trdat))
 }
 
-plotStep <- function(trdat,step,maxMakespan=0){
+plotStep <- function(trdat,step){
 
   NumJobs=max(trdat$Job)
   NumMacs=max(trdat$phi.mac)
-  if(maxMakespan<max(trdat$phi.makespan))
-    maxMakespan=max(trdat$phi.makespan)
+  maxMakespan=max(trdat$phi.makespan)+50 # margin to display Cmax notation
 
   fdat <- subset(trdat,Followed==T & Step<step)
   pdat <- subset(trdat,Step==step)
-  p=ggplot(fdat,aes(x=phi.startTime+(phi.endTime-phi.startTime)/2,
-                    xmin=phi.startTime,
-                    xmax=phi.endTime,
-                    y=phi.mac,
-                    ymin=phi.mac-0.4,
-                    ymax=phi.mac+0.4,
-                    fill=as.factor(Job),label=Job))+
-    ggplotFill('Job',NumJobs)+xlab('')+
-    scale_y_continuous('Machine', limits = c(0.6, NumMacs+1), breaks=1:NumMacs)+
-    scale_x_continuous(expand=c(0,0), limits = c(0, maxMakespan))+
-    theme(legend.position="none")
+  p=ggplot(fdat,aes(x=x,y=phi.mac))+
+    ggplotFill('Job',NumJobs)+
+    scale_y_continuous('Machine', breaks=1:NumMacs)+
+    scale_x_continuous('Time', expand=c(0,0), limits = c(0, maxMakespan))+
+    theme(legend.position="none")+facet_wrap(~Problem+Dimension+Track,ncol=2)
 
   if(nrow(fdat)>0){
-    currentMakespan=max(fdat$phi.endTime)
-    p=p+geom_rect()+geom_text(size=4)+
-      geom_vline(xintercept=currentMakespan,linetype='dotted')+
-      annotate("text", x = currentMakespan, y = NumMacs+0.6, size=4,
-               label = "C[max]", parse=T, hjust=1, vjust=0)+
-      annotate("text", x = currentMakespan, y = NumMacs+0.6, size=4,
-               label = paste0('=',currentMakespan), hjust=0, vjust=0)
+    cmax = ddply(fdat,~Problem+Dimension+Track,summarise,x=max(phi.endTime),phi.mac=0.4)
+    p=p+geom_rect(aes(fill=as.factor(Job),
+      xmin=phi.startTime,xmax=phi.endTime,
+      ymin=phi.mac-0.4,ymax=phi.mac+0.4))+
+      geom_text(size=4,aes(label=Job))+
+      geom_vline(data = cmax, aes(xintercept=x), linetype='dotted')+
+      geom_text(data = cmax, label='C[max]', parse=T, size=4, hjust=1, vjust=0)+
+      geom_text(data = cmax, aes(label=x), size=4, hjust=0, vjust=0)
   }
   if(nrow(pdat)>0){
     p=p+geom_rect(data=pdat,
+                  aes(fill=as.factor(Job),
+                      xmin=phi.startTime,xmax=phi.endTime,
+                      ymin=phi.mac-0.4,ymax=phi.mac+0.4),
                   linetype='dashed', color='black',
                   alpha=0.2, #aes(size=Rho),
                   position = position_jitter(w = 0, h = 0.1))+
       #scale_size(guide="none",range=c(1.5,1))+ # stronger line for lower rho
-      geom_text(data=pdat, size=4, position=position_jitter(w = 0.1, h = 0.1))
+      geom_text(data=pdat, size=4, aes(label=Job), position=position_jitter(w = 0.1, h = 0.1))
     #p=p+ggtitle(paste('Step',step))
   } #else { p = p + ggtitle('Complete schedule') }
 
