@@ -2,7 +2,7 @@ if(Sys.info()['user']=="hei2"){  setwd('~/alice/Code/R')
 } else if(Sys.info()['user']=="helga"){ setwd('C:/Users/Helga/alice/Code/R') }
 
 rm(list=ls(all=TRUE))
-setwd('../Rshiny/')
+setwd('../R.shiny/')
 source('global.R')
 source('getfiles.R')
 source('formatData.R')

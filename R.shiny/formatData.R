@@ -37,6 +37,11 @@ formatData = function(dat,updateRho=T){
   if('SDR' %in% cols){ dat$SDR=factor(dat$SDR,levels=sdrs) }
   if('Track' %in% cols){
     dat$Extended=grepl('EXT',dat$Track)
+    if(!updateRho){
+      ix=dat$Extended
+      dat$PID[ix] = dat$PID[ix]-min(dat$PID[ix])+1
+    }
+
     ix=dat$Track=='OPTEXT'
     if(any(ix)){dat$Track[ix]='OPT'}
 
@@ -99,7 +104,7 @@ formatData = function(dat,updateRho=T){
       ix=dat$Dimension=='10x10'
       if(any(ix)){
         Ntrain10x10=300
-        print('Updating sets for 10x10 data')
+        #print('Updating sets for 10x10 data')
         dat$Set[ix]=ifelse(dat$PID[ix]<=Ntrain10x10,'train','test')
       }
       Ntrain6x5=500

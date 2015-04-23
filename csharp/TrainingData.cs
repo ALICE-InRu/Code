@@ -651,21 +651,21 @@ namespace Scheduling
             for (int i = 0; i < (int) SDR.Count; i++)
             {
                 pattern = String.Format("sdr.{0}", (SDR) i);
-                ix = header.FindIndex(f => f == pattern);
+                ix = header.FindIndex(f => f.Equals(pattern, StringComparison.OrdinalIgnoreCase));
                 if (ix >= 0) iSDR.Add(ix);
             }
 
             for (int i = 0; i < (int) LocalFeature.Count; i++)
             {
                 pattern = String.Format("phi.{0}", (LocalFeature) i);
-                ix = header.FindIndex(f => f == pattern);
+                ix = header.FindIndex(f => f.Equals(pattern, StringComparison.OrdinalIgnoreCase));
                 if (ix >= 0) iLocal.Add(ix);
             }
 
             for (int i = 0; i < (int) GlobalFeature.Count; i++)
             {
                 pattern = String.Format("phi.{0}", (GlobalFeature) i);
-                ix = header.FindIndex(f => f == pattern);
+                ix = header.FindIndex(f => f.Equals(pattern, StringComparison.OrdinalIgnoreCase));
                 if (ix >= 0) iGlobal.Add(ix);
             }
             int iRND = header.FindIndex(f => f == "phi.RND");
@@ -699,22 +699,27 @@ namespace Scheduling
             }
 
             int iRank = header.FindIndex(x => x == "Rank");
-            Ranked = iRank != -1 && Convert.ToInt32(content[0][iRank]) != -1;
+            Ranked = iRank != -1 && Convert.ToInt32(content[0][iRank]) != -1 && !content.Exists(p => p.Length <= iRank);
             int iRho = header.FindIndex(x => x == "Rho");
 
             #region read each line
 
             foreach (var line in content)
             {
+                DataRow rowFeature = null;
                 try
                 {
-                    DataRow rowFeature = ProcessLine(line, ipid, iStep, iDisp, iFollow, iMakespan, iSimplex, iRank, iRho,
+                    rowFeature = ProcessLine(line, ipid, iStep, iDisp, iFollow, iMakespan, iSimplex, iRank, iRho,
                         iSDR, iLocal, iGlobal, readFeatures, allEquiv, allLocal, allGlobal);
+
                     Rows.Add(rowFeature);
                     NumFeatures++;
                 }
                 catch (Exception ex)
                 {
+                    if (rowFeature != null && Rows.Contains((string) rowFeature["Name"]))
+                        continue;
+
                     Error = ex.Message;
                     return false;
                 }

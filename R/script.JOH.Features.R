@@ -6,22 +6,6 @@ dpi=300;
 redoPlot=F;
 subdir='../../Papers/JOH.Features/figures/';
 
-# ----- Box plots for SDRs -----------------------------------------
-
-SDR=SDR[!(SDR$Dimension == '8x8' & SDR$Set=='train'),]
-SDR=SDR[!(SDR$Dimension == '12x12' & SDR$Set=='train'),]
-SDR=SDR[!(SDR$Dimension == '14x14' & SDR$Set=='train'),]
-SDR=subset(SDR, Problem %in% problems.10x10)
-
-source('difficultywrtSDR.R'); 
-boxplotSDRs(SDR,'10x10')
-
-# ----- Box plots for BDR ------------------------------------------
-source('inspectBDR.R')
-p=checkBDR(OPT,SDR,'SPT','MWR',40)
-p = p + ggplotFill('Dispatching rule',3,c('SPT (first 40%), MWR (last 60%)','Most Work Remaining','Shortest Processing Time'))
-fname=paste(subdir,'boxplotRho.BDR.10x10.pdf',sep='')
-ggsave(fname,width=Width,height=Height.half,dpi=dpi,units=units)
 
 # ----- Exhaustive search for feature selection --------------------
 subdir='../../Papers/JOH.Features/figures/exhaust';

@@ -67,7 +67,7 @@ output$output.liblinearModel <- renderPrint({
     if(length(fT)+any(grepl('ALL',tracks))>length(fW)){
       lmax=ifelse(Dimension()<100,ifelse(timedependent,5000,100000),ifelse(timedependent,100000,500000))
       for(track in tracks)
-        withProgress(message = paste('Create LIBLINEAR model for',track), value = 0, {
+        withProgress(message = paste('Create model for',track), value = 0, {
           createLiblinearModel(problem,dimension,track,rank,probability,timedependent,exhaustive,lmax)
         })
     } else { return(paste(length(fW),'LIBLINEAR models exist for current setting')) }
