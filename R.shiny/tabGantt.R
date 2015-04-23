@@ -27,7 +27,7 @@ dat.schedules <- reactive({ subset(all.dat.schedules(),PID==input$pid) })
 output$gantt.schedules <- renderPlot({ plotStep(dat.schedules(),input$step) })
 
 dispatchData <- function(problem,dimension,SDR,plotPID=-1){
-trdat <- getTrainingDataRaw(problem,dimension,'p',SDR,F)
+trdat <- getTrainingDataRaw(problem,dimension,SDR)
 if(plotPID>0){ trdat <- subset(trdat,PID==plotPID) }
 if(nrow(trdat)<1){return(NULL)}
 

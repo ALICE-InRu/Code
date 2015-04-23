@@ -5,7 +5,7 @@ rank='p'
 dim='6x5'
 
 plot.trainingDataSize <- function(problem,dim,rank){
-  dat.raw <- getTrainingDataRaw(problem,dim,rank,'ALL',F)
+  dat.raw <- getTrainingDataRaw(problem,dim,'ALL',rank,F)
   stats.raw=ddply(dat.raw,~Problem+Step+Track,function(X) nrow(X))
   #p=ggplot(stats.raw, aes(x=Step,y=V1,linetype=Track))
   p=ggplot(stats.raw, aes(x=Step,y=V1,color=Track))+
@@ -25,7 +25,7 @@ plot.preferenceSetSize <- function(problems,dim){
   ranks=c('b','f','p','a')
   for(problem in problems){
     for(rank in ranks){
-      tmp <- getTrainingDataRaw(problem,dim,rank,'ALL',useDiff = T)
+      tmp <- getTrainingDataRaw(problem,dim,'ALL',rank,useDiff = T)
       tmp$Rank=rank
       tmp=ddply(tmp,~Problem+Step+Rank+Track,function(X) nrow(X))
       stats=rbind(stats,tmp)
