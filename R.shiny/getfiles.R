@@ -81,7 +81,7 @@ getfilesTraining=function(pattern='rnd|rndn|mc|mxc|jc',Global=T,useDiff=F, rank)
   } else { return(lDAT) }
 }
 
-getTrainingDataRaw  <- function(problems,dim,tracks,rank='p',useDiff=F){
+getTrainingDataRaw  <- function(problems,dim,tracks,rank='p',useDiff=F, global=F){
 
   if(length(problems)>1){ problems=paste0('(',paste(problems,collapse='|'),')') }
 
@@ -102,7 +102,7 @@ getTrainingDataRaw  <- function(problems,dim,tracks,rank='p',useDiff=F){
 
   allDat=NULL
   for(track in unique(tracks)){
-    dat <- getfilesTraining(Global = F, pattern = paste(problems,dim,track,sep='.'), useDiff = useDiff, rank = rank)
+    dat <- getfilesTraining(Global = global, pattern = paste(problems,dim,track,sep='.'), useDiff = useDiff, rank = rank)
     allDat=rbind(allDat,dat)
   }
 

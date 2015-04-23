@@ -1,9 +1,10 @@
 output$tabFEAT <- renderUI({
   dashboardBody(
     fluidRow(
-      #box(title="Extremal", plotOutput("plot.extremal", height=700)),
-      box(title="Local", plotOutput("plot.local", height=350)),
-      #box(title="Global", plotOutput("plot.global", height=350))
+      box(title="Extremal", plotOutput("plot.extremal", height=600)),
+      box(title="Evolution of features",
+          plotOutput("plot.local", height=300),
+          plotOutput("plot.global", height=300))
     )
   )
 })
@@ -29,11 +30,17 @@ output$plot.extremal <- renderPlot({
   print(p)
 },height="auto")
 
+dataset.trdat <- reactive({
+  withProgress(message = 'Loading data', value = 0, {
+    statStepwiseFeatures(input$problem,input$dimension)
+  })
+})
+
 output$plot.global <- renderPlot({
   problem=input$problem
   dim=input$dimension
   withProgress(message = 'Making plot', value = 0, {
-    p=plotStepwiseFeatures(problem,dim,T)
+    p=plotStepwiseFeatures(dataset.trdat(),T)+ggtitle('')
   })
   fname=paste(paste(subdir,problem,'stepwise',sep='/'),dim,'Track','evolution','Global',extension,sep='.')
   print(fname)
@@ -49,7 +56,7 @@ output$plot.local <- renderPlot({
   problem=input$problem
   dim=input$dimension
   withProgress(message = 'Making plot', value = 0, {
-    p=plotStepwiseFeatures(problem,dim,F)
+    p=plotStepwiseFeatures(dataset.trdat(),F)+ggtitle('')
   })
   fname=paste(paste(subdir,problem,'stepwise',sep='/'),dim,'Track','evolution','Local',extension,sep='.')
   print(fname)

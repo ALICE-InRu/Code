@@ -58,7 +58,7 @@ stepwise.Stat <- function(problems,dimension){
       stat=read.csv(fname)
     } else {
 
-      trdat=getTrainingDataRaw(problem,dimension,'ALL')
+      trdat=getTrainingDataRaw(problem,dimension,'ALL',Global = T)
       if(!is.null(trdat)){
 
         trdat=formatData(trdat)
@@ -259,7 +259,23 @@ plotStepwiseExtremal <- function(Stepwise,Extremal,smooth){
   return(p)
 }
 
-plotStepwiseFeatures <- function(trdat,global){
+statStepwiseFeatures <- function(problem,dimension){
+  trdat=getTrainingDataRaw(problem,dimension,'ALL',global=T)
+  trdat=formatData(trdat)
+  phix=grep('phi',colnames(trdat))
+  trdat[,phix]=apply(trdat[,phix], MARGIN = 2, FUN = function(X) 2*(X - min(X))/diff(range(X))-1)
+  print(summary(trdat[,phix]))
+  trdat=subset(trdat,Followed==T)
+
+  mdat=melt(trdat,measure.vars = colnames(trdat)[phix], variable.name = 'Feature')
+
+  stat=ddply(mdat,~Problem+Feature+Step+Track,summarise,mu=mean(value),.progress = 'text')
+  stat=formatData(stat)
+
+  return(stat)
+}
+
+plotStepwiseFeatures <- function(stat,global){
 
   plotOne <- function(stat,Type){
     stat=subset(stat,FeatureType==Type)
@@ -275,20 +291,7 @@ plotStepwiseFeatures <- function(trdat,global){
     return(p)
   }
 
-  trdat=formatData(trdat)
   p=NULL
-
-  phix=grep('phi',colnames(trdat))
-  trdat[,phix]=apply(trdat[,phix], MARGIN = 2, FUN = function(X) 2*(X - min(X))/diff(range(X))-1)
-
-  print(summary(trdat[,phix]))
-
-  trdat=subset(trdat,Followed==T)
-
-  mdat=melt(trdat,measure.vars = colnames(trdat)[phix], variable.name = 'Feature')
-
-  stat=ddply(mdat,~Problem+Feature+Step+Track,summarise,mu=mean(value),.progress = 'text')
-  stat=formatData(stat)
 
   if(global)
     p=plotOne(stat,'Global')
