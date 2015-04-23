@@ -56,7 +56,7 @@ plotStep <- function(trdat,step){
     theme(legend.position="none")+facet_wrap(~Problem+Dimension+Track,ncol=2)
 
   if(nrow(fdat)>0){
-    cmax = ddply(fdat,~Problem+Dimension+Track,summarise,x=max(phi.endTime),phi.mac=0.4)
+    cmax = ddply(fdat,~Problem+Dimension+Track,summarise,x=max(phi.endTime),phi.mac=0.3)
     p=p+geom_rect(aes(fill=as.factor(Job),
       xmin=phi.startTime,xmax=phi.endTime,
       ymin=phi.mac-0.4,ymax=phi.mac+0.4))+
