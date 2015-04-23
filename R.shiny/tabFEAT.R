@@ -1,18 +1,9 @@
 output$tabFEAT <- renderUI({
-  sidebarLayout(
-    sidebarPanel(
-      conditionalPanel(
-        condition = "input.tabsFeat=='Extremal'",
-        checkboxInput('smooth', 'Smooth')
-      ),
-
-    ),
-    mainPanel(
-      tabsetPanel(id ="tabsFeat",
-                  tabPanel("Extremal", plotOutput("plot.extremal")),
-                  tabPanel("Local", plotOutput("plot.local")),
-                  tabPanel("Global", plotOutput("plot.global"))
-      )
+  dashboardBody(
+    fluidRow(
+      #box(title="Extremal", plotOutput("plot.extremal", height=700)),
+      box(title="Local", plotOutput("plot.local", height=350)),
+      #box(title="Global", plotOutput("plot.global", height=350))
     )
   )
 })
@@ -20,10 +11,11 @@ output$tabFEAT <- renderUI({
 output$plot.extremal <- renderPlot({
   problem=input$problem
   dim=input$dimension
-  Stepwise=findStepwiseOptimality(problem,dim,Dimension())
+  Stepwise=dataset.Stepwise()
+  Extremal=dataset.Extremal()
   if(length(Stepwise$Stats)==0) return(NULL)
   withProgress(message = 'Making plot', value = 0, {
-    p=plotStepwiseExtremal(Stepwise,problem,dim,input$smooth)
+    p=plotStepwiseExtremal(Stepwise,Extremal,F)
   })
   print(problem)
   print(dim)

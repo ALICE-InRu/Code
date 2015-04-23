@@ -10,8 +10,7 @@ output$tabPref.settings <- renderUI({
     fluidRow(helpText('Using main problem distribution...')),
     fluidRow(
       box(title = "Settings", status = "primary", solidHeader = TRUE, collapsible = TRUE,
-        selectInput("tracks", "Trajectories:", c("OPT",sdrs,"RND","ALL","ILSUP","ILUNSUP","ILFIXSUP",
-                                                 "OPTEXT","ILUNSUPEXT"), multiple = T, selected = 'OPT'),
+        selectInput("tracks", "Trajectories:", c("OPT",sdrs,"RND","ALL","ILSUP","ILUNSUP","ILFIXSUP", "OPTEXT","ILUNSUPEXT"), multiple = T, selected = 'OPT'),
         selectInput("rank", "Ranking:", c("p","f","b","a")),
         selectInput("probability", "Stepwise bias:", c('equal','opt','wcs','bcs','dbl1st','dbl2nd')),
         checkboxInput("exhaustive","Exhaustive search for models, i.e., 1,2,3 or all $d$ features"),
@@ -22,9 +21,18 @@ output$tabPref.settings <- renderUI({
       box(title = "Stepwise bias", collapsible = TRUE,
           helpText('Features instances are resampled w.r.t. its stepwise bias.'),
           plotOutput("plot.probability", height = 150)),
-      box(title = "Action output", width = 6, verbatimTextOutput("output.liblinearModel"))
+      box(title = "Action output", width = 6, collapsible = TRUE,
+          verbatimTextOutput("output.liblinearModel"))
+    ),
+    fluidRow(
+      box(plotOutput('plot.trainingDataSize')),
+      box(plotOutput('plot.preferenceSetSize'))
     )
   )
+})
+
+dataset.training <- reactive({
+  getTrainingDataRaw(input$problem,input$dimension,input$tracks)
 })
 
 output$plot.probability <- renderPlot({
@@ -97,8 +105,29 @@ output$progressProbs <- renderValueBox({
   valueBox( paste0('#',length(probs)), "probabilities", color = "lime", icon = icon("eraser "))
 })
 
+output$plot.trainingDataSize <- renderPlot({
+  input$action
+  if(isolate(input$liblinearModel)=="Estimate") {
+    dim=isolate(input$dimension)
+    p=plot.trainingDataSize(isolate(input$problem),dim,isolate(input$tracks))
+    fname=paste(paste(subdir,'trdat',sep='/'),'size',dim,extension,sep='.')
+    #ggsave(fname,p,width=Width,height=Height.half,dpi=dpi,units=units)
+    return(p)
+  }
+})
 
+output$plot.preferenceSetSize <- renderPlot({
+  input$action
+  if(isolate(input$liblinearModel)=="Estimate") {
+    dim=isolate(input$dimension)
+    p=plot.preferenceSetSize(isolate(input$problem),dim,
+                             isolate(input$tracks),isolate(input$rank))
 
+    fname=paste(paste(subdir,'prefdat',sep='/'),'size',dim,extension,sep='.')
+    #ggsave(fname,p,width=Width,height=Height.full,dpi=dpi,units=units)
+    return(p)
+  }
+})
 
 
 

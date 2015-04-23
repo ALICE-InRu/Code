@@ -259,7 +259,7 @@ plotStepwiseExtremal <- function(Stepwise,Extremal,smooth){
   return(p)
 }
 
-plotStepwiseFeatures <- function(problem,dim,global){
+plotStepwiseFeatures <- function(trdat,global){
 
   plotOne <- function(stat,Type){
     stat=subset(stat,FeatureType==Type)
@@ -275,8 +275,8 @@ plotStepwiseFeatures <- function(problem,dim,global){
     return(p)
   }
 
+  trdat=formatData(trdat)
   p=NULL
-  trdat=getfilesTraining(useDiff = F,Global = global,pattern = paste(problem,dim,'(OPT|SPT|LPT|MWR|LWR|RND)',sep='.'))
 
   phix=grep('phi',colnames(trdat))
   trdat[,phix]=apply(trdat[,phix], MARGIN = 2, FUN = function(X) 2*(X - min(X))/diff(range(X))-1)
