@@ -23,8 +23,9 @@ sidebar <- dashboardSidebar(
              menuSubItem("Feature reduction", tabName = "prefExhaustive", icon = icon("car")),
              menuSubItem("Imitation learning", tabName = "prefImitationLearning", icon = icon("university"))
     ),
-    menuItem("Optimality", tabName = "opt", icon = icon("bold"),
-             menuSubItem("Optimality", tabName = "opt", icon = icon("university")),
+    menuItem("Optimality", icon = icon("bold"),
+             menuSubItem("Uniqueness", tabName = "opt", icon = icon("university")),
+             menuSubItem("SDR", tabName = "optSDR", icon = icon("university")),
              menuSubItem("Best and worst case scenario", tabName = "bestWorstCase", icon = icon("university"))
              ),
     menuItem("Features", tabName = "feat", icon = icon("binoculars"),
@@ -45,6 +46,7 @@ body <- dashboardBody(
     tabItem(tabName = "sdrDifficulty", uiOutput("tabDifficulty")),
     tabItem(tabName = "gantt", uiOutput("tabGantt")),
     tabItem(tabName = "opt", uiOutput("tabOpt")),
+    tabItem(tabName = "optSDR", uiOutput("tabOptSDR")),
     tabItem(tabName = "bestWorstCase", uiOutput("tabBestWorstCase")),
     tabItem(tabName = "feat", uiOutput("tabFEAT")),
     tabItem(tabName = "table", uiOutput("tabTable")),

@@ -1,4 +1,4 @@
-findStepwiseOptimality <- function(problems,dim,track='OPT'){
+findStepwiseOptimality <- function(problems,dim,track='OPT',LastStep=-1){
 
   findSingleStepwiseOptimality <- function(problem){
     fname=paste('../trainingData/stepwise',problem,dim,track,'csv',sep='.')
@@ -20,6 +20,17 @@ findStepwiseOptimality <- function(problems,dim,track='OPT'){
                 rnd.Q1=quantile(rnd,.25),
                 rnd.Q3=quantile(rnd,.75),
                 unique.mu=mean(unique))
+
+    if(max(stats$Step)<LastStep){
+      lastRow=stats[1,]
+      lastRow$rnd.mu=1
+      lastRow$rnd.Q1=1
+      lastRow$rnd.Q3=1
+      lastRow$unique.mu=1
+      lastRow$Step=LastStep
+      stats=rbind(stats,lastRow)
+    }
+
     stats=formatData(stats)
 
     return(list('Stats'=stats,'Raw'=split))
@@ -207,12 +218,13 @@ plotStepwiseSDR.wrtOPT <- function(Stepwise,Extremal,smooth){
   return(p)
 }
 
-plotStepwiseSDR.wrtTrack <- function(Stepwise,Extremal,problems,dim,smooth){
+plotStepwiseSDR.wrtTrack <- function(Stepwise,Extremal,dim,smooth,lastStep=-1){
 
-  spt=findStepwiseOptimality(problems,dim,'SPT')$Stats; spt$Track='SPT'
-  lpt=findStepwiseOptimality(problems,dim,'LPT')$Stats; lpt$Track='LPT'
-  lwr=findStepwiseOptimality(problems,dim,'LWR')$Stats; lwr$Track='LWR'
-  mwr=findStepwiseOptimality(problems,dim,'MWR')$Stats; mwr$Track='MWR'
+  problems=unique(Stepwise$Stats$Problem)
+  spt=findStepwiseOptimality(problems,dim,'SPT',lastStep)$Stats; spt$Track='SPT'
+  lpt=findStepwiseOptimality(problems,dim,'LPT',lastStep)$Stats; lpt$Track='LPT'
+  lwr=findStepwiseOptimality(problems,dim,'LWR',lastStep)$Stats; lwr$Track='LWR'
+  mwr=findStepwiseOptimality(problems,dim,'MWR',lastStep)$Stats; mwr$Track='MWR'
 
   SDR=rbind(spt,lpt,lwr,mwr)
   SDR=formatData(SDR)

@@ -27,12 +27,6 @@ output$tabPref.settings <- renderUI({
   )
 })
 
-Dimension <- reactive({
-  dim=input$dimension
-  m=regexpr('(?<NumJobs>[0-9]+)x(?<NumMachines>[0-9]+)',dim,perl=T)
-  as.numeric(getAttribute(dim,m,1))*as.numeric(getAttribute(dim,m,2))
-})
-
 output$plot.probability <- renderPlot({
   steps=1:Dimension()
   w=stepwiseProbability(steps,input$problem,input$dimension,input$probability)

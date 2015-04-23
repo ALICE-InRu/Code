@@ -3,12 +3,21 @@ output$tabOpt <- renderUI({
     fluidRow(box(title='Settings',collapsible = T, checkboxInput('smooth', 'Smooth'))),
     fluidRow(
       box(title='Uniqueness of optimal solutions',plotOutput('plot.stepwiseUniqueness')),
-      box(title='Optimality of solutions',plotOutput('plot.stepwiseOptimality')),
-      box(title='SDR optimality w.r.t. optimal',plotOutput('plot.stepwiseSDR.wrtOPT')),
-      box(title='SDR optimality w.r.t. trajectory',plotOutput('plot.stepwiseSDR.wrtTrack'))
+      box(title='Optimality of solutions',plotOutput('plot.stepwiseOptimality'))
     )
   )
 })
+
+output$tabOptSDR <- renderUI({
+  dashboardBody(
+    fluidRow(
+      #box(title='SDR optimality w.r.t. optimal',plotOutput('plot.stepwiseSDR.wrtOPT')),
+      box(title='SDR optimality w.r.t. trajectory', width=12,
+          plotOutput('plot.stepwiseSDR.wrtTrack'))
+    )
+  )
+})
+
 
 output$tabBestWorstCase <- renderUI({
   dashboardBody(
@@ -20,24 +29,25 @@ output$tabBestWorstCase <- renderUI({
   )
 })
 
+all.dataset.Stepwise <- reactive({
+  findStepwiseOptimality(input$problems,input$dimension,'OPT', Dimension())
+})
 dataset.Stepwise <- reactive({
-  withProgress(message = 'Loading stepwise data', value = 0, {
-    findStepwiseOptimality(input$problems,input$dimension)
-  })
+  findStepwiseOptimality(input$problem,input$dimension,'OPT', Dimension())
 })
 dataset.Extremal <- reactive({
   withProgress(message = 'Loading extremal data', value = 0, {
-    findStepwiseExtremal(input$problems,input$dimension)
+    findStepwiseExtremal(input$problem,input$dimension)
   })
 })
 
 output$plot.stepwiseUniqueness <- renderPlot({
 
   dim=input$dimension
-  if(length(dataset.Stepwise()$Stats)==0) return(NULL)
+  if(length(all.dataset.Stepwise()$Stats)==0) return(NULL)
 
   withProgress(message = 'Making plotStepwiseUniqueness', value = 0, {
-    p=plotStepwiseUniqueness(dataset.Stepwise(),input$smooth)
+    p=plotStepwiseUniqueness(all.dataset.Stepwise(),input$smooth)
   })
 
   fname=paste(paste(subdir,'stepwise',sep='/'),dim,'OPT','unique',extension,sep='.')
@@ -53,10 +63,10 @@ output$plot.stepwiseUniqueness <- renderPlot({
 output$plot.stepwiseOptimality <- renderPlot({
 
   dim=input$dimension
-  if(length(dataset.Stepwise()$Stats)==0) return(NULL)
+  if(length(all.dataset.Stepwise()$Stats)==0) return(NULL)
 
   withProgress(message = 'Making plotStepwiseOptimality', value = 0, {
-    p=plotStepwiseOptimality(dataset.Stepwise(),F,input$smooth)
+    p=plotStepwiseOptimality(all.dataset.Stepwise(),F,input$smooth)
   })
   fname=paste(paste(subdir,'stepwise',sep='/'),dim,'OPT',extension,sep='.')
 
@@ -111,7 +121,7 @@ output$plot.stepwiseSDR.wrtTrack <- renderPlot({
   if(length(dataset.Stepwise()$Stats)==0) return(NULL)
 
   withProgress(message = 'Making plotStepwiseSDR.wrtTrack', value = 0, {
-    p=plotStepwiseSDR.wrtTrack(dataset.Stepwise(),dataset.Extremal(),input$problems,dim,input$smooth)
+    p=plotStepwiseSDR.wrtTrack(dataset.Stepwise(),dataset.Extremal(),dim,F,Dimension())
   })
   fname=ifelse(length(input$problems)>1,
                paste(paste(subdir,'stepwise',sep='/'),dim,'OPT','SDR','TRACK',extension,sep='.'),
@@ -132,7 +142,7 @@ output$plot.stepwiseSDR.wrtOPT <- renderPlot({
   if(length(dataset.Stepwise()$Stats)==0) return(NULL)
 
   withProgress(message = 'Making plotStepwiseSDR.wrtOPT', value = 0, {
-    p=plotStepwiseSDR.wrtOPT(dataset.Stepwise(),dataset.Extremal(),input$smooth)
+    p=plotStepwiseSDR.wrtOPT(dataset.Stepwise(),dataset.Extremal(),F)
   })
 
   fname=ifelse(length(input$problems)>1,

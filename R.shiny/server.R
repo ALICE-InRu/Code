@@ -17,4 +17,11 @@ server <- function(input, output, session) {
     lvs = levels(droplevels(subset(dataset.OPT,Dimension==input$dimension))$Problem)
     updateSelectInput(session, "problems", choices =  lvs, selected = lvs[1])
   })
+
+  Dimension <- reactive({
+    dim=input$dimension
+    m=regexpr('(?<NumJobs>[0-9]+)x(?<NumMachines>[0-9]+)',dim,perl=T)
+    as.numeric(getAttribute(dim,m,1))*as.numeric(getAttribute(dim,m,2))
+  })
+
 }

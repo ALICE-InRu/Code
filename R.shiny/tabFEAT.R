@@ -20,7 +20,7 @@ output$tabFEAT <- renderUI({
 output$plot.extremal <- renderPlot({
   problem=input$problem
   dim=input$dimension
-  Stepwise=findStepwiseOptimality(problem,dim)
+  Stepwise=findStepwiseOptimality(problem,dim,Dimension())
   if(length(Stepwise$Stats)==0) return(NULL)
   withProgress(message = 'Making plot', value = 0, {
     p=plotStepwiseExtremal(Stepwise,problem,dim,input$smooth)
@@ -40,8 +40,6 @@ output$plot.extremal <- renderPlot({
 output$plot.global <- renderPlot({
   problem=input$problem
   dim=input$dimension
-  Stepwise=findStepwiseOptimality(problem,dim)
-  if(length(Stepwise$Stats)==0) return(NULL)
   withProgress(message = 'Making plot', value = 0, {
     p=plotStepwiseFeatures(problem,dim,T)
   })
@@ -58,8 +56,6 @@ output$plot.global <- renderPlot({
 output$plot.local <- renderPlot({
   problem=input$problem
   dim=input$dimension
-  Stepwise=findStepwiseOptimality(problem,dim)
-  if(length(Stepwise$Stats)==0) return(NULL)
   withProgress(message = 'Making plot', value = 0, {
     p=plotStepwiseFeatures(problem,dim,F)
   })
