@@ -23,10 +23,6 @@ output$tabPref.settings <- renderUI({
           plotOutput("plot.probability", height = 150)),
       box(title = "Action output", width = 6, collapsible = TRUE,
           verbatimTextOutput("output.liblinearModel"))
-    ),
-    fluidRow(
-      box(plotOutput('plot.trainingDataSize')),
-      box(plotOutput('plot.preferenceSetSize'))
     )
   )
 })
@@ -103,23 +99,6 @@ output$progressProbs <- renderValueBox({
   m=regexpr(pref.files.pat,pref.files(),perl = T)
   probs=unique(getAttribute(pref.files(),m,3))
   valueBox( paste0('#',length(probs)), "probabilities", color = "lime", icon = icon("eraser "))
-})
-
-output$plot.trainingDataSize <- renderPlot({
-  input$action
-  if(isolate(input$liblinearModel)=="Estimate") {
-    p=plot.trainingDataSize(input$problem,input$dimension,input$tracks)
-    return(p)
-  }
-})
-
-output$plot.preferenceSetSize <- renderPlot({
-  input$action
-  if(isolate(input$liblinearModel)=="Estimate") {
-    p=plot.preferenceSetSize(isolate(input$problem),isolate(input$dimension),
-                             isolate(input$tracks),isolate(input$rank))
-    return(p)
-  }
 })
 
 

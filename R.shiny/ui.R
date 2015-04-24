@@ -20,6 +20,7 @@ sidebar <- dashboardSidebar(
              ),
     menuItem("Preference models", icon = icon("plane"),
              menuSubItem("LIBLINEAR settings", tabName = "prefSettings", icon = icon("car")),
+             menuSubItem("Trajectories", tabName = "prefTrajectories", icon = icon("car")),
              menuSubItem("Feature reduction", tabName = "prefExhaustive", icon = icon("car")),
              menuSubItem("Imitation learning", tabName = "prefImitationLearning", icon = icon("university"))
     ),
@@ -51,6 +52,7 @@ body <- dashboardBody(
     tabItem(tabName = "feat", uiOutput("tabFEAT")),
     tabItem(tabName = "table", uiOutput("tabTable")),
     tabItem(tabName = "prefSettings", uiOutput("tabPref.settings")),
+    tabItem(tabName = "prefTrajectories", uiOutput("tabPref.trajectories")),
     tabItem(tabName = "prefExhaustive", uiOutput("tabPref.exhaustive")),
     tabItem(tabName = "prefImitationLearning", uiOutput("tabPref.imitationLearning")),
     tabItem(tabName = "about", uiOutput("tabAbout"))
