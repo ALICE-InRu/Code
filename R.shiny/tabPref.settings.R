@@ -39,7 +39,7 @@ output$plot.probability <- renderPlot({
   steps=1:Dimension()
   w=stepwiseProbability(steps,input$problem,input$dimension,input$probability)
   df=data.frame('step'=steps,'Weight'=w)
-  ggplot(df,aes(x=step,y=Weight))+geom_line()
+  ggplot(df,aes(x=step,y=Weight))+geom_line()+scale_x_continuous(expand=c(0,0))
 })
 
 output$output.liblinearModel <- renderPrint({
@@ -55,7 +55,7 @@ output$output.liblinearModel <- renderPrint({
   timedependent=isolate(input$timedependent)
 
   if(isolate(input$liblinearModel)=="Estimate") {
-    estimateLiblinearModels(problem,dimension,ifelse(exhaustive,'exhaust','full'),probability,timedependent,tracks,rank)
+    estimate.prefModels(problem,dimension,ifelse(exhaustive,'exhaust','full'),probability,timedependent,tracks,rank)
   } else {
     patTracks=tracks
     patTracks[grepl('ILSUP',patTracks)]='IL[0-9]+SUP'
@@ -108,10 +108,7 @@ output$progressProbs <- renderValueBox({
 output$plot.trainingDataSize <- renderPlot({
   input$action
   if(isolate(input$liblinearModel)=="Estimate") {
-    dim=isolate(input$dimension)
-    p=plot.trainingDataSize(isolate(input$problem),dim,isolate(input$tracks))
-    fname=paste(paste(subdir,'trdat',sep='/'),'size',dim,extension,sep='.')
-    #ggsave(fname,p,width=Width,height=Height.half,dpi=dpi,units=units)
+    p=plot.trainingDataSize(input$problem,input$dimension,input$tracks)
     return(p)
   }
 })
@@ -119,12 +116,8 @@ output$plot.trainingDataSize <- renderPlot({
 output$plot.preferenceSetSize <- renderPlot({
   input$action
   if(isolate(input$liblinearModel)=="Estimate") {
-    dim=isolate(input$dimension)
-    p=plot.preferenceSetSize(isolate(input$problem),dim,
+    p=plot.preferenceSetSize(isolate(input$problem),isolate(input$dimension),
                              isolate(input$tracks),isolate(input$rank))
-
-    fname=paste(paste(subdir,'prefdat',sep='/'),'size',dim,extension,sep='.')
-    #ggsave(fname,p,width=Width,height=Height.full,dpi=dpi,units=units)
     return(p)
   }
 })

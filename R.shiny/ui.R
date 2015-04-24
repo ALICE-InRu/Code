@@ -24,9 +24,9 @@ sidebar <- dashboardSidebar(
              menuSubItem("Imitation learning", tabName = "prefImitationLearning", icon = icon("university"))
     ),
     menuItem("Optimality", icon = icon("bold"),
-             menuSubItem("Uniqueness", tabName = "opt", icon = icon("university")),
+             menuSubItem("Uniqueness", tabName = "optUniqueness", icon = icon("university")),
              menuSubItem("SDR", tabName = "optSDR", icon = icon("university")),
-             menuSubItem("Best and worst case scenario", tabName = "bestWorstCase", icon = icon("university"))
+             menuSubItem("Best and worst case scenario", tabName = "optBW", icon = icon("university"))
              ),
     menuItem("Features", tabName = "feat", icon = icon("binoculars"),
              badgeLabel = "new", badgeColor = "green"),
@@ -45,9 +45,9 @@ body <- dashboardBody(
     tabItem(tabName = "bdr", uiOutput("tabBDR")),
     tabItem(tabName = "sdrDifficulty", uiOutput("tabDifficulty")),
     tabItem(tabName = "gantt", uiOutput("tabGantt")),
-    tabItem(tabName = "opt", uiOutput("tabOpt")),
-    tabItem(tabName = "optSDR", uiOutput("tabOptSDR")),
-    tabItem(tabName = "bestWorstCase", uiOutput("tabBestWorstCase")),
+    tabItem(tabName = "optUniqueness", uiOutput("tabOpt.uniqueness")),
+    tabItem(tabName = "optSDR", uiOutput("tabOpt.SDR")),
+    tabItem(tabName = "optBW", uiOutput("tabOpt.bw")),
     tabItem(tabName = "feat", uiOutput("tabFEAT")),
     tabItem(tabName = "table", uiOutput("tabTable")),
     tabItem(tabName = "prefSettings", uiOutput("tabPref.settings")),

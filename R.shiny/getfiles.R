@@ -16,7 +16,6 @@ getOPTs <- function(){
 getfiles=function(dir, pattern = 'rnd|rndn|mc|mxc|jc', fileName = F,updateRho = T){
 
   if(fileName!=F){ files=fileName } else { files=list.files(path=dir, pattern=pattern,full.names=T) }
-  print(files)
 
   allDat=NULL;
   for(file in files){
@@ -58,7 +57,7 @@ getfilesTraining=function(pattern='rnd|rndn|mc|mxc|jc',Global=T,useDiff=F, rank)
 
     gDAT=NULL;
     for(file in global){
-      gDAT = rbind(gDAT,getfiles('../trainingData',file,updateRho = F))
+      gDAT = rbind(gDAT,getfiles('../trainingData',file,updateRho = !useDiff))
     }
   } else {
     gDAT=NULL;
@@ -66,7 +65,7 @@ getfilesTraining=function(pattern='rnd|rndn|mc|mxc|jc',Global=T,useDiff=F, rank)
 
   lDAT=NULL;
   for(file in local){
-    lDAT = rbind(lDAT,getfiles('../trainingData',file,updateRho = F))
+    lDAT = rbind(lDAT,getfiles('../trainingData',file,updateRho = !useDiff))
   }
 
   if(!is.null(gDAT)){

@@ -5,6 +5,7 @@ getAttribute<-function(str,regexpr.m,id){
 formatData = function(dat,updateRho=T){
 
   if(is.null(dat)){return(NULL)}
+  if(nrow(dat)==0){return(NULL)}
 
   cols=colnames(dat)
 
