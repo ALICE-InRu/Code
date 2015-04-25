@@ -34,8 +34,8 @@ dataset.training <- reactive({
 output$plot.probability <- renderPlot({
   steps=1:Dimension()
   w=stepwiseProbability(steps,input$problem,input$dimension,input$probability)
-  df=data.frame('step'=steps,'Weight'=w)
-  ggplot(df,aes(x=step,y=Weight))+geom_line()+scale_x_continuous(expand=c(0,0))
+  df=data.frame('Step'=steps,'Weight'=w)
+  ggplot(df,aes(x=Step,y=Weight))+geom_line()+scale_x_continuous(expand=c(0,0))
 })
 
 output$output.liblinearModel <- renderPrint({

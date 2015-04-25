@@ -1,17 +1,17 @@
-stepwiseProbability <- function(STEP,problem,dim,probability){
-  dim=max(STEP)
-  half=round(dim/2,digit=0)
-  last=dim-half
+stepwiseProbability <- function(steps,problem,dim,probability){
+  nDim=max(steps)
+  half=round(nDim/2,digit=0)
+  last=nDim-half
   w=switch(probability,
-           'linear'=1:max(STEP),
-           'opt'=1-get.StepwiseOptimality(problem,dim)$Stats$rnd.mu,
+           'linear'=1:max(steps),
+           'opt'=1-get.StepwiseOptimality(problem,dim,'OPT',nDim)$Stats$rnd.mu,
            'bcs'=subset(get.BestWorst(problem,dim),Track=='OPT' & Followed==F)$best.mu,
            'wcs'=subset(get.BestWorst(problem,dim),Track=='OPT' & Followed==F)$worst.mu,
            'dbl1st'=c(rep(2,half),rep(1,last)),
            'dbl2nd'=c(rep(1,half),rep(2,last)),
-           rep(1,max(STEP)))
+           rep(1,max(steps)))
   w=w/sum(w); # normalize
-  return(w[STEP])
+  return(w[steps])
 }
 
 estimate.prefModels <- function(problem,dim,start,probability,timedependent,tracks,rank){
