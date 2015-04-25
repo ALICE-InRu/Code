@@ -17,10 +17,12 @@ plot.SDR <- function(dat,type='boxplot',save=NA){
   dim=ifelse(length(levels(dat$Dimension))>1,'ALL',dat$Dimension[1])
   fname=paste(paste(dir,'SDR',dim,sep='.'),extension,sep='.')
 
-  if(save=='full')
-    ggsave(filename=fname,plot=p, height=Height.full, width=Width, dpi=dpi, units=units)
-  else if(save=='half')
-    ggsave(filename=fname,plot=p, height=Height.half, width=Width, dpi=dpi, units=units)
+  if(!is.na(save)){
+    if(save=='full')
+      ggsave(filename=fname,plot=p, height=Height.full, width=Width, dpi=dpi, units=units)
+    else if(save=='half')
+      ggsave(filename=fname,plot=p, height=Height.half, width=Width, dpi=dpi, units=units)
+  }
 
   return(p)
 }
@@ -40,11 +42,13 @@ plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.split,save=NA){
     ggplotColor('Data set',1)+
     ggplotFill('Dispatching rule',3,c(BDR,sdrNames[grep(unique(dat$SDR)[2],sdrs)],sdrNames[grep(unique(dat$SDR)[3],sdrs)]))
 
-  fname=paste(subdir,'boxplotRho.BDR.10x10','.',extension,sep='')
-  if(save=='full')
-    ggsave(filename=fname,plot=p, height=Height.full, width=Width, dpi=dpi, units=units)
-  else if(save=='half')
-    ggsave(filename=fname,plot=p, height=Height.half, width=Width, dpi=dpi, units=units)
+  if(!is.na(save)){
+    fname=paste(subdir,'boxplotRho.BDR.10x10','.',extension,sep='')
+    if(save=='full')
+      ggsave(filename=fname,plot=p, height=Height.full, width=Width, dpi=dpi, units=units)
+    else if(save=='half')
+      ggsave(filename=fname,plot=p, height=Height.half, width=Width, dpi=dpi, units=units)
+  }
 
   return(p)
 }

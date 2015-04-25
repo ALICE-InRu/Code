@@ -69,13 +69,16 @@ plot.StepwiseFeatures <- function(problem,dim,local,global,save=NA){
   dim=stat$Dimension[1]
   fname=paste(paste(subdir,problem,'stepwise',sep='/'),dim,'Track','evolution',ifelse(local & global, 'ALL', ifelse(global,'Global','Local')),extension,sep='.')
 
-  if(save=='full')
-    ggsave(filename=fname,plot=p, height=Height.full, width=Width, dpi=dpi, units=units)
-  else if(save=='half')
-    ggsave(filename=fname,plot=p, height=Height.half, width=Width, dpi=dpi, units=units)
+  if(!is.na(save)){
+    if(save=='full')
+      ggsave(filename=fname,plot=p, height=Height.full, width=Width, dpi=dpi, units=units)
+    else if(save=='half')
+      ggsave(filename=fname,plot=p, height=Height.half, width=Width, dpi=dpi, units=units)
+  }
 
+  title=expression('Evolution of feature ' * ~ bold(phi))
   if(global & local){
-    pLocal=plotOne(stat,'Local')+scale_y_continuous(breaks=seq(-1, 1, 1))
+    pLocal=plotOne(stat,'Local')+ggtitle(title)
     pGlobal=plotOne(stat,'Global')
     require(gridExtra)
     if(save) pdf(fname,width = Width, height = Height.full)
@@ -85,9 +88,9 @@ plot.StepwiseFeatures <- function(problem,dim,local,global,save=NA){
   } else if(global)
     p=plotOne(stat,'Global')
   else
-    p=plotOne(stat,'Local')+scale_y_continuous(breaks=seq(-1, 1, 1))
+    p=plotOne(stat,'Local')
 
-  p=p+ggtitle(expression('Evolution of feature ' * ~ bold(phi)))
+  p=p+ggtitle(title)
 
   return(p)
 }
