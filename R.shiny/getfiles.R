@@ -5,7 +5,7 @@ library('data.table')
 #library('readr') # not working properly due to Rcpp package on server
 
 getOPTs <- function(){
-  OPT=getfiles('../OPT',updateRho = F); colnames(OPT)[grep('Makespan',colnames(OPT))]='Optimum'
+  OPT=getfiles('../OPT',updateRho = F, adjust = F); colnames(OPT)[grep('Makespan',colnames(OPT))]='Optimum'
   OPT=subset(OPT,Solved=='opt');
   stat=ddply(OPT,~Problem+Dimension+Set,function(X) data.frame(Optimum = as.list(summary(X$Optimum)),Model.Cnt=nrow(X)))
   print(stat)
@@ -13,7 +13,7 @@ getOPTs <- function(){
   return(OPT)
 }
 
-getfiles=function(dir, pattern = 'rnd|rndn|mc|mxc|jc', fileName = F,updateRho = T){
+getfiles=function(dir, pattern = 'rnd|rndn|mc|mxc|jc', fileName = F,updateRho = T, adjust=F){
 
   if(fileName!=F){ files=fileName } else { files=list.files(path=dir, pattern=pattern,full.names=T) }
 
@@ -37,7 +37,7 @@ getfiles=function(dir, pattern = 'rnd|rndn|mc|mxc|jc', fileName = F,updateRho = 
     allDat<-rbind(allDat,pdat);
   }
 
-  return(formatData(allDat,updateRho))
+  return(formatData(allDat,updateRho,adjust))
 }
 
 getfilesTraining=function(pattern='rnd|rndn|mc|mxc|jc',Global=T,useDiff=F, rank){

@@ -49,14 +49,47 @@ get.preferenceSetSize <- function(problems,dim,tracks,ranks){
 }
 
 plot.preferenceSetSize <- function(preferenceSetSize){
-  #stats$Rank <- factor(stats$Rank, levels=levels(stats$Rank), labels=paste0('S[',levels(stats$Rank),']'))
-  p=ggplot(preferenceSetSize, aes(x=Step,y=V1,color=Track))+
+  preferenceSetSize$Rank <- factor(preferenceSetSize$Rank,
+                                   levels=c('p','f','b','a'),
+                                   labels=c('partial subsequent','full subsequent','base','all'))
+  p=ggplot(preferenceSetSize, aes(x=Step,y=V1,color=Rank))+
     geom_line(size=1)+
-    #facet_grid(Problem~Rank,scales='free_y',labeller = label_parsed)+
-    facet_grid(Problem~Rank,scales='free_y',labeller = label_both)+
-    ggplotColor('Track',num = length(levels(preferenceSetSize$Track)))+
+    facet_grid(Problem~Track,scales='free_y')+
+    ggplotColor('Ranking',num = 4)+
     ylab(expression('Size of preference set, |' * S * '|'))+
     axisStep(preferenceSetSize$Step)+axisCompact
+  return(p)
+}
+
+plot.preferenceSetBoxPlot <- function(problems,dim,tracks,ranks){
+
+}
+
+pref.boxplot <- function(CDR,SDR=NULL,ColorVar,xVar='CDRlbl',xText='CDR',tiltText=T,lineTypeVar=NA){
+
+  colnames(CDR)[grep(ColorVar,colnames(CDR))]='ColorVar'
+  colnames(CDR)[grep(xVar,colnames(CDR))]='xVar'
+
+  if(!is.na(lineTypeVar))
+    colnames(CDR)[grep(lineTypeVar,colnames(CDR))]='lineTypeVar'
+
+  if(!is.null(SDR)){
+    SDR <- subset(SDR,Name %in% CDR$Name)
+    SDR$xVar=SDR$SDR
+  }
+  p=ggplot(CDR,aes(x=as.factor(xVar),y=Rho))
+
+  if(!is.na(lineTypeVar))
+    p=p+geom_boxplot(aes(color=ColorVar,linetype=lineTypeVar))+scale_linetype(lineTypeVar)
+  else
+    p=p+geom_boxplot(aes(color=ColorVar))
+
+  if(!is.null(SDR)){ p=p+geom_boxplot(data=SDR,aes(fill=SDR))+ggplotFill('SDR',4);}
+  p=p+facet_grid(Set~Problem,scale='free_x') +
+    ggplotColor(xText,length(unique(CDR$ColorVar))) +
+    xlab('')+ylab(rhoLabel)
+
+  if(tiltText){ p=p+theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) }
   return(p)
 }
 

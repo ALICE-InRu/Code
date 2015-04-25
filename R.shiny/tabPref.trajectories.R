@@ -12,7 +12,9 @@ trainingDataSize <- reactive({
 })
 
 output$plot.trainingDataSize <- renderPlot({
-  plot.trainingDataSize(trainingDataSize())
+  withProgress(message = 'Plotting training set size', value = 0, {
+    plot.trainingDataSize(trainingDataSize())
+  })
 })
 
 preferenceSetSize <- reactive({
@@ -20,7 +22,7 @@ preferenceSetSize <- reactive({
 })
 
 output$plot.preferenceSetSize <- renderPlot({
-  plot.preferenceSetSize(preferenceSetSize())
+  withProgress(message = 'Plotting preference set size', value = 0, {
+    plot.preferenceSetSize(preferenceSetSize())
+  })
 })
-
-

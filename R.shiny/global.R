@@ -17,7 +17,7 @@ rhoLabel=expression("Deviation from optimality," * ~ rho * ~ " (%)")
 
 if(file.exists('startUp.Rdata')){ load('startUp.Rdata')} else {
   dataset.OPT=getOPTs()
-  all.dataset.SDR=getfiles('../SDR/')
+  all.dataset.SDR=getfiles('../SDR/',adjust=F)
   save(list=c('dataset.OPT','all.dataset.SDR'),file='startUp.Rdata')
 }
 

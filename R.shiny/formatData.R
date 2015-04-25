@@ -2,19 +2,12 @@ getAttribute<-function(str,regexpr.m,id){
   substr(str,attr(regexpr.m,'capture.start')[,id],attr(regexpr.m,'capture.start')[,id]+attr(regexpr.m,'capture.length')[,id]-1)
 }
 
-formatData = function(dat,updateRho=T){
+formatData = function(dat,updateRho=T,adjusted=T){
 
   if(is.null(dat)){return(NULL)}
   if(nrow(dat)==0){return(NULL)}
 
   cols=colnames(dat)
-
-  #if('PID' %in% cols){ dat$PID <- as.factor(dat$PID) }
-
-  if('Step' %in% cols){
-    if(min(dat$Step)==0) { dat$Step=dat$Step+1 } # in order for step to start at 1
-    #dat$Step=as.factor(dat$Step)
-  }
 
   if('NumJobs' %in% cols & 'NumMachines' %in% cols) {
     dat$NumJobs <- as.factor(dat$NumJobs)
@@ -24,6 +17,26 @@ formatData = function(dat,updateRho=T){
   } else  if ('Dimension' %in% cols) {
     dat$Dimension <- factor(dat$Dimension, levels = c('6x5','8x8','10x10','12x12','14x14'))
   }
+
+  if(!('Name' %in% cols) & all(c('Problem','Dimension','Set','PID') %in% cols)){
+    dat$Name = interaction(dat$Problem,dat$Dimension,dat$Set,dat$PID)
+  }
+
+  if(updateRho){
+    if('Makespan' %in% cols){
+      dat <- join(dat,dataset.OPT[,c('Name','Optimum')],by='Name',type='inner')
+      dat$Rho =  (dat$Makespan-dat$Optimum)/dat$Optimum*100
+    } else if('ResultingOptMakespan' %in% cols){
+      dat <- join(dat,dataset.OPT[,c('Name','Optimum')],by='Name',type='inner')
+      dat$Rho = (dat$ResultingOptMakespan-dat$Optimum)/dat$Optimum*100
+    }
+  }
+
+  if('Step' %in% cols){
+    if(min(dat$Step)==0) { dat$Step=dat$Step+1 } # in order for step to start at 1
+    #dat$Step=as.factor(dat$Step)
+  }
+
   if('Shop' %in% cols & 'Distribution' %in% cols & !('Problem' %in% cols)){
     dat$Shop=factor(dat$Shop,levels=c('j','f'))
     dat$Distribution=factor(dat$Distribution, levels=c('rnd','rndn','rnd_p1mdoubled','rnd_pj1doubled','jc','mc','mxc'))
@@ -35,21 +48,20 @@ formatData = function(dat,updateRho=T){
     dat$Problem=factor(dat$Problem, levels=c('j.rnd','j.rndn','j.rnd_p1mdoubled','j.rnd_pj1doubled','f.rnd','f.rndn','f.jc','f.mc','f.mxc'))
     levels(dat$Problem)=c('j.rnd','j.rndn','j.rnd, J1','j.rnd, M1','f.rnd','f.rndn','f.jc','f.mc','f.mxc')
   }
+
   if('SDR' %in% cols){ dat$SDR=factor(dat$SDR,levels=sdrs) }
   if('Track' %in% cols){
-    dat$Extended=grepl('EXT',dat$Track)
-    if(!updateRho){
+    if(!('Extended' %in% cols)) {
+      dat$Extended=grepl('EXT',dat$Track)
       ix=dat$Extended
       dat$PID[ix] = dat$PID[ix]-min(dat$PID[ix])+1
     }
-
     ix=dat$Track=='OPTEXT'
     if(any(ix)){dat$Track[ix]='OPT'}
 
     if (any(grepl('SUP',dat$Track))){
       if(!('Supervision' %in% cols)){
-        dat$Supervision=ifelse(grepl('UNSUP',dat$Track),'Unsupervised',ifelse(grepl('FIX',dat$Track),'Fixed','Decreasing'))
-        dat$Supervision=as.factor(dat$Supervision)
+        dat$Supervision=ifelse(grepl('UNSUP',dat$Track),'Unsupervised',ifelse(grepl('FIX',dat$Track)|dat$Track=='OPT','Fixed','Decreasing'))
       }
 
       m=regexpr('IL(?<Iter>[0-9]+)',dat$Track,perl=T)
@@ -57,11 +69,8 @@ formatData = function(dat,updateRho=T){
       ix=!is.na(dat$Iter)
       dat$Track[ix]=paste('IL',dat$Iter[ix],sep='')
       dat$Iter[is.na(dat$Iter)]=0
-      ils=paste('IL',1:max(dat$Iter),sep='')
-      dat$Track=factor(dat$Track, levels=c(sdrs,'OPT','RND','ALL',ils))
     } else {
-      dat$Track=factor(dat$Track, levels=c(sdrs,'OPT','RND','ALL'))
-      dat$Supervision=ifelse(grepl('OPT',dat$Track),'Supervised','Unsupervised')
+      dat$Supervision=ifelse(grepl('OPT',dat$Track),'Fixed','Unsupervised')
       dat$Iter=0
     }
   }
@@ -99,10 +108,11 @@ formatData = function(dat,updateRho=T){
   if('Model' %in% cols){ dat$Model <- as.factor(dat$Model)}
 
   if(all(c('Problem','Dimension','Set','PID') %in% colnames(dat))){
+    if(!('Extended' %in% colnames(dat))){ dat$Extended=F }
 
-    if(!any(dat$Extended)){
-      dat=subset(dat,!(Dimension=='10x10' & Set=='test'))
-      ix=dat$Dimension=='10x10'
+    if(adjusted & !any(dat$Extended)){
+      dat=subset(dat,!(Dimension=='10x10' & Set=='test' & Extended==F))
+      ix=dat$Dimension=='10x10' & dat$Extended==F
       if(any(ix)){
         Ntrain10x10=300
         #print('Updating sets for 10x10 data')
@@ -111,17 +121,7 @@ formatData = function(dat,updateRho=T){
       Ntrain6x5=500
       dat=subset(dat,!(Dimension=='6x5' & Set=='train' & PID>Ntrain6x5))
     }
-    dat$Name = interaction(dat$Problem,dat$Dimension,dat$Set,dat$PID)
-  }
 
-  if(updateRho){
-    if('Makespan' %in% colnames(dat)){
-      dat <- join(dat,dataset.OPT[,c('Name','Optimum')],by='Name',type='inner')
-      dat$Rho =  (dat$Makespan-dat$Optimum)/dat$Optimum*100
-    } else if('ResultingOptMakespan' %in% colnames(dat)){
-      dat <- join(dat,dataset.OPT[,c('Name','Optimum')],by='Name',type='inner')
-      dat$Rho = (dat$ResultingOptMakespan-dat$Optimum)/dat$Optimum*100
-    }
   }
 
   # make isMWR etc. logical
@@ -148,7 +148,7 @@ formatData = function(dat,updateRho=T){
     colnames(dat)[grep('macfree',colnames(dat))]='macFree'
   }
   cols=colnames(dat)
-  if('Feature' %in% cols){
+  if('Feature' %in% cols & !('Featurelbl' %in% cols)){
 
     if(length(grep('phi',dat$Feature))>0){dat$Feature=substr(dat$Feature,5,100)} # remove 'phi.' from variable name (cleaner)
 
@@ -179,6 +179,13 @@ formatData = function(dat,updateRho=T){
     dat$CDR = interaction(dat$NrFeat,dat$Model,dat$Prob)
     dat$CDRlbl = interaction(dat$NrFeat,dat$Model)
     if(length(unique(dat$Prob))>1){ dat$CDRlbl=dat$CDR }
+  }
+
+  if('Supervision' %in% colnames(dat)){
+    dat$Supervision=factor(dat$Supervision,levels=c('Fixed','Decreasing','Unsupervised'))
+  }
+  if('Track' %in% colnames(dat)){
+    dat$Track=factor(dat$Track, levels=c(sdrs,'OPT','RND','ALL',paste0('IL',1:10)))
   }
 
   return(droplevels(dat))
