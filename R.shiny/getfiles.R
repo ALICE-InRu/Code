@@ -26,12 +26,12 @@ getfiles=function(dir, pattern = 'rnd|rndn|mc|mxc|jc', fileName = F,updateRho = 
     str=str_match(file, "[a-z].[a-z]*.[0-9]+x[0-9]+.[A-Z]{2}[A-Z0-9]+")
     if(!is.na(str)){
       track=as.character(str_match(str, "[A-Z]{2}[A-Z0-9]+"))
-      dimension=as.character(str_match(str, "[0-9]+x[0-9]+"))
+      dim=as.character(str_match(str, "[0-9]+x[0-9]+"))
       problem=as.character(str_match(str, "[a-z].[a-z]*"))
       if(!('Shop'%in% colnames(pdat))) { pdat$Shop=substr(problem,1,1)}
       if(!('Distribution'%in% colnames(pdat))) {pdat$Distribution=substr(problem,3,100) }
       if(!('Problem' %in% colnames(pdat))) { pdat$Problem=problem }
-      if(!('Dimension' %in% colnames(pdat))){ pdat$Dimension=dimension }
+      if(!('Dimension' %in% colnames(pdat))){ pdat$Dimension=dim }
       if(!('Track' %in% colnames(pdat)) & !is.na(track)){ pdat$Track=track }
     }
     allDat<-rbind(allDat,pdat);
@@ -115,18 +115,18 @@ getTrainingDataRaw  <- function(problems,dim,tracks,rank='p',useDiff=F, global=F
   return(allDat)
 }
 
-getSingleCDR=function(logFile,NrFeat,Model,problem=NULL,dimension=NULL,set='train'){
+getSingleCDR=function(logFile,NrFeat,Model,problem=NULL,dim=NULL,set='train'){
 
   if(grepl('.csv$',logFile)){logFile=substr(logFile,1,str_length(logFile)-4)}
 
   model.rex="(?<Problem>[a-z].[a-z]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Probability>[a-z0-9]+).weights.time"
   m=regexpr(model.rex,logFile,perl=T)
   if(is.null(problem)){ problem = getAttribute(logFile,m,1) }
-  if(is.null(dimension)){ dimension = getAttribute(logFile,m,2)}
+  if(is.null(dim)){ dim = getAttribute(logFile,m,2)}
   Track=getAttribute(logFile,m,4)
   Prob=getAttribute(logFile,m,5)
 
-  fname=paste('../liblinear','CDR',logFile,paste(paste('F',NrFeat,sep=''),paste('Model',Model,sep=''),'on',problem,dimension,set,'csv',sep='.'),sep='/')
+  fname=paste('../liblinear','CDR',logFile,paste(paste('F',NrFeat,sep=''),paste('Model',Model,sep=''),'on',problem,dim,set,'csv',sep='.'),sep='/')
   if(!file.exists(fname)){return(NULL)}
   dat=read.csv(fname)
   dat$Problem=problem
@@ -138,21 +138,3 @@ getSingleCDR=function(logFile,NrFeat,Model,problem=NULL,dimension=NULL,set='trai
   return(dat)
 }
 
-getBestCDR=function(best.model){
-  CDR=NULL
-
-  for(r in 1:nrow(best.model)){
-    problem=best.model[r,'Problem']
-
-    for(var in colnames(best.model)[2:ncol(best.model)]){
-      m=str_split_fixed(best.model[r,var],'.csv.',2)
-      n=str_split_fixed(m[2],'[.]',2)
-      dat=getSingleCDR(m[1],n[1],n[2])
-      if(!is.null(dat)){
-        dat$Best=factor(var)
-        CDR <- rbind(CDR,dat)
-      }
-    }
-  }
-  return(formatData(CDR) )
-}

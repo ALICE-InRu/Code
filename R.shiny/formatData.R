@@ -51,10 +51,10 @@ formatData = function(dat,updateRho=T,adjusted=T){
 
   if('SDR' %in% cols){ dat$SDR=factor(dat$SDR,levels=sdrs) }
   if('Track' %in% cols){
-    if(!('Extended' %in% cols)) {
+    if(!('Extended' %in% cols) & 'PID' %in% cols) {
       dat$Extended=grepl('EXT',dat$Track)
       ix=dat$Extended
-      dat$PID[ix] = dat$PID[ix]-min(dat$PID[ix])+1
+      if(any(ix)){ dat$PID[ix] = dat$PID[ix]-min(dat$PID[ix])+1 }
     }
     ix=dat$Track=='OPTEXT'
     if(any(ix)){dat$Track[ix]='OPT'}
@@ -110,7 +110,7 @@ formatData = function(dat,updateRho=T,adjusted=T){
   if(all(c('Problem','Dimension','Set','PID') %in% colnames(dat))){
     if(!('Extended' %in% colnames(dat))){ dat$Extended=F }
 
-    if(adjusted & !any(dat$Extended)){
+    if(adjusted & !any(dat$Extended) & 'PID'%in%cols){
       dat=subset(dat,!(Dimension=='10x10' & Set=='test' & Extended==F))
       ix=dat$Dimension=='10x10' & dat$Extended==F
       if(any(ix)){

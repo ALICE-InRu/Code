@@ -1,4 +1,4 @@
-stat.BestWorst <- function(problems,dim){
+get.BestWorst <- function(problems,dim){
 
   allStat=NULL
   for(problem in problems){
@@ -31,7 +31,7 @@ stat.BestWorst <- function(problems,dim){
 
 plot.BestWorst <- function(problems,dim,track,save=NA){
 
-  stat=stat.BestWorst(problems,dim)
+  stat=get.BestWorst(problems,dim)
   if(is.null(stat)){return(NULL)}
 
   if(track=='OPT')

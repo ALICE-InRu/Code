@@ -40,10 +40,10 @@ mytheme <- theme_update(axis.text.y = element_blank(),
 theme_set(mytheme)
 themeVerticalLegend <- theme_set(mytheme) # + theme(legend.position='right', legend.box = 'vertical')
 mytheme <- theme_update(legend.justification='center',legend.position='bottom',legend.box = "horizontal")
-axisCompact <- list(
-  scale_x_continuous(expand=c(0,0)), scale_y_continuous(expand=c(0,0)))
-axisProbability <- list(
-  scale_x_continuous(expand=c(0,0)), scale_y_continuous(limits=c(0,1), expand=c(0,0)))
+axisCompactY <- list(scale_y_continuous(expand=c(0,0)))
+axisCompactX <- list(scale_x_continuous(expand=c(0,0)))
+axisCompact <- list(axisCompactX, axisCompactY)
+axisProbability <- list(axisCompactX, scale_y_continuous(limits=c(0,1), expand=c(0,0)))
 axisStep <- function(STEP){ list(expand_limits(x = c(1,ceiling(max(STEP)/10)*10))) }
 
 #legend.justification='center',legend.position='right',legend.box = "vertical", # right

@@ -1,4 +1,4 @@
-table.paretoFront = function(paretoFront,onlyPareto=F){
+table.exhaust.paretoFront = function(paretoFront,onlyPareto=F){
   if(is.null(paretoFront)){return(NULL)}
   if(onlyPareto){paretoFront=subset(paretoFront,Pareto.front==T)}
   library('xtable')
@@ -13,7 +13,8 @@ table.paretoFront = function(paretoFront,onlyPareto=F){
   return(xtable(tmp))#,include.rownames=FALSE,sanitize.text.function=function(x){x})
 }
 
-plot.linearWeights <- function(paretoFront,timedependent,save=NA){
+plot.exhaust.paretoWeights <- function(paretoFront,timedependent=F,save=NA){
+  if(is.null(paretoFront$File)){return(NULL)}
 
   weights=NULL
   for(file in unique(paretoFront$File)){
@@ -44,7 +45,7 @@ plot.linearWeights <- function(paretoFront,timedependent,save=NA){
   return(p)
 }
 
-plot.exhaust.best <- function(StepwiseOptimality,bestPrefModel,save=NA){
+plot.exhaust.bestAcc <- function(StepwiseOptimality,bestPrefModel,save=NA){
   if(is.null(bestPrefModel)|is.null(StepwiseOptimality)) { return(NULL) }
 
   p0=plot.stepwiseOptimality(StepwiseOptimality,T,F)
@@ -66,30 +67,68 @@ plot.exhaust.best <- function(StepwiseOptimality,bestPrefModel,save=NA){
   return(p)
 }
 
-plot.trainingAcc <- function(prefSummary,save=NA){
+plot.exhaust.bestBoxplot <- function(bestPrefModel,SDR=NULL,save=NA){
+  if(is.null(bestPrefModel)){return(NULL)}
+
+  getBestCDR=function(bestSummary){
+    CDR=NULL
+
+    for(r in 1:nrow(bestSummary)){
+      problem=bestSummary[r,'Problem']
+
+      for(var in colnames(bestSummary)[2:ncol(bestSummary)]){
+        m=str_split_fixed(bestSummary[r,var],'.csv.',2)
+        n=str_split_fixed(m[2],'[.]',2)
+        dat=getSingleCDR(m[1],n[1],n[2])
+        if(!is.null(dat)){
+          dat$Best=factor(var)
+          CDR <- rbind(CDR,dat)
+        }
+      }
+    }
+    return(formatData(CDR) )
+  }
+
+  CDR = getBestCDR(bestPrefModel$Summary)
+  if(is.null(CDR)){return(NULL)}
+  p=pref.boxplot(CDR,SDR,'Best')
+
+  if(!is.na(save)){
+    dim=ifelse(length(levels(CDR$Dimension))==1,as.character(CDR$Dimension[1]),'ALL')
+    prob = ifelse(length(levels(CDR$Prob))==1,as.character(CDR$Prob[1]),'ALL')
+    fname=paste(subdir,paste('boxplotRho','CDR',dim,prob,extension,sep='.'),sep='/')
+    if(save=='half'){
+      ggsave(p,filename=fname,width=Width,height=Height.half,units=units,dpi=dpi)
+    }
+  }
+  return(p)
+}
+
+plot.exhaust.acc <- function(prefSummary,save=NA){
   if(is.null(prefSummary)) return(NULL)
 
-  p=ggplot(prefSummary,aes(y=Validation.Rho))+facet_grid(~Problem, scales='free')+
-    geom_point(aes(x=Validation.Accuracy.Classification,color='classification',shape=Prob))+
-    geom_point(aes(x=Validation.Accuracy.Optimality,color='optimality',shape=Prob))+
+  p=ggplot(prefSummary,aes(y=Validation.Rho,shape=Prob))+
+    facet_grid(~Problem, scales='free')+
+    geom_point(aes(x=Validation.Accuracy.Classification,color='classification'))+
+    geom_point(aes(x=Validation.Accuracy.Optimality,color='optimality'))+
     ggplotColor(name = "Mean stepwise", num=2)+
     ylab(expression('Expected mean for'*~rho*~'(%)'))+
     xlab('Validation accuracy (%)')
 
   Probability=ifelse(length(levels(prefSummary$Prob))>1,'ALL',prefSummary$Prob[1])
-  Problem=ifelse(length(levels(prefSummary$Problem))>1,'ALL',prefSummary$Problem[1])
-
   if(Probability!='ALL'){p=p+scale_shape_discrete(guide = F)}
 
   if(!is.na(save)){
+    Problem=ifelse(length(levels(prefSummary$Problem))>1,'ALL',prefSummary$Problem[1])
     fname=paste(subdir,paste('training','accuracy',Probability,Problem,extension,sep='.'),sep='/')
-    if(save=='half')
+    if(save=='half'){
       ggsave(fname,p,units=units,width=Width,height=Height.half)
+    }
   }
   return(p)
 }
 
-plot.paretoFront <- function(prefSummary,paretoFront,plotAllSolutions=T,save=NA){
+plot.exhaust.paretoFront <- function(prefSummary,paretoFront,plotAllSolutions=T,save=NA){
   if(is.null(prefSummary)|is.null(paretoFront)) return(NULL)
   p=ggplot(prefSummary,aes(x=Validation.Accuracy.Optimality, y=Validation.Rho,color=NrFeat))+
     facet_grid(~Problem,scales='free_y')
@@ -137,6 +176,7 @@ rankPareto <- function(weights,byVar){
 
   return(list(Front=front,Ranked=weights))
 }
+
 get.prefAccuracy <- function(model,type=NULL,onlyMean=F){
   m=regexpr(".(?<Dimension>[0-9]+x[0-9]+).",model,perl=T)
   dim=getAttribute(model,m,1)
@@ -184,7 +224,8 @@ get.optAccuracy <- function(model,reportMean=T){
   }
   return(acc)
 }
-get.prefSummary <- function(problems,dim,tracks,rank,probabilities,timedependent){
+
+get.prefSummary <- function(problems,dim,tracks='OPT',rank='p',probabilities='equal',timedependent=F){
 
   get.prefSummary1 <- function(logFile,Set='Validation'){
     rho.stats = rho.statistic(logFile)
@@ -226,45 +267,45 @@ get.bestPrefModel <- function(paretoFront){
   if(is.null(paretoFront)) return(NULL)
 
   paretoFront$BestInfo=interaction(paretoFront$File,paretoFront$NrFeat,paretoFront$Model)
-  best.model = ddply(paretoFront,~Problem,summarise,Max.Accuracy.Optimality=BestInfo[Validation.Accuracy.Optimality==max(Validation.Accuracy.Optimality)],Min.Rho=BestInfo[Validation.Rho==min(Validation.Rho)])
+  Summary = ddply(paretoFront,~Problem,summarise,Max.Accuracy.Optimality=BestInfo[Validation.Accuracy.Optimality==max(Validation.Accuracy.Optimality)],Min.Rho=BestInfo[Validation.Rho==min(Validation.Rho)])
 
-  best=NULL
-  for(i in 1:nrow(best.model))
+  Stepwise=NULL
+  for(i in 1:nrow(Summary))
   {
-    tmp=subset(paretoFront, Problem==best.model$Problem[i] & BestInfo==best.model$Max.Accuracy.Optimality[i])
+    tmp=subset(paretoFront, Problem==Summary$Problem[i] & BestInfo==Summary$Max.Accuracy.Optimality[i])
     acc=subset(get.optAccuracy(tmp$File,F),NrFeat==tmp$NrFeat & Model==tmp$Model)
     acc=acc[,c('Step','validation.isOptimal')];colnames(acc)[2]='value'
     acc$Problem=tmp$Problem;
     acc$CDRlbl=tmp$CDRlbl
     acc$variable='Max.Accuracy.Optimality'
     acc$Accuracy='Optimality'
-    best=rbind(best,acc)
+    Stepwise=rbind(Stepwise,acc)
     acc=subset(get.prefAccuracy(tmp$File,'Validation.Accuracy'),NrFeat==tmp$NrFeat & Model==tmp$Model)
     acc=acc[,c('Step','value')]
     acc$Problem=tmp$Problem;
     acc$CDRlbl=tmp$CDRlbl
     acc$variable='Max.Accuracy.Optimality'
     acc$Accuracy='Classification'
-    best=rbind(best,acc)
+    Stepwise=rbind(Stepwise,acc)
 
-    tmp=subset(paretoFront, Problem==best.model$Problem[i] & BestInfo==best.model$Min.Rho[i])
+    tmp=subset(paretoFront, Problem==Summary$Problem[i] & BestInfo==Summary$Min.Rho[i])
     rho=subset(get.optAccuracy(tmp$File,F),NrFeat==tmp$NrFeat & Model==tmp$Model)
     rho=rho[,c('Step','validation.isOptimal')];colnames(rho)[2]='value'
     rho$Problem=tmp$Problem
     rho$CDRlbl=tmp$CDRlbl
     rho$variable='Min.Rho'
     rho$Accuracy='Optimality'
-    best=rbind(best,rho)
+    Stepwise=rbind(Stepwise,rho)
     rho=subset(get.prefAccuracy(tmp$File,'Validation.Accuracy'),NrFeat==tmp$NrFeat & Model==tmp$Model)
     rho=rho[,c('Step','value')]
     rho$Problem=tmp$Problem
     rho$CDRlbl=tmp$CDRlbl
     rho$variable='Min.Rho'
     rho$Accuracy='Classification'
-    best=rbind(best,rho)
+    Stepwise=rbind(Stepwise,rho)
   }
 
-  return(list('Summary'=best.model,'Stepwise'=best))
+  return(list('Summary'=Summary,'Stepwise'=Stepwise))
 }
 
 get.pareto.ks <- function(paretoFront,problem,onlyPareto=T,SDR=NULL){

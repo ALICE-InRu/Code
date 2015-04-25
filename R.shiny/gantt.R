@@ -1,5 +1,5 @@
-dispatchData <- function(problem,dimension,SDR,plotPID=-1){
-  trdat <- getTrainingDataRaw(problem,dimension,SDR)
+dispatchData <- function(problem,dim,SDR,plotPID=-1){
+  trdat <- getTrainingDataRaw(problem,dim,SDR)
   if(plotPID>0){ trdat <- subset(trdat,PID==plotPID) }
   if(nrow(trdat)<1){return(NULL)}
 
@@ -53,9 +53,9 @@ plotStep <- function(trdat,step){
   return(p)
 }
 
-createGif <- function(problem,dimension,SDR){
+createGif <- function(problem,dim,SDR){
 
-  trdat=dispatchData(problem,dimension,SDR)
+  trdat=dispatchData(problem,dim,SDR)
 
   ## save images and convert them to a single GIF
   library(animation)
@@ -64,6 +64,6 @@ createGif <- function(problem,dimension,SDR){
       print(plotStep(trdat,step))
     }
     print(plotStep(trdat,step+1))
-  }, interval = 0.5, movie.name = paste(problem,dimension,SDR,'gif',sep='.'), ani.width = 600, ani.height = 250, loop=F)
+  }, interval = 0.5, movie.name = paste(problem,dim,SDR,'gif',sep='.'), ani.width = 600, ani.height = 250, loop=F)
 
 }

@@ -74,7 +74,7 @@ pref.boxplot <- function(CDR,SDR=NULL,ColorVar,xVar='CDRlbl',xText='CDR',tiltTex
     colnames(CDR)[grep(lineTypeVar,colnames(CDR))]='lineTypeVar'
 
   if(!is.null(SDR)){
-    SDR <- subset(SDR,Name %in% CDR$Name)
+    SDR <- subset(SDR,Dimension %in% CDR$Dimension & Problem %in% CDR$Problem)
     SDR$xVar=SDR$SDR
   }
   p=ggplot(CDR,aes(x=as.factor(xVar),y=Rho))
@@ -87,7 +87,8 @@ pref.boxplot <- function(CDR,SDR=NULL,ColorVar,xVar='CDRlbl',xText='CDR',tiltTex
   if(!is.null(SDR)){ p=p+geom_boxplot(data=SDR,aes(fill=SDR))+ggplotFill('SDR',4);}
   p=p+facet_grid(Set~Problem,scale='free_x') +
     ggplotColor(xText,length(unique(CDR$ColorVar))) +
-    xlab('')+ylab(rhoLabel)
+    xlab('')+ylab(rhoLabel)+
+    axisCompactY+expand_limits(y = 0)
 
   if(tiltText){ p=p+theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) }
   return(p)

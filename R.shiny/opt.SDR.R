@@ -1,6 +1,6 @@
-stat.StepwiseExtremal <- function(problems,dim){
+get.StepwiseExtremal <- function(problems,dim){
 
-  stat.StepwiseExtremal1 <- function(problem){
+  get.StepwiseExtremal1 <- function(problem){
 
     fname=paste('../trainingData/features/extremal',problem,dim,'csv',sep='.')
 
@@ -37,7 +37,7 @@ stat.StepwiseExtremal <- function(problems,dim){
   Extremal=list('Stats'=NULL,'Raw'=NULL)
 
   for(problem in problems){
-    tmp=stat.StepwiseExtremal1(problem)
+    tmp=get.StepwiseExtremal1(problem)
     Extremal$Raw=rbind(Extremal$Raw,tmp$Raw)
     Extremal$Stats=rbind(Extremal$Stats,tmp$Stats)
   }
@@ -85,7 +85,7 @@ plot.StepwiseSDR.wrtTrack <- function(StepwiseOptimality,StepwiseExtremal,dim,sm
   problems=unique(StepwiseOptimality$Stats$Problem)
   SDR=NULL
   for(sdr in sdrs){
-    tmp=stat.StepwiseOptimality(problems,dim,sdr,lastStep)$Stats
+    tmp=get.StepwiseOptimality(problems,dim,sdr,lastStep)$Stats
     if(!is.null(tmp)){
       tmp$Track=sdr
       SDR=rbind(SDR,tmp)

@@ -14,8 +14,8 @@ plot.SDR <- function(dat,type='boxplot',save=NA){
              'density'=geom_density(aes(x=Rho),alpha=0.25))
 
   dir=paste(subdir,paste0(type,'Rho'),sep='/')
-  dimension=ifelse(length(levels(dat$Dimension))>1,'ALL',dat$Dimension[1])
-  fname=paste(paste(dir,'SDR',dimension,sep='.'),extension,sep='.')
+  dim=ifelse(length(levels(dat$Dimension))>1,'ALL',dat$Dimension[1])
+  fname=paste(paste(dir,'SDR',dim,sep='.'),extension,sep='.')
 
   if(save=='full')
     ggsave(filename=fname,plot=p, height=Height.full, width=Width, dpi=dpi, units=units)
@@ -25,9 +25,9 @@ plot.SDR <- function(dat,type='boxplot',save=NA){
   return(p)
 }
 
-plot.BDR <- function(dimension,problems,bdr.firstSDR,bdr.secSDR,bdr.split,save=NA){
+plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.split,save=NA){
 
-  dat=fetchBDR(dimension, problems, bdr.firstSDR, bdr.secSDR, bdr.split)
+  dat=fetchBDR(dim, problems, bdr.firstSDR, bdr.secSDR, bdr.split)
   if(is.null(dat)) return()
 
   BDR=paste(bdr.firstSDR,'(first',bdr.split,'%),',bdr.secSDR,'(last',100-bdr.split,'%)')

@@ -4,9 +4,9 @@ stepwiseProbability <- function(STEP,problem,dim,probability){
   last=dim-half
   w=switch(probability,
            'linear'=1:max(STEP),
-           'opt'=1-stat.StepwiseOptimality(problem,dim)$Stats$rnd.mu,
-           'bcs'=subset(stat.BestWorst(problem,dim),Track=='OPT' & Followed==F)$best.mu,
-           'wcs'=subset(stat.BestWorst(problem,dim),Track=='OPT' & Followed==F)$worst.mu,
+           'opt'=1-get.StepwiseOptimality(problem,dim)$Stats$rnd.mu,
+           'bcs'=subset(get.BestWorst(problem,dim),Track=='OPT' & Followed==F)$best.mu,
+           'wcs'=subset(get.BestWorst(problem,dim),Track=='OPT' & Followed==F)$worst.mu,
            'dbl1st'=c(rep(2,half),rep(1,last)),
            'dbl2nd'=c(rep(1,half),rep(2,last)),
            rep(1,max(STEP)))

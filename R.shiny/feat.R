@@ -17,16 +17,16 @@ plot.StepwiseExtremal <- function(StepwiseOptimality,StepwiseExtremal,smooth,sav
     dim=ifelse(length(levels(StepwiseOptimality$Stats$Dimension))>1,'ALL',StepwiseOptimality$Stats$Dimension[1])
     fname=paste(paste(subdir,problem,'stepwise',sep='/'),dim,'OPT','extremal',extension,sep='.')
     print(fname)
-    if(input$save=='full')
+    if(save=='full')
       ggsave(filename=fname,plot=p, height=Height.full, width=Width, dpi=dpi, units=units)
-    else if(input$save=='half')
+    else if(save=='half')
       ggsave(filename=fname,plot=p, height=Height.half, width=Width, dpi=dpi, units=units)
   }
 
   return(p)
 }
 
-stat.StepwiseFeatures <- function(problem,dim){
+get.StepwiseFeatures <- function(problem,dim){
 
   fname=paste('../trainingData/features/evolution',problem,dim,'csv',sep='.')
   if(file.exists(fname)) {
@@ -45,9 +45,9 @@ stat.StepwiseFeatures <- function(problem,dim){
   return(formatData(stat))
 }
 
-plot.StepwiseFeatures <- function(problem,dimension,local,global,save=NA){
+plot.StepwiseFeatures <- function(problem,dim,local,global,save=NA){
 
-  stat = stat.StepwiseFeatures(input$problem,input$dimension)
+  stat = get.StepwiseFeatures(problem,dim)
 
   plotOne <- function(stat,Type){
     stat=subset(stat,FeatureType==Type)
@@ -69,9 +69,9 @@ plot.StepwiseFeatures <- function(problem,dimension,local,global,save=NA){
   dim=stat$Dimension[1]
   fname=paste(paste(subdir,problem,'stepwise',sep='/'),dim,'Track','evolution',ifelse(local & global, 'ALL', ifelse(global,'Global','Local')),extension,sep='.')
 
-  if(input$save=='full')
+  if(save=='full')
     ggsave(filename=fname,plot=p, height=Height.full, width=Width, dpi=dpi, units=units)
-  else if(input$save=='half')
+  else if(save=='half')
     ggsave(filename=fname,plot=p, height=Height.half, width=Width, dpi=dpi, units=units)
 
   if(global & local){

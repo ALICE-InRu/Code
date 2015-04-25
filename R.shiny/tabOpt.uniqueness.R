@@ -8,21 +8,21 @@ output$tabOpt.uniqueness <- renderUI({
   )
 })
 
-all.dataset.Stepwise <- reactive({
+all.dataset.StepwiseOptimality <- reactive({
   withProgress(message = 'Loading all stepwise data', value = 0, {
-    stat.StepwiseOptimality(input$problems,input$dimension,'OPT', Dimension())
+    get.StepwiseOptimality(input$problems,input$dimension,'OPT', Dimension())
   })
 })
 
 output$plot.stepwiseUniqueness <- renderPlot({
   withProgress(message = 'Ploting stepwise uniqueness', value = 0, {
-    plot.stepwiseUniqueness(all.dataset.Stepwise(),input$smooth,input$save)
+    plot.stepwiseUniqueness(all.dataset.StepwiseOptimality(),input$smooth,input$save)
   })
 }, height="auto")
 
 output$plot.stepwiseOptimality <- renderPlot({
   withProgress(message = 'Plotting stepwise optimality', value = 0, {
-    plot.stepwiseOptimality(all.dataset.Stepwise(),F,input$smooth,input$save)
+    plot.stepwiseOptimality(all.dataset.StepwiseOptimality(),F,input$smooth,input$save)
   })
 }, height="auto")
 

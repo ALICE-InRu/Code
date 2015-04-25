@@ -1,6 +1,6 @@
-stat.StepwiseOptimality <- function(problems,dim,track='OPT',LastStep=-1){
+get.StepwiseOptimality <- function(problems,dim,track='OPT',LastStep=-1){
 
-  stat.StepwiseOptimality1 <- function(problem){
+  get.StepwiseOptimality1 <- function(problem){
     fname=paste('../trainingData/stepwise',problem,dim,track,'csv',sep='.')
 
     if(file.exists(fname)){ split=read.csv(fname) } else {
@@ -40,7 +40,7 @@ stat.StepwiseOptimality <- function(problems,dim,track='OPT',LastStep=-1){
   Stepwise=list('Stats'=NULL,'Raw'=NULL)
 
   for(problem in problems){
-    tmp=stat.StepwiseOptimality1(problem)
+    tmp=get.StepwiseOptimality1(problem)
     if(!is.null(tmp)){
       Stepwise$Raw=rbind(Stepwise$Raw,tmp$Raw)
       Stepwise$Stats=rbind(Stepwise$Stats,tmp$Stats)

@@ -9,13 +9,13 @@ output$tabOpt.SDR <- renderUI({
 
 dataset.StepwiseOptimality <- reactive({
   withProgress(message = 'Loading optimal data', value = 0, {
-    stat.StepwiseOptimality(input$problem,input$dimension,'OPT', Dimension())
+    get.StepwiseOptimality(input$problem,input$dimension,'OPT', Dimension())
   })
 })
 
 dataset.StepwiseExtremal <- reactive({
   withProgress(message = 'Loading extremal data', value = 0, {
-    stat.StepwiseExtremal(input$problem,input$dimension)
+    get.StepwiseExtremal(input$problem,input$dimension)
   })
 })
 
