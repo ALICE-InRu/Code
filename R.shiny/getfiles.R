@@ -115,26 +115,3 @@ getTrainingDataRaw  <- function(problems,dim,tracks,rank='p',useDiff=F, global=F
   return(allDat)
 }
 
-getSingleCDR=function(logFile,NrFeat,Model,problem=NULL,dim=NULL,set='train'){
-
-  if(grepl('.csv$',logFile)){logFile=substr(logFile,1,str_length(logFile)-4)}
-
-  model.rex="(?<Problem>[a-z].[a-z]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Probability>[a-z0-9]+).weights.time"
-  m=regexpr(model.rex,logFile,perl=T)
-  if(is.null(problem)){ problem = getAttribute(logFile,m,1) }
-  if(is.null(dim)){ dim = getAttribute(logFile,m,2)}
-  Track=getAttribute(logFile,m,4)
-  Prob=getAttribute(logFile,m,5)
-
-  fname=paste('../liblinear','CDR',logFile,paste(paste('F',NrFeat,sep=''),paste('Model',Model,sep=''),'on',problem,dim,set,'csv',sep='.'),sep='/')
-  if(!file.exists(fname)){return(NULL)}
-  dat=read.csv(fname)
-  dat$Problem=problem
-  dat$NrFeat=NrFeat
-  dat$Model=Model
-  dat$Prob=Prob
-  dat$Track=Track
-
-  return(dat)
-}
-

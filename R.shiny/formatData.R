@@ -2,6 +2,25 @@ getAttribute<-function(str,regexpr.m,id){
   substr(str,attr(regexpr.m,'capture.start')[,id],attr(regexpr.m,'capture.start')[,id]+attr(regexpr.m,'capture.length')[,id]-1)
 }
 
+factorRank <- function(Rank,simple=T){
+  if(simple) { lbs=c('p','f','b','a')
+  } else  {lbs=c('partial subsequent','full subsequent','base','all')}
+  droplevels(factor(Rank, levels=c('p','f','b','a'), labels=lbs)) }
+
+factorTrack <- function(Track){
+  droplevels(factor(Track, levels=c(sdrs,'OPT','RND','ALL',paste0('IL',1:10)))) }
+
+factorRho <- function(x, var='Makespan'){
+  x <- join(x,dataset.OPT[,c('Name','Optimum')],by='Name',type='inner')
+  return((x[,var]-x$Optimum)/x$Optimum*100)
+}
+
+factorDimension <- function(x){
+  if(is.numeric(x$Dimension))
+    x$Dimension=paste(x$NumJobs,x$NumMachines,sep='x')
+  return(droplevels(factor(x$Dimension, levels = c('6x5','8x8','10x10','12x12','14x14'))))
+}
+
 formatData = function(dat,updateRho=T,adjusted=T){
 
   if(is.null(dat)){return(NULL)}
@@ -24,11 +43,9 @@ formatData = function(dat,updateRho=T,adjusted=T){
 
   if(updateRho){
     if('Makespan' %in% cols){
-      dat <- join(dat,dataset.OPT[,c('Name','Optimum')],by='Name',type='inner')
-      dat$Rho =  (dat$Makespan-dat$Optimum)/dat$Optimum*100
+      dat$Rho = factorRho(dat)
     } else if('ResultingOptMakespan' %in% cols){
-      dat <- join(dat,dataset.OPT[,c('Name','Optimum')],by='Name',type='inner')
-      dat$Rho = (dat$ResultingOptMakespan-dat$Optimum)/dat$Optimum*100
+      dat$Rho = factor(dat, 'ResultingOptMakespan')
     }
   }
 
@@ -94,8 +111,6 @@ formatData = function(dat,updateRho=T,adjusted=T){
   }
   if ('phi.slotCreated' %in% cols){ dat$phi.slotCreated = as.logical(dat$phi.slotCreated) }
 
-  if('Rank' %in% cols){ dat$Rank = as.factor(dat$Rank)}
-
   if('Scaled' %in% cols){ dat$Scaled <- as.factor(dat$Scaled)}
   if('NrFeat' %in% cols){ dat$NrFeat <- as.factor(dat$NrFeat)}
   if('Prob' %in% cols){ dat$Prob <- factor(dat$Prob, levels=c('equal','opt','bcs','wcs','dbl1st','dbl2nd'))}
@@ -112,11 +127,11 @@ formatData = function(dat,updateRho=T,adjusted=T){
 
     if(adjusted & !any(dat$Extended) & 'PID'%in%cols){
       dat=subset(dat,!(Dimension=='10x10' & Set=='test' & Extended==F))
-      ix=dat$Dimension=='10x10' & dat$Extended==F
-      if(any(ix)){
+      ix2=dat$Dimension=='10x10' & dat$Extended==F
+      if(any(ix2)){
         Ntrain10x10=300
         #print('Updating sets for 10x10 data')
-        dat$Set[ix]=ifelse(dat$PID[ix]<=Ntrain10x10,'train','test')
+        dat$Set[ix2]=ifelse(dat$PID[ix2]<=Ntrain10x10,'train','test')
       }
       Ntrain6x5=500
       dat=subset(dat,!(Dimension=='6x5' & Set=='train' & PID>Ntrain6x5))
@@ -184,10 +199,6 @@ formatData = function(dat,updateRho=T,adjusted=T){
   if('Supervision' %in% colnames(dat)){
     dat$Supervision=factor(dat$Supervision,levels=c('Fixed','Decreasing','Unsupervised'))
   }
-  if('Track' %in% colnames(dat)){
-    dat$Track=factor(dat$Track, levels=c(sdrs,'OPT','RND','ALL',paste0('IL',1:10)))
-  }
-
   return(droplevels(dat))
 }
 

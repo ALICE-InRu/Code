@@ -20,7 +20,7 @@ sidebar <- dashboardSidebar(
              ),
     menuItem("Preference models", icon = icon("plane"),
              menuSubItem("LIBLINEAR settings", tabName = "prefSettings", icon = icon("car")),
-             menuSubItem("Trajectories", tabName = "prefTrajectories", icon = icon("car")),
+             menuSubItem("Trajectories & ranks", tabName = "prefTrajectories", icon = icon("search")),
              menuSubItem("Feature reduction", tabName = "prefExhaustive", icon = icon("car")),
              menuSubItem("Imitation learning", tabName = "prefImitationLearning", icon = icon("university"))
     ),
