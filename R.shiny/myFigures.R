@@ -44,7 +44,7 @@ axisCompactY <- list(scale_y_continuous(expand=c(0,0)))
 axisCompactX <- list(scale_x_continuous(expand=c(0,0)))
 axisCompact <- list(axisCompactX, axisCompactY)
 axisProbability <- list(axisCompactX, scale_y_continuous(limits=c(0,1), expand=c(0,0)))
-axisStep <- function(STEP){ list(expand_limits(x = c(1,ceiling(max(STEP)/10)*10))) }
+axisStep <- function(dim){ list(expand_limits(x = c(1,numericDimension(dim)))) }
 
 #legend.justification='center',legend.position='right',legend.box = "vertical", # right
 #legend.justification = c(1, 0),legend.position = c(1, 0),legend.box = "horizontal", # lower right hand corner
@@ -69,5 +69,37 @@ ggplotColor <- function(name,num,labels=NULL){
     return(list(scale_color_manual(values=mypalette,name=name,labels=labels)))
   }
 }
+
+pref.boxplot <- function(CDR,SDR=NULL,ColorVar,xVar='CDR',xText='CDR',tiltText=T,lineTypeVar=NA){
+  CDR=subset(CDR,!is.na(Rho))
+  CDR$Problem=factorProblem(CDR)
+
+  colnames(CDR)[grep(ColorVar,colnames(CDR))]='ColorVar'
+  colnames(CDR)[grep(xVar,colnames(CDR))]='xVar'
+
+  if(!is.na(lineTypeVar))
+    colnames(CDR)[grep(lineTypeVar,colnames(CDR))]='lineTypeVar'
+
+  if(!is.null(SDR)){
+    SDR <- subset(SDR,Dimension %in% CDR$Dimension & Problem %in% CDR$Problem)
+    SDR$xVar=SDR$SDR
+  }
+  p=ggplot(CDR,aes(x=as.factor(xVar),y=Rho))
+
+  if(!is.na(lineTypeVar))
+    p=p+geom_boxplot(aes(color=ColorVar,linetype=lineTypeVar))+scale_linetype(lineTypeVar)
+  else
+    p=p+geom_boxplot(aes(color=ColorVar))
+
+  if(!is.null(SDR)){ p=p+geom_boxplot(data=SDR,aes(fill=SDR))+ggplotFill('SDR',4);}
+  p=p+facet_grid(Set~Problem,scale='free_x') +
+    ggplotColor(xText,length(unique(CDR$ColorVar))) +
+    xlab('')+ylab(rhoLabel)+
+    axisCompactY+expand_limits(y = 0)
+
+  if(tiltText){ p=p+theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) }
+  return(p)
+}
+
 
 clc <- function() cat(rep("\n",50)); clc()

@@ -9,7 +9,7 @@ output$tabOpt.SDR <- renderUI({
 
 dataset.StepwiseOptimality <- reactive({
   withProgress(message = 'Loading optimal data', value = 0, {
-    get.StepwiseOptimality(input$problem,input$dimension,'OPT', Dimension())
+    get.StepwiseOptimality(input$problem,input$dimension,'OPT')
   })
 })
 
@@ -21,6 +21,6 @@ dataset.StepwiseExtremal <- reactive({
 
 output$plot.stepwiseSDR.wrtTrack <- renderPlot({
   withProgress(message = 'Making plotStepwiseSDR.wrtTrack', value = 0, {
-    plot.StepwiseSDR.wrtTrack(dataset.StepwiseOptimality(),dataset.StepwiseExtremal(),input$dimension,F,Dimension(),input$save)
+    plot.StepwiseSDR.wrtTrack(dataset.StepwiseOptimality(),dataset.StepwiseExtremal(),input$dimension,F,input$save)
   })
 }, height='auto')

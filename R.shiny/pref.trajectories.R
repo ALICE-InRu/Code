@@ -1,9 +1,9 @@
 get.trainingDataSize <- function(problems,dim,tracks='ALL'){
   get.trainingDataSize1 <- function(problem){
-    fname=paste('../trainingData/features/size','trainingSet',problem,dim,'csv',sep='.')
+    fname=paste('../stepwise/size','trainingSet',problem,dim,'csv',sep='.')
     if(file.exists(fname)){ stat=read.csv(fname)
     } else {
-      trdat <- getTrainingDataRaw(problem,dim,tracks)
+      trdat <- get.files.TRDAT(problem,dim,tracks)
       stat=ddply(trdat,~Problem+Step+Track,function(X) nrow(X))
       write.csv(stat, file = fname, row.names = F, quote = F)
     }
@@ -13,7 +13,7 @@ get.trainingDataSize <- function(problems,dim,tracks='ALL'){
   for(problem in problems){
     stats=rbind(stats,get.trainingDataSize1(problem))
   }
-  stats$Track=factorTrack(stats$Track)
+  stats=factorTrack(stats)
   return(stats)
 }
 
@@ -23,16 +23,16 @@ plot.trainingDataSize <- function(trainingDataSize){
     geom_line(size=1,position=position_jitter(w=0.25, h=0))+
     facet_wrap(~Problem,ncol=2)+
     ylab(expression('Size of training set, |' * Phi * '|'))+
-    axisStep(trainingDataSize$Step)+axisCompact
+    axisStep(trainingDataSize$Dimension[1])+axisCompact
   return(p)
 }
 
 get.preferenceSetSize <- function(problems,dim,tracks='ALL',ranks=c('a','b','f','p')){
   get.preferenceSetSize1 <- function(problem,rank){
-    fname=paste('../trainingData/features/size','prefSet',problem,dim,rank,'csv',sep='.')
+    fname=paste('../stepwise/size','prefSet',problem,dim,rank,'csv',sep='.')
     if(file.exists(fname)){ stat=read.csv(fname)
     } else {
-      stat <- getTrainingDataRaw(problem,dim,tracks,rank,useDiff = T)
+      stat <- get.files.TRDAT(problem,dim,tracks,rank,useDiff = T)
       stat$Rank=rank
       stat=ddply(stat,~Problem+Step+Rank+Track,function(X) nrow(X))
       write.csv(stat, file = fname, row.names = F, quote = F)
@@ -45,7 +45,7 @@ get.preferenceSetSize <- function(problems,dim,tracks='ALL',ranks=c('a','b','f',
       stats=rbind(stats,get.preferenceSetSize1(problem,rank))
     }
   }
-  stats$Track=factorTrack(stats$Track)
+  stats=factorTrack(stats)
   stats$Rank=factorRank(stats$Rank)
   return(stats)
 }
@@ -57,62 +57,7 @@ plot.preferenceSetSize <- function(preferenceSetSize){
     facet_grid(Problem~Track,scales='free_y')+
     ggplotColor('Ranking',num = 4)+
     ylab(expression('Size of preference set, |' * S * '|'))+
-    axisStep(preferenceSetSize$Step)+axisCompact
-  return(p)
-}
-
-
-getSingleCDR=function(logFile,NrFeat,Model,problem=NULL,dim=NULL,set='train'){
-
-  if(grepl('.csv$',logFile)){logFile=substr(logFile,1,str_length(logFile)-4)}
-
-  model.rex="(?<Problem>[a-z].[a-z]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Probability>[a-z0-9]+).weights.time"
-  m=regexpr(model.rex,logFile,perl=T)
-  if(is.null(problem)){ problem = getAttribute(logFile,m,1) }
-  if(is.null(dim)){ dim = getAttribute(logFile,m,2)}
-  Rank=getAttribute(logFile,m,3)
-  Track=getAttribute(logFile,m,4)
-  Prob=getAttribute(logFile,m,5)
-
-  fname=paste('../liblinear','CDR',logFile,paste(paste('F',NrFeat,sep=''),paste('Model',Model,sep=''),'on',problem,dim,set,'csv',sep='.'),sep='/')
-  if(!file.exists(fname)){return(NULL)}
-  dat=read.csv(fname)
-  dat$Problem=problem
-  dat$NrFeat=NrFeat
-  dat$Model=Model
-  dat$Prob=Prob
-  dat$Rank=Rank
-  dat$Track=Track
-
-  return(dat)
-}
-
-pref.boxplot <- function(CDR,SDR=NULL,ColorVar,xVar='CDRlbl',xText='CDR',tiltText=T,lineTypeVar=NA){
-
-  colnames(CDR)[grep(ColorVar,colnames(CDR))]='ColorVar'
-  colnames(CDR)[grep(xVar,colnames(CDR))]='xVar'
-
-  if(!is.na(lineTypeVar))
-    colnames(CDR)[grep(lineTypeVar,colnames(CDR))]='lineTypeVar'
-
-  if(!is.null(SDR)){
-    SDR <- subset(SDR,Dimension %in% CDR$Dimension & Problem %in% CDR$Problem)
-    SDR$xVar=SDR$SDR
-  }
-  p=ggplot(CDR,aes(x=as.factor(xVar),y=Rho))
-
-  if(!is.na(lineTypeVar))
-    p=p+geom_boxplot(aes(color=ColorVar,linetype=lineTypeVar))+scale_linetype(lineTypeVar)
-  else
-    p=p+geom_boxplot(aes(color=ColorVar))
-
-  if(!is.null(SDR)){ p=p+geom_boxplot(data=SDR,aes(fill=SDR))+ggplotFill('SDR',4);}
-  p=p+facet_grid(Set~Problem,scale='free_x') +
-    ggplotColor(xText,length(unique(CDR$ColorVar))) +
-    xlab('')+ylab(rhoLabel)+
-    axisCompactY+expand_limits(y = 0)
-
-  if(tiltText){ p=p+theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) }
+    axisStep(preferenceSetSize$Dimension[1])+axisCompact
   return(p)
 }
 
@@ -127,7 +72,7 @@ get.rhoTracksRanks <- function(problems,dim,tracks=c(sdrs,'OPT','RND','ALL'),
 
   CDR=NULL
   for(file in files){
-    CDR=rbind(CDR,getSingleCDR(file,16,1,set = 'train'))
+    CDR=rbind(CDR,get.singleCDR(file,16,1,set = 'train'))
   }
   if(!is.null(CDR)){
     CDR$Track=factorTrack(CDR$Track)

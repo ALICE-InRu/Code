@@ -10,24 +10,19 @@ output$tabFEAT <- renderUI({
 })
 
 output$plot.extremal <- renderPlot({
-  problem=input$problem
-  dim=input$dimension
   withProgress(message = 'Making plot', value = 0, {
-    p=plot.StepwiseExtremal(dataset.StepwiseOptimality(),dataset.StepwiseExtremal(),F)
+    plot.StepwiseExtremal(dataset.StepwiseOptimality(),dataset.StepwiseExtremal(),F)
   })
-  print(p)
 },height="auto")
 
 output$plot.global <- renderPlot({
   withProgress(message = 'Making plot', value = 0, {
-    p=plot.StepwiseFeatures(input$problem,input$dimension,F,T)+ggtitle('')
+    plot.StepwiseFeatures(input$problem,input$dimension,F,T)+ggtitle('')
   })
-  print(p)
 },height="auto")
 
 output$plot.local <- renderPlot({
   withProgress(message = 'Making plot', value = 0, {
-    p=plot.StepwiseFeatures(input$problem,input$dimension,T,F)+ggtitle('')
+    plot.StepwiseFeatures(input$problem,input$dimension,T,F)+ggtitle('')
   })
-  print(p)
 },height="auto")

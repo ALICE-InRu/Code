@@ -37,12 +37,13 @@ output$tabDifficulty <- renderUI({
   )
 })
 
-dataset.diff <- reactive({
-  dat=subset(dataset.SDR(), Set=='train' & Dimension==input$dimension & Problem==input$problem)
-  checkDifficulty(dat)
+SDR <- reactive({
+  subset(dataset.SDR,Problem %in% input$problems & Dimension == input$dimension)
 })
-dataset.SDR <- reactive({
-  subset(all.dataset.SDR,Problem %in% input$problems & Dimension == input$dimension)
+
+dataset.diff <- reactive({
+  dat=subset(SDR(), Set=='train' & Dimension==input$dimension & Problem==input$problem)
+  checkDifficulty(dat)
 })
 
 output$diff.Quartiles <- renderTable({ xtable(dataset.diff()$Quartiles) }, include.rownames = FALSE)
@@ -52,7 +53,7 @@ output$diff.Hard <- renderTable({ xtable(splitSDR(dataset.diff()$Hard)) })
 
 output$plot.SDR <- renderPlot({
 
-  p = plot.SDR(dataset.SDR(),input$sdr.plot, input$save)
+  p = plot.SDR(SDR(),input$sdr.plot, input$save)
   print(p)
 
 }, height="auto")

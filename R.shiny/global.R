@@ -7,17 +7,17 @@ library(plyr)
 library(knitr)
 library(xtable)
 library(grid)
-source('getfiles.R')
+library(reshape2)
+source('getFiles.R')
 source('formatData.R')
 source('myFigures.R')
 
 sdrs=c('SPT','LPT','LWR','MWR');
-sdrNames=c('Shortest Processing Time','Largest Processing Time','Least Work Remaining','Most Work Remaining')
 rhoLabel=expression("Deviation from optimality," * ~ rho * ~ " (%)")
 
-if(file.exists('startUp.Rdata')){ load('startUp.Rdata')} else {
-  dataset.OPT=getOPTs()
-  all.dataset.SDR=getfiles('../SDR/',adjust=F)
-  save(list=c('dataset.OPT','all.dataset.SDR'),file='startUp.Rdata')
+if(file.exists('startUp.Rdata')){ load('startUp.Rdata') } else {
+  dataset.OPT=get.files.OPT()
+  dataset.SDR=get.files.SDR()
+  save(list=c('dataset.OPT','dataset.SDR'),file='startUp.Rdata')
 }
 

@@ -47,4 +47,3 @@ output$compareImitationLearning.stats <- renderDataTable({
     stats.imitationLearning(input$problem,input$dimension)
   })
 },  options = list(paging = FALSE, searching = T))
-

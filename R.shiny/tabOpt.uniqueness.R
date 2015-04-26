@@ -10,7 +10,7 @@ output$tabOpt.uniqueness <- renderUI({
 
 all.dataset.StepwiseOptimality <- reactive({
   withProgress(message = 'Loading all stepwise data', value = 0, {
-    get.StepwiseOptimality(input$problems,input$dimension,'OPT', Dimension())
+    get.StepwiseOptimality(input$problems,input$dimension,'OPT')
   })
 })
 

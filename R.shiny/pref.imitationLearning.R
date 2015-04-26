@@ -8,15 +8,8 @@ getSummaryFileNamesIL <- function(problem,dim,CDR=T,rank='p',probability='equal'
 plot.imitationLearning.boxplot <- function(problem,dim){
   files = getSummaryFileNamesIL(problem,dim)
   if(length(files)==0) return(NULL)
-  CDR=NULL;
-  for (file in substr(files,9,100)){
-    tmp=rbind(getSingleCDR(file,16,1,problem,dim,'train'),
-              getSingleCDR(file,16,1,problem,dim,'test'))
-    tmp$Extended=grepl('EXT',file)
-    CDR=rbind(CDR,tmp)
-  }
-  dat=CDR
-  CDR=formatData(CDR)
+  CDR=get.CDR(substr(files,9,100),16,1,c('train','test'))
+
   p=pref.boxplot(CDR,NULL,'Supervision','Track','Imitation learning',F,ifelse(any(CDR$Extended),'Extended',NA))
 
   #CDR$CDR=interaction(CDR$Track,CDR$Iter,substr(CDR$Supervision,1,1))
@@ -54,8 +47,9 @@ plot.imitationLearning.weights <- function(problem,dim){
     wExtOpt$Supervision='Decreasing' }
 
   w$Problem=problem
+  w$Feature = factorFeature(w$Feature,F)
 
-  p=ggplot(w,aes(x=Iter,y=sc.value,color=Featurelbl,group=Feature))+
+  p=ggplot(w,aes(x=Iter,y=sc.value,color=Feature,group=Feature))+
     geom_line()+geom_point()+
     facet_grid(Supervision~Problem)+scale_size_manual(values=c(0.5,1.2))+
     xlab('iteration')+

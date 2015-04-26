@@ -20,7 +20,7 @@ output$tabPref.settings <- renderUI({
       ),
       box(title = "Stepwise bias", collapsible = TRUE,
           helpText('Features instances are resampled w.r.t. its stepwise bias.'),
-          plotOutput("plot.probability", height = 150)),
+          plotOutput("plot.stepwiseProbability", height = 150)),
       box(title = "Action output", width = 6, collapsible = TRUE,
           verbatimTextOutput("output.liblinearModel"))
     )
@@ -31,9 +31,9 @@ dataset.training <- reactive({
   getTrainingDataRaw(input$problem,input$dimension,input$tracks)
 })
 
-output$plot.probability <- renderPlot({
-  steps=1:Dimension()
-  w=stepwiseProbability(steps,input$problem,input$dimension,input$probability)
+output$plot.stepwiseProbability <- renderPlot({
+  steps=1:numericDimension(input$dimension)
+  w=get.stepwiseProbability(steps,input$problem,input$dimension,input$probability)
   df=data.frame('Step'=steps,'Weight'=w)
   ggplot(df,aes(x=Step,y=Weight))+geom_line()+scale_x_continuous(expand=c(0,0))
 })
@@ -61,7 +61,11 @@ output$output.liblinearModel <- renderPrint({
     fT=list.files('../trainingData/',paste('^trdat',problem,dimension,patTracks,'Local','diff',rank,'csv',sep='.'))
     fW=list.files(paste('..//liblinear',dimension,sep='/'),paste(ifelse(exhaustive,'exhaust','full'),problem,dimension,rank,tracks,probability,'weights',ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.'))
     if(length(fT)+any(grepl('ALL',tracks))>length(fW)){
-      lmax=ifelse(Dimension()<100,ifelse(timedependent,5000,100000),ifelse(timedependent,100000,500000))
+
+      lmax=ifelse(numericDimension(input$dimension)<100,
+                  ifelse(timedependent,5000,100000),
+                  ifelse(timedependent,100000,500000))
+
       for(track in tracks)
         withProgress(message = paste('Create model for',track), value = 0, {
           create.prefModel(problem,dimension,track,rank,probability,timedependent,exhaustive,lmax)

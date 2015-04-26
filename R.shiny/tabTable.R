@@ -18,7 +18,7 @@ output$tabTable <- renderUI({
 output$stats.table <- renderDataTable({
 
   dat = switch(input$rawData,
-               'SDR'=dataset.SDR(),
+               'SDR'=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension),
                'OPT'=subset(dataset.OPT,Problem %in% input$problems & Dimension %in% input$dimension))
 
   vars = switch(input$rawData,

@@ -1,5 +1,5 @@
-stepwiseProbability <- function(steps,problem,dim,probability){
-  nDim=max(steps)
+get.stepwiseProbability <- function(steps,problem,dim,probability){
+  nDim=numericDimension(dim)
   half=round(nDim/2,digit=0)
   last=nDim-half
   w=switch(probability,
@@ -9,7 +9,7 @@ stepwiseProbability <- function(steps,problem,dim,probability){
            'wcs'=subset(get.BestWorst(problem,dim),Track=='OPT' & Followed==F)$worst.mu,
            'dbl1st'=c(rep(2,half),rep(1,last)),
            'dbl2nd'=c(rep(1,half),rep(2,last)),
-           rep(1,max(steps)))
+           rep(1,nDim))
   w=w/sum(w); # normalize
   return(w[steps])
 }
@@ -18,11 +18,11 @@ estimate.prefModels <- function(problem,dim,start,probability,timedependent,trac
   ix=grepl('IL',tracks)
   if(any(ix)){ tracks[ix]=paste0(substr(tracks[ix],1,2),'[0-9]+',substr(tracks[ix],3,100)) }
   tracks=paste0('(',paste(tracks,collapse = '|'),')')
-  m=list.files('../liblinear/CDR/',
+  files=list.files('../liblinear/CDR/',
                paste(paste0('^',start),problem,dim,rank,tracks,probability,"weights",ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
   minNum=ifelse(start=='full',2,697)
-  for(model in m){ rho.statistic(model,minNum = minNum) }
-  return(paste('Estimate LIBLINEAR models for',length(m),'files'))
+  for(file in files){ rho.statistic(file,minNum = minNum) }
+  return(paste('Estimate LIBLINEAR models for',length(files),'files'))
 }
 
 rho.statistic <- function(model,minNum=697){
@@ -46,24 +46,23 @@ rho.statistic <- function(model,minNum=697){
     timeindependent=grepl('timeindependent$',model)
     print(paste(rank,track,probability,timeindependent))
 
-    ALLDAT=NULL
+    dat=NULL
     name.rex="F(?<NrFeat>[0-9]+).Model(?<Model>[0-9]+)"
     for(file in files){
-      dat=read.csv(paste('..//liblinear/CDR',model,file,sep='/'))
+      tmp=read.csv(paste('..//liblinear/CDR',model,file,sep='/'))
       m=regexpr(name.rex,file,perl=T)
-      dat$NrFeat <- as.factor(getAttribute(file,m,1))
-      dat$Model <- as.factor(getAttribute(file,m,2))
-      dat$Heuristic=NULL
-      dat$Prob=probability
-      ALLDAT=rbind(ALLDAT,dat)
+      tmp$NrFeat <- as.factor(getAttribute(file,m,1))
+      tmp$Model <- as.factor(getAttribute(file,m,2))
+      tmp$Heuristic=NULL
+      tmp$Prob=probability
+      dat=rbind(dat,tmp)
     }
-    ALLDAT$Problem=problem
-    ALLDAT$TimeIndependent=timeindependent
-    dat=formatData(ALLDAT);
+    dat$Problem=problem
+    dat$TimeIndependent=timeindependent
     Ntrain=quantile(unique(subset(dat,Set=='train')$PID),.8) # 80% of training data saved for validation
     levels(dat$Set)=c(levels(dat$Set),'validation')
     dat$Set[dat$Set=='train' & dat$PID>Ntrain]='validation' # 20% of training data saved for validation
-
+    dat$Rho = factorRho(dat)
     rho.stats = ddply(dat,~Problem+NrFeat+Model+Prob+TimeIndependent, summarise,
                       Training.Rho = round(mean(Rho[Set=='train']), digits = 5),
                       NTrain = sum(Set=='train'),
@@ -71,7 +70,6 @@ rho.statistic <- function(model,minNum=697){
                       NValidation = sum(Set=='validation'),
                       Test.Rho = round(mean(Rho[Set=='test']), digits = 5),
                       NTest = sum(Set=='test'))
-
     write.table(rho.stats, file=fname, quote=F,row.names=F,dec='.',sep=',')
   }
   return(rho.stats)
@@ -106,7 +104,7 @@ create.prefModel <- function(problem,dim,track,rank,probability,timedependent,ex
   getTrainingData <- function(){
 
     useDiff=T
-    dat <- getTrainingDataRaw(problem,dim,track,rank,useDiff)
+    dat <- get.files.TRDAT(problem,dim,track,rank,useDiff)
     if(is.null(dat)){ return(NULL) }
 
     if(useDiff) { label = sign(dat$ResultingOptMakespan) } else { label = as.numeric(dat$Rho == 0); }
@@ -124,7 +122,7 @@ create.prefModel <- function(problem,dim,track,rank,probability,timedependent,ex
     info = paste('Distribution',problem,'and dimension',dim,'and with',ifelse(useDiff,'preference pairs','direct classification'),'\n------------\n')
     for(lbl in unique(label)){ info=paste(info,paste('Label',lbl,':',sum(label==lbl)),sep='\n') }
     info = paste(info,'Features:',sep='\n')
-    info=paste(info, paste(format(str_split_fixed(colnames(features),'phi.',2)[,2], justfy=F),' ',collapse=''), sep='\n')
+    info=paste(info, paste(format(stringr::str_split_fixed(colnames(features),'phi.',2)[,2], justfy=F),' ',collapse=''), sep='\n')
     print(cat(info))
 
     return(list(Y=label,X=features,PID=dat$PID,STEP=dat$Step, Dimension=dim,Problem=problem,Info=info))
@@ -248,7 +246,7 @@ create.prefModel <- function(problem,dim,track,rank,probability,timedependent,ex
       }
     }
 
-    dat$Probability = stepwiseProbability(dat$STEP, problem, dat$Dimension[1], probability)
+    dat$Probability = get.stepwiseProbability(dat$STEP, problem, dim, probability)
     phiCol = grep('phi',colnames(dat$X));
 
     # use all features

@@ -42,21 +42,18 @@ output$plot.preferenceSetSize <- renderPlot({
   })
 })
 
-
 rhoTracksRanks <- reactive({ get.rhoTracksRanks(input$problems,input$dimension) })
 
 output$plot.rhoTracksRanks <- renderPlot({
   withProgress(message = 'Plotting boxplot', value = 0, {
-    SDR=switch(input$plotSDR,
-               T=dataset.SDR())
+    SDR=switch(input$plotSDR, T=SDR())
     plot.rhoTracksRanks(subset(rhoTracksRanks(),
                                Track %in% input$plotTracks & Rank %in% input$plotRanks), SDR)
   })
 })
 
 output$table.rhoTracksRanks <- renderTable({
-  SDR=switch(input$plotSDR,
-             T=dataset.SDR())
+  SDR=switch(input$plotSDR, T=SDR())
   table.rhoTracksRanks(input$problem, subset(rhoTracksRanks(),
                              Track %in% input$plotTracks & Rank %in% input$plotRanks), SDR)
 }, include.rownames = FALSE)

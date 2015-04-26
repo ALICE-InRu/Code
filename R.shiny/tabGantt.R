@@ -19,11 +19,11 @@ output$tabGantt <- renderUI({
 
 all.dat.schedules <- reactive({
   withProgress(message = 'Loading schedules', value = 0, {
-    dispatchData(input$problem,'6x5','ALL')
+    get.gantt(input$problem,'6x5','ALL')
   })
 })
 
 dat.schedules <- reactive({ subset(all.dat.schedules(),PID==input$pid) })
 
-output$gantt.schedules <- renderPlot({ plotStep(dat.schedules(),input$step) })
+output$gantt.schedules <- renderPlot({ plot.gantt(dat.schedules(),input$step) })
 

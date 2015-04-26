@@ -1,14 +1,14 @@
-get.StepwiseOptimality <- function(problems,dim,track='OPT',LastStep=-1){
+get.StepwiseOptimality <- function(problems,dim,track='OPT'){
 
   get.StepwiseOptimality1 <- function(problem){
-    fname=paste('../trainingData/stepwise',problem,dim,track,'csv',sep='.')
+    fname=paste('../stepwise/optimality',problem,dim,track,'csv',sep='.')
 
     if(file.exists(fname)){ split=read.csv(fname) } else {
-      dat=getfilesTraining(useDiff = F,pattern = paste(problem,dim,track,sep='.'),Global = F)
+      dat=get.files.TRDAT(problem, dim, track)
       if(is.null(dat)){ return(NULL) }
       dat$isOPT=dat$Rho==0
 
-      split=ddply(dat,~Problem+Dimension+Step+PID,summarise,
+      split=ddply(dat,~Problem+Step+PID,summarise,
                   rnd=mean(isOPT),
                   unique=sum(isOPT),
                   .progress = "text")
@@ -16,24 +16,21 @@ get.StepwiseOptimality <- function(problems,dim,track='OPT',LastStep=-1){
       write.csv(split,file=fname,row.names=F,quote=F)
     }
 
-    stats=ddply(split,~Problem+Dimension+Step,summarise,
+    stats=ddply(split,~Problem+Step,summarise,
                 rnd.mu=mean(rnd),
                 rnd.Q1=quantile(rnd,.25),
                 rnd.Q3=quantile(rnd,.75),
                 unique.mu=mean(unique))
 
-    if(max(stats$Step)<LastStep){
+    if(max(stats$Step)<numericDimension(dim)){
       lastRow=stats[1,]
       lastRow$rnd.mu=1
       lastRow$rnd.Q1=1
       lastRow$rnd.Q3=1
       lastRow$unique.mu=1
-      lastRow$Step=LastStep
+      lastRow$Step=numericDimension(dim)
       stats=rbind(stats,lastRow)
     }
-
-    stats=formatData(stats)
-
     return(list('Stats'=stats,'Raw'=split))
   }
 
@@ -46,6 +43,10 @@ get.StepwiseOptimality <- function(problems,dim,track='OPT',LastStep=-1){
       Stepwise$Stats=rbind(Stepwise$Stats,tmp$Stats)
     }
   }
+
+  Stepwise$Raw$Problem=factorProblem(Stepwise$Raw)
+  Stepwise$Stats$Problem=factorProblem(Stepwise$Stats)
+
   return(Stepwise)
 }
 
@@ -60,12 +61,13 @@ plot.stepwiseUniqueness <- function(StepwiseOptimality,smooth,save=NA){
   } else {
     p=p+geom_line(size=1)
   }
+  dim=StepwiseOptimality$Stats$Dimension[1]
+
   p=p+ggplotColor('Problem',length(probs))+
     ylab('Number of unique optimal dispatches')+
-    axisStep(StepwiseOptimality$Stats$Step)+axisCompact
+    axisStep(dim)+axisCompact
 
   if(!is.na(save)){
-    dim=ifelse(length(levels(StepwiseOptimality$Stats$Dimension))>1,'ALL',StepwiseOptimality$Stats$Dimension[1])
     fname=paste(paste(subdir,'stepwise',sep='/'),dim,'OPT','unique',extension,sep='.')
     if(save=='full')
       ggsave(filename=fname,plot=p, height=Height.full, width=Width, dpi=dpi, units=units)
@@ -93,11 +95,12 @@ plot.stepwiseOptimality <- function(StepwiseOptimality,simple,smooth,save=NA){
   if(!simple)
     p=p+ggplotColor('Problem',length(problems))
 
+  dim=StepwiseOptimality$Stats$Dimension[1]
+
   p=p+ylab('Probability of choosing optimal move')+
-    axisStep(StepwiseOptimality$Stats$Step)+axisProbability
+    axisStep(dim)+axisProbability
 
   if(!is.na(save)){
-    dim=ifelse(length(levels(StepwiseOptimality$Stats$Dimension))>1,'ALL',StepwiseOptimality$Stats$Dimension[1])
     fname=paste(paste(subdir,'stepwise',sep='/'),dim,'OPT',extension,sep='.')
     if(save=='full')
       ggsave(filename=fname,plot=p, height=Height.full, width=Width, dpi=dpi, units=units)

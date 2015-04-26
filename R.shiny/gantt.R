@@ -1,26 +1,24 @@
-dispatchData <- function(problem,dim,SDR,plotPID=-1){
-  trdat <- getTrainingDataRaw(problem,dim,SDR)
+get.gantt <- function(problem,dim,SDR='ALL',plotPID=-1){
+  trdat <- get.files.TRDAT(problem,dim,SDR)
   if(plotPID>0){ trdat <- subset(trdat,PID==plotPID) }
   if(nrow(trdat)<1){return(NULL)}
-
-  m=regexpr('(?<Job>[0-9]+).(?<Mac>[0-9]+).(?<StarTime>[0-9]+)',trdat$Dispatch,perl = T)
-  trdat=formatData(trdat)
-  trdat$Step=trdat$Step-min(trdat$Step)
+  m=regexpr('(?<Job>[0-9]+).(?<Mac>[0-9]+).(?<StartTime>[0-9]+)',trdat$Dispatch,perl = T)
+  trdat$Dimension=dim
+  trdat$Step=trdat$Step-1 # start from 0
   trdat$Job=as.numeric(getAttribute(trdat$Dispatch,m,1))+1
-  trdat$Rho=round(trdat$Rho,2)
   trdat$phi.mac=trdat$phi.mac-min(trdat$phi.mac)+1
   trdat$x=trdat$phi.startTime+(trdat$phi.endTime-trdat$phi.startTime)/2
   return(trdat)
 }
 
-plotStep <- function(trdat,step){
+plot.gantt <- function(gantt,step){
 
-  NumJobs=max(trdat$Job)
-  NumMacs=max(trdat$phi.mac)
-  maxMakespan=max(trdat$phi.makespan)+50 # margin to display Cmax notation
+  NumJobs=max(gantt$Job)
+  NumMacs=max(gantt$phi.mac)
+  maxMakespan=max(gantt$phi.makespan)+50 # margin to display Cmax notation
 
-  fdat <- subset(trdat,Followed==T & Step<step)
-  pdat <- subset(trdat,Step==step)
+  fdat <- subset(gantt,Followed==T & Step<step)
+  pdat <- subset(gantt,Step==step)
   p=ggplot(fdat,aes(x=x,y=phi.mac))+
     ggplotFill('Job',NumJobs)+
     scale_y_continuous('Machine', breaks=1:NumMacs)+
@@ -53,17 +51,15 @@ plotStep <- function(trdat,step){
   return(p)
 }
 
-createGif <- function(problem,dim,SDR){
-
-  trdat=dispatchData(problem,dim,SDR)
-
+gif.gantt <- function(problem,dim,SDR='MWR',plotPID=10){
+  gantt=get.gantt(proble,dim,SDR,plotPID)
   ## save images and convert them to a single GIF
   library(animation)
   saveGIF({
-    for (step in unique(trdat$Step)) {
-      print(plotStep(trdat,step))
+    for (step in 0:numericDimension(dim)) {
+      print(plotStep(gantt,step))
     }
-    print(plotStep(trdat,step+1))
+    print(plotStep(gantt,step+1))
   }, interval = 0.5, movie.name = paste(problem,dim,SDR,'gif',sep='.'), ani.width = 600, ani.height = 250, loop=F)
 
 }
