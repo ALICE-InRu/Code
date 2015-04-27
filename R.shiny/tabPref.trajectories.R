@@ -2,6 +2,7 @@ output$tabPref.trajectories <- renderUI({
   dashboardBody(
     fluidRow(
       box(title='Settings', collapsible = T,
+          helpText('For main problem distribution.'),
           selectInput("plotTracks", "Trajectories:", multiple = T,
                       c("OPT",sdrs,"RND","ALL"), selected = c("OPT",sdrs,"RND","ALL")),
           selectInput("plotRanks", "Rankings:", multiple = T,
@@ -17,13 +18,12 @@ output$tabPref.trajectories <- renderUI({
           plotOutput('plot.rhoTracksRanks', height=500),
           checkboxInput('plotSDR','Display the trajectories the models are based on (white).', T)),
       box(title='Summary for Rho', width=9,
-          helpText('For main problem distribution.'),
           tableOutput('table.rhoTracksRanks'))
     )
   )
 })
 
-trainingDataSize <- reactive({ get.trainingDataSize(input$problems,input$dimension) })
+trainingDataSize <- reactive({ get.trainingDataSize(input$problem,input$dimension) })
 
 output$plot.trainingDataSize <- renderPlot({
   withProgress(message = 'Plotting training set size', value = 0, {
@@ -32,7 +32,7 @@ output$plot.trainingDataSize <- renderPlot({
   })
 })
 
-preferenceSetSize <- reactive({ get.preferenceSetSize(input$problems,input$dimension) })
+preferenceSetSize <- reactive({ get.preferenceSetSize(input$problem,input$dimension) })
 
 output$plot.preferenceSetSize <- renderPlot({
   withProgress(message = 'Plotting preference set size', value = 0, {
@@ -42,7 +42,7 @@ output$plot.preferenceSetSize <- renderPlot({
   })
 })
 
-rhoTracksRanks <- reactive({ get.rhoTracksRanks(input$problems,input$dimension) })
+rhoTracksRanks <- reactive({ get.rhoTracksRanks(input$problem,input$dimension) })
 
 output$plot.rhoTracksRanks <- renderPlot({
   withProgress(message = 'Plotting boxplot', value = 0, {

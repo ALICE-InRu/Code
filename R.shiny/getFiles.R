@@ -126,9 +126,9 @@ get.CDR <- function(files,NrFeat,Model,sets='train'){
   dat$CDR=factorCDR(dat)
   dat=factorTrack(dat)
 
-  ix=dat$Dimension=='10x10' & dat$Set=='train' & dat$PID < Ntrain10x10
+  ix=dat$Dimension=='10x10' & dat$Set=='train' & dat$PID > Ntrain10x10
   if(any(ix)) {dat$Set[ix]='test'}
-  ix=dat$Dimension=='6x5' & dat$Set=='train' & dat$PID < Ntrain6x5
+  ix=dat$Dimension=='6x5' & dat$Set=='train' & dat$PID > Ntrain6x5
   if(any(ix)) {dat$Set[ix]='test'}
   dat$Set=factorSet(dat$Set)
   return(dat)
@@ -136,7 +136,7 @@ get.CDR <- function(files,NrFeat,Model,sets='train'){
 
 get.prefWeights <- function(file,timedependent,asMatrix=F){
   m=regexpr("(?<Problem>[jf].[a-z0-9]+).(?<Dimension>[0-9]+x[0-9]+).",file,perl=T)
-  problem==getAttribute(file,m,1)
+  problem=getAttribute(file,m,1)
   dim=getAttribute(file,m,2)
   weights=read.csv(paste0('../liblinear/',dim,'/',file))
   weights=subset(weights,Type=='Weight')

@@ -17,12 +17,16 @@ output$plot.extremal <- renderPlot({
 
 output$plot.global <- renderPlot({
   withProgress(message = 'Making plot', value = 0, {
-    plot.StepwiseFeatures(input$problem,input$dimension,F,T)+ggtitle('')
+    p=plot.StepwiseFeatures(input$problem,input$dimension,F,T)
+    if(!is.null(p)){p=p+ggtitle('')}
+    print(p)
   })
 },height="auto")
 
 output$plot.local <- renderPlot({
   withProgress(message = 'Making plot', value = 0, {
-    plot.StepwiseFeatures(input$problem,input$dimension,T,F)+ggtitle('')
+    p=plot.StepwiseFeatures(input$problem,input$dimension,T,F)
+    if(!is.null(p)){p=p+ggtitle('')}
+    print(p)
   })
 },height="auto")
