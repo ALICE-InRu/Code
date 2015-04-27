@@ -206,7 +206,7 @@ get.prefAccuracy <- function(file,type=NULL,onlyMean=F){
 get.optAccuracy <- function(file,reportMean=T){
   m=regexpr(".(?<Dimension>[0-9]+x[0-9]+).",file,perl=T)
   dim=getAttribute(file,m,1)
-  fname=paste('../liblinear',dim,'optStepwiseAcc',file,sep='/')
+  fname=paste0('../stepwise/accuracy/',file)
   if(!file.exists(fname)){ return(NULL)}
   acc = read.csv(fname)
   if(!grepl(fname,'MATLAB')){
