@@ -338,6 +338,8 @@ get.pareto.ks <- function(paretoFront,problem,onlyPareto=T,SDR=NULL){
     dat=unique(paretoFront)
   }
   dat=subset(dat,Problem==problem)
+  if(nrow(dat)==0){return(NULL)}
+
   dat$CDR=factorCDR(dat)
   dat.Acc=NULL
   dat.Rho=NULL
@@ -389,23 +391,4 @@ get.paretoFront <- function(prefSummary){
   fronts$CDR=factorCDR(fronts)
   return(fronts)
 }
-
-get.prefWeights <- function(file,timedependent,asMatrix=F){
-  m=regexpr("(?<Problem>[jf].[a-z0-9]+).(?<Dimension>[0-9]+x[0-9]+).",file,perl=T)
-  problem==getAttribute(file,m,1)
-  dim=getAttribute(file,m,2)
-  weights=read.csv(paste0('../liblinear/',dim,'/',file))
-  weights=subset(weights,Type=='Weight')
-  if(!timedependent){ weights=weights[,c(1:4,6)] } else { weights$mean=NULL };
-  if(asMatrix){
-    weights$CDR=interaction(paste('F',weights$NrFeat,sep=''),paste('M',weights$Model,sep=''))
-    weights=dcast(weights,CDR~Feature,value.var = 'Step.1', fill = 0);
-    wmat=as.matrix(weights[,2:ncol(weights)])
-    rownames(wmat)=weights$CDR
-    return(wmat)
-  }
-  weights$Problem=problem
-  return(weights)
-}
-
 

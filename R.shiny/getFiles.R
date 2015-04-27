@@ -1,8 +1,11 @@
-get.files <- function(dir, files){
+get.files <- function(dir, files, addFileNameColumn=F){
   dat=NULL
   print(files)
-  for(file in files)
-    dat=rbind(dat,read.csv(paste(dir,file,sep='/')))
+  for(file in files){
+    tmp=read.csv(paste(dir,file,sep='/'))
+    if(addFileNameColumn) {tmp$File=file}
+    dat=rbind(dat,tmp)
+  }
   return(dat)
 }
 
@@ -117,13 +120,34 @@ get.CDR <- function(files,NrFeat,Model,sets='train'){
       dat=rbind(dat,get.CDR1(file,set))
     }
   }
+  if(is.null(dat)){return(NULL)}
 
   dat$Rho=factorRho(dat)
   dat$CDR=factorCDR(dat)
+  dat=factorTrack(dat)
+
   ix=dat$Dimension=='10x10' & dat$Set=='train' & dat$PID < Ntrain10x10
   if(any(ix)) {dat$Set[ix]='test'}
   ix=dat$Dimension=='6x5' & dat$Set=='train' & dat$PID < Ntrain6x5
   if(any(ix)) {dat$Set[ix]='test'}
   dat$Set=factorSet(dat$Set)
   return(dat)
+}
+
+get.prefWeights <- function(file,timedependent,asMatrix=F){
+  m=regexpr("(?<Problem>[jf].[a-z0-9]+).(?<Dimension>[0-9]+x[0-9]+).",file,perl=T)
+  problem==getAttribute(file,m,1)
+  dim=getAttribute(file,m,2)
+  weights=read.csv(paste0('../liblinear/',dim,'/',file))
+  weights=subset(weights,Type=='Weight')
+  if(!timedependent){ weights=weights[,c(1:4,6)] } else { weights$mean=NULL };
+  if(asMatrix){
+    weights$CDR=interaction(paste('F',weights$NrFeat,sep=''),paste('M',weights$Model,sep=''))
+    weights=dcast(weights,CDR~Feature,value.var = 'Step.1', fill = 0);
+    wmat=as.matrix(weights[,2:ncol(weights)])
+    rownames(wmat)=weights$CDR
+    return(wmat)
+  }
+  weights$Problem=problem
+  return(weights)
 }

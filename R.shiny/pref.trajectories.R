@@ -4,6 +4,7 @@ get.trainingDataSize <- function(problems,dim,tracks='ALL'){
     if(file.exists(fname)){ stat=read.csv(fname)
     } else {
       trdat <- get.files.TRDAT(problem,dim,tracks)
+      if(is.null(trdat)) return(NULL)
       stat=ddply(trdat,~Problem+Step+Track,function(X) nrow(X))
       write.csv(stat, file = fname, row.names = F, quote = F)
     }
@@ -33,6 +34,7 @@ get.preferenceSetSize <- function(problems,dim,tracks='ALL',ranks=c('a','b','f',
     if(file.exists(fname)){ stat=read.csv(fname)
     } else {
       stat <- get.files.TRDAT(problem,dim,tracks,rank,useDiff = T)
+      if(is.null(stat)) { return(NULL) }
       stat$Rank=rank
       stat=ddply(stat,~Problem+Step+Rank+Track,function(X) nrow(X))
       write.csv(stat, file = fname, row.names = F, quote = F)
@@ -70,16 +72,8 @@ get.rhoTracksRanks <- function(problems,dim,tracks=c(sdrs,'OPT','RND','ALL'),
 
   files=list.files('../liblinear/CDR',paste('^full',problems,dim,ranks,tracks,probability,'weights',ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
 
-  CDR=NULL
-  for(file in files){
-    CDR=rbind(CDR,get.singleCDR(file,16,1,set = 'train'))
-  }
-  if(!is.null(CDR)){
-    CDR$Track=factorTrack(CDR$Track)
-    CDR$Rank=factorRank(CDR$Rank)
-    CDR$Rho=factorRho(CDR)
-    CDR$Dimension=factorDimension(CDR)
-  }
+  CDR=get.CDR(files,16,1,'train')
+
   return(CDR)
 }
 
@@ -103,7 +97,7 @@ plot.rhoTracksRanks <- function(rhoTracksRanks,SDR=NULL){
   #pref.boxplot(rhoTracksRanks,all.dataset.SDR,'Rank','Track',xText = 'Ranking')
   rhoTracksRanks=joinRhoSDR(rhoTracksRanks,SDR)
   rhoTracksRanks$Rank = factorRank(rhoTracksRanks$Rank,F)
-  rhoTracksRanks$Track = factorTrack(rhoTracksRanks$Track)
+  rhoTracksRanks = factorTrack(rhoTracksRanks)
 
   p <- ggplot(data=rhoTracksRanks , aes(y=Rho, x=Track , fill=Rank)) + geom_boxplot() +
     facet_grid(Problem ~ Track, scale='free')+

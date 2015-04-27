@@ -36,8 +36,9 @@ get.StepwiseFeatures <- function(problem,dim){
   if(file.exists(fname)) {
     stat = read.csv(fname)
   } else {
-    trdatG=get.files.TRDAT(problem,dim,'ALL',Global=T)
     trdatL=get.files.TRDAT(problem,dim,'ALL')
+    if(is.null(trdatL)){return(NULL)}
+    trdatG=get.files.TRDAT(problem,dim,'ALL',Global=T)
     trdat=join(trdatL,trdatG,by=colnames(trdatG)[colnames(trdatG) %in% colnames(trdatL)])
 
     phix=grep('phi',colnames(trdat))
@@ -48,7 +49,7 @@ get.StepwiseFeatures <- function(problem,dim){
     stat=ddply(mdat,~Problem+Feature+Step+Track,summarise,mu=mean(value),.progress = 'text')
     write.csv(stat,file = fname, row.names = F, quote = F)
   }
-  stat$Track=factorTrack(stat$Track)
+  stat=factorTrack(stat)
   stat$Feature=factorFeature(stat$Feature)
   return(stat)
 }
@@ -56,11 +57,14 @@ get.StepwiseFeatures <- function(problem,dim){
 plot.StepwiseFeatures <- function(problem,dim,local,global,save=NA){
 
   stat = get.StepwiseFeatures(problem,dim)
+  if(is.null(stat)) { return(NULL) }
 
   plotOne <- function(stat,Type){
     stat=subset(stat,FeatureType==Type)
+    if(all(is.na(stat$mu))) { return(NULL) }
+
     p=ggplot(stat,aes(x=Step,color=Track,fill=Track))+
-      geom_line(data=stat,aes(y=mu),size=1)+
+      geom_line(aes(y=mu),size=1)+
       facet_wrap(~Feature,ncol = 4, scales = 'free_y')+
       xlab(ifelse(Type=='Local','','step'))+
       ylab(paste(Type,'features'))+
@@ -68,32 +72,18 @@ plot.StepwiseFeatures <- function(problem,dim,local,global,save=NA){
       axisStep(dim)+axisCompact
 
     if(Type=='Local'){p=p+theme(legend.position='none')}
+    p=p+ggtitle(expression('Evolution of feature ' * ~ bold(phi)))
     return(p)
   }
-
-  p=NULL
-
-
-  if(!is.na(save)){
-    problem=stat$Problem[1]
-    dim=stat$Dimension[1]
-    fname=paste(paste(subdir,problem,'stepwise',sep='/'),dim,'Track','evolution',ifelse(local & global, 'ALL', ifelse(global,'Global','Local')),extension,sep='.')
-    if(save=='full')
-      ggsave(filename=fname,plot=p, height=Height.full, width=Width, dpi=dpi, units=units)
-    else if(save=='half')
-      ggsave(filename=fname,plot=p, height=Height.half, width=Width, dpi=dpi, units=units)
-  }
-
-  title=expression('Evolution of feature ' * ~ bold(phi))
 
   stat$Feature = factorFeature(stat$Feature,F)
   m=regexpr('(?<Global>[A-Z]{3})',stat$Feature,perl=T)
   stat$FeatureType=factor(ifelse(attr(m,'capture.start')!=-1,'Global','Local'),
                           levels=c('Local','Global'))
-
+  p=NULL
   if(global & local){
-    pLocal=plotOne(stat,'Local')+ggtitle(title)
-    pGlobal=plotOne(stat,'Global')
+    pLocal=plotOne(stat,'Local')
+    pGlobal=plotOne(stat,'Global')+ggtitle('')
     require(gridExtra)
     if(save) pdf(fname,width = Width, height = Height.full)
     grid.arrange(pLocal, pGlobal, ncol=1)
@@ -104,7 +94,15 @@ plot.StepwiseFeatures <- function(problem,dim,local,global,save=NA){
   else
     p=plotOne(stat,'Local')
 
-  p=p+ggtitle(title)
+  if(!is.na(save)){
+    problem=stat$Problem[1]
+    dim=stat$Dimension[1]
+    fname=paste(paste(subdir,problem,'stepwise',sep='/'),dim,'Track','evolution',ifelse(local & global, 'ALL', ifelse(global,'Global','Local')),extension,sep='.')
+    if(save=='full')
+      ggsave(filename=fname,plot=p, height=Height.full, width=Width, dpi=dpi, units=units)
+    else if(save=='half')
+      ggsave(filename=fname,plot=p, height=Height.half, width=Width, dpi=dpi, units=units)
+  }
 
   return(p)
 }

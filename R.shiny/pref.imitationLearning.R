@@ -29,25 +29,24 @@ plot.imitationLearning.weights <- function(problem,dim){
     tmp$Track=file
     w=rbind(w,tmp)
   }
-  m=regexpr('(?<Track>[A-Z]{2}[A-Z0-9]+)',w$Track,perl=T);
-  w$Track=getAttribute(w$Track,m,1)
-  w=formatData(w)
+  w$Track=getAttribute(w$Track,regexpr('(?<Track>[A-Z]{2}[A-Z0-9]+)',w$Track,perl=T),1)
+  w=factorTrack(w)
+  w$Feature = factorFeature(w$Feature,F)
+
   w=ddply(w,~Iter+Supervision+Extended,mutate,sc.value=Step.1/sqrt(sum(Step.1*Step.1)))
 
   wExtOpt=subset(w,Extended==T & Track=='OPT')
   wExt=subset(w,Extended==T & Track!='OPT')
-  wopt=subset(w,Track=='OPT' & Extended==F)
+  wOpt=subset(w,Track=='OPT' & Extended==F)
   w=subset(w,Iter>0 & Extended==F)
 
   for(supervision in unique(w$Supervision)){
-    wopt$Supervision=supervision
-    w=rbind(w,wopt)
+    wOpt$Supervision=supervision
+    w=rbind(w,wOpt)
   }
+
   if(!('Fixed' %in% unique(w$Supervision)) & nrow(wExtOpt)>0){
     wExtOpt$Supervision='Decreasing' }
-
-  w$Problem=problem
-  w$Feature = factorFeature(w$Feature,F)
 
   p=ggplot(w,aes(x=Iter,y=sc.value,color=Feature,group=Feature))+
     geom_line()+geom_point()+
@@ -62,9 +61,9 @@ plot.imitationLearning.weights <- function(problem,dim){
   if(nrow(wExt)>0){
     w=NULL
     for(supervision in wExt$Supervision){
-      wopt$Supervision=supervision
-      wopt$Extended=T
-      w=rbind(w,wopt,subset(wExt,Supervision==supervision))
+      wOpt$Supervision=supervision
+      wOpt$Extended=T
+      w=rbind(w,wOpt,subset(wExt,Supervision==supervision))
     }
     p=p+geom_line(data=w,linetype='dotted')
   }
@@ -75,16 +74,9 @@ plot.imitationLearning.weights <- function(problem,dim){
 stats.imitationLearning <- function(problem,dim){
   files = getSummaryFileNamesIL(problem,dim)
   if(length(files)==0) return(NULL)
-  stat=NULL;
-  for (file in files){
-    tmp=read.csv(paste('..//liblinear/CDR',file,sep='/'))
-    tmp=subset(tmp,NrFeat==16 & Model==1)
-    tmp$Track=file
-    stat=rbind(stat,tmp)
-  }
-
-  m=regexpr('(?<Track>[A-Z]{2}[A-Z0-9]+)',stat$Track,perl=T);
-  stat$Track=getAttribute(stat$Track,m,1)
-  stat=formatData(stat)
-  return(stat[order(stat$Iter,stat$Supervision),c(1,6:14)])
+  stat=get.files('../liblinear/CDR/',files,T)
+  stat=subset(stat,Model==1 & NrFeat==16)
+  stat$Track=getAttribute(stat$File,regexpr('(?<Track>[A-Z]{2}[A-Z0-9]+)',stat$File,perl=T),1)
+  stat=factorTrack(stat)
+  return(stat[order(stat$Iter,stat$Supervision),c(1,6:11,13:15)])
 }

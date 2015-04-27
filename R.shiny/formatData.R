@@ -35,6 +35,9 @@ factorRank <- function(Rank,simple=T){
 factorTrack <- function(x){
   lvs=c(sdrs,'OPT','RND','ALL')
   x$Extended=grepl('EXT',x$Track)
+  ix=grepl('EXT', x$Track)
+  if(any(ix)){ x$Track[ix]=substr(x$Track[ix],1,stringr::str_length(x$Track[ix])-3) }
+
   ix=grepl('IL', x$Track)
   if(any(ix)){
     m=regexpr('IL(?<Iter>[0-9]+)(?<Supervision>[A-Z]+)',x$Track[ix],perl=T)
@@ -42,8 +45,12 @@ factorTrack <- function(x){
     x$Iter[ix]=getAttribute(x$Track[ix],m,1,F)
     x$Supervision='Fixed'
     x$Supervision[ix]=getAttribute(x$Track[ix],m,2)
-
+    x$Track[ix]=paste0('IL',x$Iter[ix])
     lvs=c(lvs,paste0('IL',1:max(x$Iter)))
+    ix=x$Track=='OPT'
+    if(any(ix)){ x$Supervision[ix]='FIX' }
+    x$Supervision=factor(x$Supervision, levels=c('FIX','SUP','UNSUP'),
+                         labels = c('Fixed','Decreasing','Unsupervised'))
   }
   x$Track=factor(x$Track, levels=lvs)
   droplevels(x)

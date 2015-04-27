@@ -44,8 +44,10 @@ get.StepwiseOptimality <- function(problems,dim,track='OPT'){
     }
   }
 
-  Stepwise$Raw$Problem=factorProblem(Stepwise$Raw)
-  Stepwise$Stats$Problem=factorProblem(Stepwise$Stats)
+  if(!is.null(Stepwise$Stats)){
+    Stepwise$Raw$Problem=factorProblem(Stepwise$Raw)
+    Stepwise$Stats$Problem=factorProblem(Stepwise$Stats)
+  } else { return(NULL) }
 
   return(Stepwise)
 }

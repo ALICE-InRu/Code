@@ -2,11 +2,9 @@ get.BestWorst <- function(problems,dim){
 
   stats=NULL
   for(problem in problems){
-    fname = paste('../stepwise/bw.summary',problem,dim,'csv',sep='.')
+    fname = paste('../stepwise/bw',problem,dim,'csv',sep='.')
     if(file.exists(fname)){
       stat=read.csv(fname)
-      fname = paste('../stepwise/bw',problem,dim,'csv',sep='.')
-      write.csv(stat,fname,row.names=F,quote=F)
     } else {
 
       trdat=get.files.TRDAT(problem,dim,'ALL')
@@ -24,7 +22,8 @@ get.BestWorst <- function(problems,dim){
     }
     stats=rbind(stats,stat)
   }
-  stats$Problem=factorProblem(stats)
+  if(!is.null(stats)){ stats$Problem=factorProblem(stats) }
+
   return(stats)
 }
 
