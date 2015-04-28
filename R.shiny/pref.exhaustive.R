@@ -233,24 +233,24 @@ get.optAccuracy <- function(file,reportMean=T){
 
 get.prefSummary <- function(problems,dim,tracks='OPT',rank='p',probabilities='equal',timedependent=F){
 
-  get.prefSummary1 <- function(logFile,Set='Validation'){
-    rho.stats = rho.statistic(logFile)
+  get.prefSummary1 <- function(file,Set='Validation'){
+    rho.stats = rho.statistic(file)
     if(is.null(rho.stats)){return(NULL)}
     rho.stats = rho.stats[,c('Problem','NrFeat','Model','Prob',paste(Set,'Rho',sep='.'),'NValidation')]
 
-    acc.pref = get.prefAccuracy(logFile,paste(Set,'Accuracy',sep='.'),onlyMean = T)
+    acc.pref = get.prefAccuracy(file,paste(Set,'Accuracy',sep='.'),onlyMean = T)
     if(is.null(acc.pref)){return(NULL)}
 
     pref=join(rho.stats, acc.pref, by = c('NrFeat','Model'))
 
     # Make a distinction between mean cross-validation accuracy and stepwise training accuracy
-    acc.opt = get.optAccuracy(logFile,T)
+    acc.opt = get.optAccuracy(file,T)
     if(is.null(acc.opt)){return(NULL)}
     acc.opt=acc.opt[,c('NrFeat','Model',paste(Set,'Accuracy',sep='.'))]
     pref=merge(pref, acc.opt, by = c('NrFeat','Model'),suffixes = c('.Classification','.Optimality'))
 
     pref=rankPareto(pref,paste(Set,'Accuracy.Optimality',sep='.'))$Ranked
-    pref$File=logFile
+    pref$File=file
     return(pref)
   }
 

@@ -28,7 +28,8 @@ rho.statistic <- function(model){
     minNum=choose(16,1)+choose(16,2)+choose(16,3)+choose(16,16)
   } else { minNum=2 }
 
-  fname=paste0('..//PREF/summary/',model,'.csv')
+  fname=paste0('..//PREF/summary/',model)
+  if(!grepl('.csv',fname)){ fname=paste0(fname, '.csv') }
 
   if(file.exists(fname)){ rho.stats=read.csv(fname)}
   else{
