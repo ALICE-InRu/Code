@@ -72,21 +72,21 @@ plot.CMAPREF.timedependentWeights <- function(problem,dim='6x5',
 
   getPrefWeight <- function(){
     file=paste('full',problem,dim,rank,track,probability,'weights.timedependent.csv',sep='.')
-    w=subset(read.csv(paste0('../PREF/weights/',file)),Type=='Weight')
-    w$Model='PREF'
-    w$mean=NULL; w$NrFeat=NULL; w$Type=NULL
-    w=melt(w, id.vars = c('Model','Feature'), variable.name = 'Step')
+    w=read.csv(paste0('../PREF/weights/',file))
+    w=subset(w[,-5],Type=='Weight');
+    w=tidyr::gather(w,'Step','value',grep('Step',names(w)))
     w$Step=as.numeric(substr(w$Step,6,10))
+    w$Model='PREF'
     return(w)
   }
 
   getCMAWeight <- function(type){
     file=paste('full',problem,dim,type,'weights.timedependent.csv',sep='.')
     w <- subset(read.csv(paste0('../CMAES/',file)),Type=='Weight')
-    w$Model=paste0('CMA-',type)
-    w$mean=NULL; w$NrFeat=NULL; w$Type=NULL
-    w=melt(w, id.vars = c('Model','Feature'), variable.name = 'Step')
+    w=subset(w[,-5],Type=='Weight');
+    w=tidyr::gather(w,'Step','value',grep('Step',names(w)))
     w$Step=as.numeric(substr(w$Step,6,10))
+    w$Model=paste0('CMA-',ifelse('MinimumMakespan'==type,'Cmax','Rho'))
     return(w)
   }
 
@@ -94,11 +94,13 @@ plot.CMAPREF.timedependentWeights <- function(problem,dim='6x5',
           getCMAWeight('MinimumRho'),
           getPrefWeight())
 
-  w=ddply(w,~Step+Model,mutate,sc.weight=value/sqrt(sum(value*value)))
   w$Feature=factorFeature(w$Feature,F)
+  w$Feature[w$Feature == levels(w$Feature)[5]] = levels(w$Feature)[17]
+  w=ddply(w,~Step+Model,mutate,sc.weight=value/sqrt(sum(value*value)))
+
   p=ggplot(w,aes(x=Step,y=sc.weight,color=Model,shape=Model))+geom_point(alpha=0.1)+
     geom_smooth(se=F, method='loess')+ggplotColor('Model',3)+
-    axisStep(dim)+axisCompact+facet_wrap(~Feature,nrow=4)
+    axisStep(dim)+axisCompact+facet_wrap(~Feature,ncol=4)
   return(p)
 }
 
