@@ -24,11 +24,11 @@ namespace Scheduling
         private readonly string _dataDirectory;
         private readonly string _sdrDirectory;
         private readonly string _bdrDirectory;
+        private readonly string _prefDirectory;
         private readonly string _optDirectory;
         private readonly string _cmaDirectory;
         private readonly string _trainingDirectoy;
         private string _workingDirectory;
-        private readonly string _liblinearDirectory;
 
         public App()
         {
@@ -42,24 +42,21 @@ namespace Scheduling
             var main = new DirectoryInfo(_mainDirectory);
             Debug.Assert(main.Parent != null, "main.Parent != null");
             _dataDirectory = main.Parent.FullName + @"\rawData\";
-            var sec = new DirectoryInfo(_dataDirectory);
-            if (!sec.Exists) sec.Create();
             _sdrDirectory = main.Parent.FullName + @"\SDR\";
-            sec = new DirectoryInfo(_sdrDirectory);
-            if (!sec.Exists) sec.Create();
             _bdrDirectory = main.Parent.FullName + @"\BDR\";
-            sec = new DirectoryInfo(_bdrDirectory);
-            if (!sec.Exists) sec.Create();
             _optDirectory = main.Parent.FullName + @"\OPT\";
-            sec = new DirectoryInfo(_optDirectory);
-            if (!sec.Exists) sec.Create();
             _trainingDirectoy = main.Parent.FullName + @"\trainingData\";
-            sec = new DirectoryInfo(_trainingDirectoy);
-            if (!sec.Exists) sec.Create();
-            _liblinearDirectory = main.Parent.FullName + @"\liblinear\";
+            _prefDirectory= main.Parent.FullName + @"\PREF\";
             _cmaDirectory = main.Parent.FullName + @"\CMAES\";
-            sec = new DirectoryInfo(_cmaDirectory);
-            if (!sec.Exists) sec.Create();
+
+            foreach (var dir in new[]
+            {
+                _dataDirectory, _sdrDirectory, _bdrDirectory, _optDirectory, _trainingDirectoy, _prefDirectory,
+                _cmaDirectory
+            }.Select(dir => new DirectoryInfo(dir)).Where(sec => !sec.Exists))
+            {
+                dir.Create();
+            }
 
             _workingDirectory = _mainDirectory + @"wip\";
         }
@@ -506,14 +503,9 @@ namespace Scheduling
                 string strSupervised = supervised ? "SUP" : unsupervised ? "UNSUP" : "FIXSUP";
                 string pat = String.Format("{0}.{1}.{2}.(OPT|IL[0-9]+{3}).*.timeindependent", distribution, dimension,
                     rank[0], strSupervised);
-                foreach (string fname in allfiles)
+                foreach (string fname in allfiles.Where(fname => Regex.IsMatch(fname, pat)))
                 {
-                    if (Regex.IsMatch(fname, pat))
-                    {
-                        FileInfo file = new FileInfo(fname);
-                        string name = file.FullName.Substring(_liblinearDirectory.Length);
-                        comboBoxLiblinearLogfile.Items.Add(name);
-                    }
+                    comboBoxLiblinearLogfile.Items.Add(fname);
                 }
             }
             else
@@ -1203,7 +1195,7 @@ namespace Scheduling
                             return false;
                         }
                     }
-                    FileInfo file = new FileInfo(String.Format("{0}{1}", _liblinearDirectory, logFile));
+                    FileInfo file = new FileInfo(String.Format("{0}weights\\{1}", _prefDirectory, logFile));
                     int iteration;
                     bool supervised = radioImitationLearningSupervised.Checked;
                     bool unsupervised = radioImitationLearningUnsupervised.Checked;
@@ -2452,8 +2444,8 @@ namespace Scheduling
 
             if (allfiles.Length == 0)
                 richTextBox.AppendText(
-                    String.Format("Liblinear logged weights for {0} cannot be found in directory: {1}\n", distribution,
-                        _liblinearDirectory));
+                    String.Format("Liblinear logged weights for {0} cannot be found in directory: {1}weights\n", distribution,
+                        _prefDirectory));
             return allfiles;
         }
 
@@ -2481,13 +2473,8 @@ namespace Scheduling
 
             comboBoxLiblinearLogs.Items.Clear();
             string[] allfiles = LiblinearLogs_Update(distribution, dimension);
-
             foreach (string fname in allfiles)
-            {
-                FileInfo file = new FileInfo(fname);
-                string name = file.FullName.Substring(_liblinearDirectory.Length);
-                comboBoxLiblinearLogs.Items.Add(name);
-            }
+                comboBoxLiblinearLogs.Items.Add(fname);
         }
 
         private String[] GetFilesWeight(string startOfFile, string distribution, string dimension)
@@ -2500,8 +2487,9 @@ namespace Scheduling
             else if (radioButtonDependent.Checked) pattern += "dependent";
             else pattern += "*";
             pattern += ".csv";
-            return Directory.GetFiles(String.Format("{0}{1}", _liblinearDirectory, dimension), pattern,
+            string[] files = Directory.GetFiles(String.Format("{0}weights", _prefDirectory), pattern,
                 SearchOption.TopDirectoryOnly);
+            return files.Select(Path.GetFileNameWithoutExtension).ToArray();
         }
 
         private void comboBoxModel_Update(object sender, EventArgs e)
@@ -2858,8 +2846,8 @@ namespace Scheduling
             if (comboBoxLiblinearLogs.Items.Count != 0) return true;
             richTextBox.Text =
                 String.Format(
-                    "Error: Missing log file for precomputed weights. Run LiblineaR script in R first and save in desired directory. (Currently set as {0})\n",
-                    _liblinearDirectory);
+                    "Error: Missing log file for precomputed weights. Run LiblineaR script in R first and save in desired directory. (Currently set as {0}weights)\n",
+                    _prefDirectory);
             return false;
         }
 
@@ -2883,33 +2871,38 @@ namespace Scheduling
                 if (!FindLiblinearLogFiles(problem.Name, problem.Dimension, e))
                     return;
 
-                List<FileInfo> logFiles = new List<FileInfo>();
+                List<FileInfo> weights = new List<FileInfo>();
                 int alreadyDone = 0;
                 if (comboBoxLiblinearLogs.SelectedIndex == -1)
                 {
                     foreach (var item in comboBoxLiblinearLogs.Items)
                     {
-                        FileInfo logFile = new FileInfo(_liblinearDirectory + item);
+                        FileInfo weight = new FileInfo(String.Format("{0}weights\\{1}.csv", _prefDirectory, item));
                         FileInfo summaryFile =
-                            new FileInfo(String.Format("{0}\\CDR\\summary.{1}", _liblinearDirectory, logFile.Name));
-                        if (!summaryFile.Exists & logFile.Exists) logFiles.Add(logFile);
+                            new FileInfo(String.Format("{0}summary\\{1}", _prefDirectory, weight.Name));
+                        if (!summaryFile.Exists & weight.Exists) weights.Add(weight);
                         else if (summaryFile.Exists) alreadyDone++;
                     }
                 }
                 else
                 {
-                    FileInfo logFile = new FileInfo(_liblinearDirectory + comboBoxLiblinearLogs.SelectedItem);
-                    if (logFile.Exists) logFiles.Add(logFile);
+                    FileInfo logFile =
+                        new FileInfo(String.Format("{0}weights\\{1}.csv", _prefDirectory,
+                            comboBoxLiblinearLogs.Items[comboBoxLiblinearLogs.SelectedIndex]));
+                    FileInfo summaryFile =
+                        new FileInfo(String.Format("{0}summary\\{1}", _prefDirectory, logFile.Name));
+                    if (!summaryFile.Exists & logFile.Exists) weights.Add(logFile);
+                    else if (summaryFile.Exists) alreadyDone++;
                 }
 
-                if (logFiles.Count == 0)
+                if (weights.Count == 0)
                 {
                     if (alreadyDone > 0)
                         richTextBox.AppendText(String.Format("Already done {0} models for {1}, see summary files",
                             alreadyDone, problem.Name));
                     else
                     {
-                        richTextBox.Text = "Error: Missing log file for precomputed weights\n";
+                        richTextBox.Text = @"Error: Missing logged weight file for precomputed weights\n";
                         return;
                     }
                 }
@@ -2918,12 +2911,12 @@ namespace Scheduling
                 int outerIter = 0;
                 progressBarOuter.Value = 0;
 
-                foreach (FileInfo logFile in logFiles)
+                foreach (FileInfo weight in weights)
                 {
-                    LinearWeight[] loggedWeights = AuxFun.ReadLoggedLinearWeights(logFile);
+                    LinearWeight[] loggedWeights = AuxFun.ReadLoggedLinearWeights(weight);
                     if (loggedWeights == null) continue;
 
-                    richTextBox.AppendText(string.Format("{0}\n", logFile.Name.Substring(8)));
+                    richTextBox.AppendText(string.Format("{0}\n", weight.Name));
 
                     LinearModel[] loggedModels = new LinearModel[loggedWeights.Length];
                     for (int i = 0; i < loggedWeights.Length; i++)
@@ -2945,8 +2938,8 @@ namespace Scheduling
                         #region apply model to problem
 
                         FileInfo file =
-                            new FileInfo(String.Format(@"{0}/CDR/{1}.on.{2}.{3}.{4}.csv", _liblinearDirectory,
-                                linear.Name, problem.Name, problem.Dimension, problem.Set));
+                            new FileInfo(String.Format("{0}CDR\\{1}.on.{2}.{3}.{4}.csv", _prefDirectory, linear.Name,
+                                problem.Name, problem.Dimension, problem.Set));
                         if (!file.Exists)
                         {
                             //richTextBox.AppendText(linear.Name + " applied.\n");
@@ -2980,7 +2973,7 @@ namespace Scheduling
                         #endregion
                     }
                     progressBarInner.Value = 100;
-                    progressBarOuter.Value = (int) (100.0*(++outerIter)/logFiles.Count);
+                    progressBarOuter.Value = (int) (100.0*(++outerIter)/weights.Count);
 
                     #endregion
                 }
