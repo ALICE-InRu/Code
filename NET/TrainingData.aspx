@@ -64,11 +64,18 @@
         </asp:CheckBoxList>
     </p>
     <p>
-        <asp:Button ID="CreateTrdat" runat="server" Text="Collect training set" 
-            onclick="CreateTrdat_Click" />
+        <asp:Button ID="CreateLocalTrdat" runat="server" Text="Collect training set" 
+            onclick="CreateLocalTrdat_Click" />
+        <asp:Label ID="lblCreateLocalTrdat" runat="server" Text=""></asp:Label>
     </p>
     <p>
-        <textarea id="TextAreaCreateTrdat" name="S1" rows="10"></textarea></p>
+        <asp:Button ID="CreateGlobalTrdat" runat="server" Text="Collect global features"
+            onclick="CreateGlobalTrdat_Click" />
+        <asp:Label ID="lblCreateGlobalTrdat" runat="server" Text=""></asp:Label>
+    </p>
+    <p>
+        <textarea id="TextAreaCreateTrdat" name="S1" rows="10" cols="20" 
+            disabled="disabled"></textarea></p>
     <p>
         Ranking schemes:
         <asp:CheckBoxList ID="TrdatRanks" runat="server">
@@ -81,8 +88,10 @@
     <p>
         <asp:Button ID="CreatePrefSet" runat="server" Text="Collect preference set" 
             onclick="CreatePrefSet_Click" />
+            <asp:Label ID="lblCreatePrefSet" runat="server" Text=""></asp:Label>
     </p>
     <p>
-        <textarea id="TextAreaCreatePrefSet" name="S2" rows="10"></textarea>
+        <textarea id="TextAreaCreatePrefSet" name="S2" rows="10" cols="20" 
+            disabled="disabled"></textarea>
     </p>    
 </asp:Content>
