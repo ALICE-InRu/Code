@@ -1,40 +1,78 @@
-get.evolutionCMA <- function(problem,dim='6x5',timedependent=F){
-
-  get.evolutionCMA1 <- function(type){
+get.evolutionCMA <- function(problems,dim,Timedependent=T,Timeindependent=T,meanStep=F){
+  get.evolutionCMA1 <- function(problem,type,timedependent){
     file=paste('output',problem,dim,type,'weights',
                ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.')
-    x <- read.csv(paste0('../CMAES/results/',file))
-    pat='phi.(?<Feature>[a-zA-Z]+).1$' # only first step is showed regardless of timedependent
+    file=paste0('../CMAES/results/',file)
+    if(!file.exists(file)) { return(NULL) }
+    x <- read_csv(file)
+    x=subset(x, Generation==1 | Generation %% 10 == 0 | Generation==max(Generation)) # otherwise too much data
+    pat='phi.(?<Feature>[a-zA-Z]+).(?<Step>[0-9]+)'
     x=melt(x[,c(1:3,grep(pat,names(x),perl=T))], id.vars=c('Generation','CountEval','Fitness'))
     m=regexpr(pat,x$variable,perl=T)
+    x$Step=getAttribute(x$variable,m,2,F)
+    if(meanStep & timedependent){
+      x=ddply(x,~Generation+CountEval+Fitness+variable,summarise,value=mean(value), .progress = 'text')
+    } else { x=subset(x,Step==1)}
     x$Feature=factorFeature(getAttribute(x$variable,m,1))
-    #x$Step=as.numeric(getAttribute(x$variable,m,2))
-    x$Model=paste0('CMA-',type)
+    x$ObjFun=type
     return(x)
   }
-  stat=rbind(get.evolutionCMA1('MinimumMakespan'),get.evolutionCMA1('MinimumRho'))
+  get.evolutionCMA2 <- function(problem,timedependent){
+    stat=rbind(get.evolutionCMA1(problem,'MinimumMakespan',timedependent),
+               get.evolutionCMA1(problem,'MinimumRho',timedependent))
+    if(is.null(stat)) return(NULL)
+    stat$Timedependent=timedependent
+    stat$Problem=problem
+    return(stat)
+  }
+  stat=NULL
+  for(problem in problems){
+    if(Timedependent) stat=rbind(stat,get.evolutionCMA2(problem,T))
+    if(Timeindependent) stat=rbind(stat,get.evolutionCMA2(problem,F))
+  }
+  info=ddply(stat,~Problem+ObjFun+Timedependent,summarise,Generation=max(Generation),CountEval=max(CountEval))
+  info=merge(tidyr::spread(info[,-4],'ObjFun','CountEval'),
+             tidyr::spread(info[,-5],'ObjFun','Generation'),
+             by=c('Problem','Timedependent'),
+             suffixes = c(".CountEval",".Generation"))
+  print(info)
   return(stat)
 }
 
-plot.evolutionCMA.Weight <- function(evolutionCMA){
-
-  x=ddply(evolutionCMA,~Model+Generation,mutate,sc.weight=value/sqrt(sum(value*value)))
+plot.evolutionCMA.Weights <- function(evolutionCMA,problem){
+  x=subset(evolutionCMA,Problem==problem)
+  x=ddply(x,~ObjFun+Generation+Timedependent,mutate,sc.weight=value/sqrt(sum(value*value)))
   x$Feature=factorFeature(x$Feature,F)
-  p=ggplot(x,aes(x=Generation,y=sc.weight,color=Model))+
+  p=ggplot(x,aes(x=Generation,y=sc.weight,color=ObjFun,linetype=Timedependent))+
     geom_line()+
-    #geom_smooth(se=F, method='loess')+
-    ggplotColor('Model',3)+axisCompact+facet_wrap(~Feature,nrow=4)
+    ggplotColor('Objective function',2)+axisCompact+facet_wrap(~Feature,nrow=4)
   return(p)
-
-
 }
 
-plot.timedependentWeights <- function(problem,dim='6x5',
+plot.evolutionCMA.Fitness <- function(evolutionCMA){
+  evolutionCMA$Problem=factorProblem(evolutionCMA)
+  x=evolutionCMA; x$value=NULL
+  x=tidyr::spread(x,'ObjFun','Fitness')
+  x=subset(x,!is.na(MinimumMakespan) & !is.na(MinimumRho))
+
+  p1 <- ggplot(x,aes(x=Generation, y=MinimumRho, linetype = Timedependent)) +
+    geom_line(color='grey') + ylab(expression("Minimum" * ~rho * ~" (%)")) +facet_wrap(~Problem,ncol=2)
+
+  p2 <- ggplot(x, aes(Generation, y=MinimumMakespan, linetype = Timedependent)) +
+    geom_line(color='black') + ylab(expression("Minimum" *~ C[max])) +facet_wrap(~Problem,ncol=2)
+
+  cat(paste('MinimumRho=grey','MinimumMakespan=black',sep='\n'))
+
+  grid_arrange_different_yaxis(p1,p2,length(unique(x$Problem)))
+  #grid_arrange_shared_xaxis(p1,p2)
+}
+
+plot.CMAPREF.timedependentWeights <- function(problem,dim='6x5',
                                       track='OPT',rank='p',probability='equal'){
 
   getPrefWeight <- function(){
-    file=paste('/full',problem,dim,rank,track,probability,'weights.timedependent.csv',sep='.')
-    w=subset(read.csv(paste0('../liblinear/',dim,file)),Type=='Weight')
+    file=paste('full',problem,dim,rank,track,probability,'weights.timedependent.csv',sep='.')
+    w=subset(read.csv(paste0('../PREF/weights/',file)),Type=='Weight')
     w$Model='PREF'
     w$mean=NULL; w$NrFeat=NULL; w$Type=NULL
     w=melt(w, id.vars = c('Model','Feature'), variable.name = 'Step')
@@ -60,7 +98,7 @@ plot.timedependentWeights <- function(problem,dim='6x5',
   w$Feature=factorFeature(w$Feature,F)
   p=ggplot(w,aes(x=Step,y=sc.weight,color=Model,shape=Model))+geom_point(alpha=0.1)+
     geom_smooth(se=F, method='loess')+ggplotColor('Model',3)+
-    axisStep(w$Step)+axisCompact+facet_wrap(~Feature,nrow=4)
+    axisStep(dim)+axisCompact+facet_wrap(~Feature,nrow=4)
   return(p)
 }
 

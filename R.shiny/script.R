@@ -1,7 +1,7 @@
 source('global.R')
 save=NA
-dim='6x5'
-problem='f.rndn'
+dim='10x10'
+problem='j.rnd'
 problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc')
 SDR=subset(dataset.SDR,Problem %in% problems & dim %in% dim)
 
@@ -48,7 +48,7 @@ plot.BestWorst(problem,dim,'ALL',save)
 if(dim=='10x10'){
   source('pref.exhaustive.R'); source('pref.settings.R')
   probability='equal'
-  prefSummary=get.prefSummary(problems,dim,'OPT','p',probability,F)
+  prefSummary=get.prefSummary(problems,'10x10','OPT','p',probability,F)
   paretoFront=get.paretoFront(prefSummary)
   bestPrefModel=get.bestPrefModel(paretoFront)
 
@@ -76,3 +76,11 @@ source('pref.imitationLearning.R')
 plot.imitationLearning.boxplot(problem,dim)
 plot.imitationLearning.weights(problem,dim)
 stats.imitationLearning(problem,dim)
+
+if(dim=='6x5'){
+  source('cma.R')
+  evolutionCMA=get.evolutionCMA(problems,dim)
+  plot.evolutionCMA.Weights(evolutionCMA,problem)
+  plot.evolutionCMA.Fitness(evolutionCMA)
+  plot.CMAPREF.timedependentWeights(problem, dim)
+}
