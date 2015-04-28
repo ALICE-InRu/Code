@@ -186,7 +186,7 @@ rankPareto <- function(weights,byVar){
 get.prefAccuracy <- function(file,type=NULL,onlyMean=F){
   m=regexpr(".(?<Dimension>[0-9]+x[0-9]+).",file,perl=T)
   dim=getAttribute(file,m,1)
-  acc=read.csv(paste('../liblinear/',dim,'/',file,sep=''))
+  acc=read.csv(paste0('../PREF/weights/',file))
   acc=subset(acc,Type!='Weight'); acc$Feature=NULL
   if(!is.null(type)){ acc = subset(acc,Type==type)}
 
@@ -256,14 +256,14 @@ get.prefSummary <- function(problems,dim,tracks='OPT',rank='p',probabilities='eq
 
   ix=grepl('IL',tracks)
   if(any(ix)){ tracks[ix]=paste0(substr(tracks[ix],1,2),'[0-9]+',substr(tracks[ix],3,100)) }
-  pat=paste('^summary','exhaust',
+  pat=paste('exhaust',
             paste0('(',paste(problems,collapse = '|'),')'),dim,rank,
             paste0('(',paste(tracks,collapse = '|'),')'),
             paste0('(',paste(probabilities,collapse='|'),')'),'weights',
-            ifelse(timedependent,'timedependent','timeindependent'),'csv$',sep='.')
-  files=list.files('..//liblinear/CDR',pat)
+            ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.')
+  files=list.files('..//PREF/summary',pat)
   prefSummary=NULL
-  for(file in files){ prefSummary=rbind(prefSummary,get.prefSummary1(substr(file,9,100))); }
+  for(file in files){ prefSummary=rbind(prefSummary,get.prefSummary1(file)); }
   if(is.null(prefSummary)){return(NULL)}
   prefSummary$Problem=factorProblem(prefSummary)
   return(prefSummary)

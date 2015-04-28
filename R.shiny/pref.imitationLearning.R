@@ -1,6 +1,6 @@
 getSummaryFileNamesIL <- function(problem,dim,CDR=T,rank='p',probability='equal',timedependent=F){
   times=ifelse(timedependent,'timedependent','timeindependent')
-  files=list.files('..//liblinear/CDR',paste('^summary.(full|exhaust)',problem,dim,rank,'*',probability,'weights',times,'csv',sep='.'))
+  files=list.files('..//PREF/summary/',paste('(full|exhaust)',problem,dim,rank,'*',probability,'weights',times,'csv',sep='.'))
   files=files[grep('OPT|IL',files)]
   return(files)
 }
@@ -8,7 +8,7 @@ getSummaryFileNamesIL <- function(problem,dim,CDR=T,rank='p',probability='equal'
 plot.imitationLearning.boxplot <- function(problem,dim){
   files = getSummaryFileNamesIL(problem,dim)
   if(length(files)==0) return(NULL)
-  CDR=get.CDR(substr(files,9,100),16,1,c('train','test'))
+  CDR=get.CDR(files,16,1,c('train','test'))
 
   p=pref.boxplot(CDR,NULL,'Supervision','Track','Imitation learning',F,ifelse(any(CDR$Extended),'Extended',NA))
 
@@ -24,7 +24,7 @@ plot.imitationLearning.weights <- function(problem,dim){
   if(length(files)==0) return(NULL)
   w=NULL
   for (file in files){
-    tmp=get.prefWeights(substr(file,9,100),F)
+    tmp=get.prefWeights(file,F)
     tmp=subset(tmp,NrFeat==16)
     tmp$Track=file
     w=rbind(w,tmp)
@@ -74,7 +74,7 @@ plot.imitationLearning.weights <- function(problem,dim){
 stats.imitationLearning <- function(problem,dim){
   files = getSummaryFileNamesIL(problem,dim)
   if(length(files)==0) return(NULL)
-  stat=get.files('../liblinear/CDR/',files,T)
+  stat=get.files('../PREF/summary/',files,T)
   stat=subset(stat,Model==1 & NrFeat==16)
   stat$Track=getAttribute(stat$File,regexpr('(?<Track>[A-Z]{2}[A-Z0-9]+)',stat$File,perl=T),1)
   stat=factorTrack(stat)

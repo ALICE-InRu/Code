@@ -18,51 +18,41 @@ estimate.prefModels <- function(problem,dim,start,probability,timedependent,trac
   ix=grepl('IL',tracks)
   if(any(ix)){ tracks[ix]=paste0(substr(tracks[ix],1,2),'[0-9]+',substr(tracks[ix],3,100)) }
   tracks=paste0('(',paste(tracks,collapse = '|'),')')
-  files=list.files('../liblinear/CDR/',
-               paste(paste0('^',start),problem,dim,rank,tracks,probability,"weights",ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
-  minNum=ifelse(start=='full',2,697)
-  for(file in files){ rho.statistic(file,minNum = minNum) }
+  files=list.files('..//PREF/CDR/',paste(start,problem,dim,rank,tracks,probability,"weights",ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
+  for(file in files){ rho.statistic(file) }
   return(paste('Estimate LIBLINEAR models for',length(files),'files'))
 }
 
-rho.statistic <- function(model,minNum=697){
-  #choose(16,1)+choose(16,2)+choose(16,3)+choose(16,16)==697
+rho.statistic <- function(model){
+  if(grepl('exhaust',model)){
+    minNum=choose(16,1)+choose(16,2)+choose(16,3)+choose(16,16)
+  } else { minNum=2 }
 
-  fname=paste('../liblinear/CDR/summary',model,sep='.')
-  if(!grepl('.csv',fname)){ fname=paste(fname,'csv',sep='.')}
+  fname=paste0('..//PREF/summary/',model,'.csv')
 
   if(file.exists(fname)){ rho.stats=read.csv(fname)}
   else{
-    files=list.files(paste('..//liblinear/CDR',model,sep='/'))
+    files=list.files(paste0('..//PREF/CDR/',model))
     print(paste(length(files),'models found for',model))
     if(length(files)<minNum){return(NULL)}
+    dat=get.files(paste0('../PREF/CDR/',model),files,T)
+    m=regexpr("F(?<NrFeat>[0-9]+).Model(?<Model>[0-9]+)",dat$File,perl=T)
+    dat$NrFeat=getAttribute(dat$File,m,1,F)
+    dat$Model=getAttribute(dat$File,m,2)
+    m=regexpr("(?<Problem>[a-z].[a-z]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Probability>[a-z0-9]+).weights.time",model,perl=T)
+    dat$Problem=getAttribute(model,m,1)
+    dat$Prob=getAttribute(model,m,5)
+    dat$TimeIndependent=grepl('timeindependent',model)
+    dat$Dimension=getAttribute(model,m,2)
+    dat$Track=getAttribute(model,m,4)
+    dat$Extended=grepl('EXT',dat$Track)
+    dat$Rho = factorRho(dat)
+    ix=dat$Dimension=='10x10' & dat$Set=='train' & dat$PID>Ntrain10x10 & !dat$Extended
+    if(any(ix)){ dat$Set[ix]='test' }
 
-    model.rex="(?<Problem>[a-z].[a-z]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Probability>[a-z0-9]+).weights.time"
-    m=regexpr(model.rex,model,perl=T)
-    problem=getAttribute(model,m,1)
-    rank=getAttribute(model,m,3)
-    track=getAttribute(model,m,4)
-    probability=getAttribute(model,m,5)
-    timeindependent=grepl('timeindependent$',model)
-    print(paste(rank,track,probability,timeindependent))
-
-    dat=NULL
-    name.rex="F(?<NrFeat>[0-9]+).Model(?<Model>[0-9]+)"
-    for(file in files){
-      tmp=read.csv(paste('..//liblinear/CDR',model,file,sep='/'))
-      m=regexpr(name.rex,file,perl=T)
-      tmp$NrFeat <- as.factor(getAttribute(file,m,1))
-      tmp$Model <- as.factor(getAttribute(file,m,2))
-      tmp$Heuristic=NULL
-      tmp$Prob=probability
-      dat=rbind(dat,tmp)
-    }
-    dat$Problem=problem
-    dat$TimeIndependent=timeindependent
     Ntrain=quantile(unique(subset(dat,Set=='train')$PID),.8) # 80% of training data saved for validation
     levels(dat$Set)=c(levels(dat$Set),'validation')
     dat$Set[dat$Set=='train' & dat$PID>Ntrain]='validation' # 20% of training data saved for validation
-    dat$Rho = factorRho(dat)
     rho.stats = ddply(dat,~Problem+NrFeat+Model+Prob+TimeIndependent, summarise,
                       Training.Rho = round(mean(Rho[Set=='train']), digits = 5),
                       NTrain = sum(Set=='train'),
@@ -85,13 +75,10 @@ create.prefModel <- function(problem,dim,track,rank,probability,timedependent,ex
   }
 
   logFile <- function(exhaustive){
-    liblinearDir=paste('../liblinear/',dim,'/',sep='')
-    dir.create(path = liblinearDir,showWarnings = FALSE)
-
     file = paste(problem,dim,rank,track,probability,'weights',
                  ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.')
     if(scale){file=paste('sc',file,sep='.')}
-    file = paste(liblinearDir,ifelse(exhaustive,'exhaust.','full.'),file,sep='')
+    file = paste0('../PREF/weights/',ifelse(exhaustive,'exhaust.','full.'),file)
     return(file)
   }
 

@@ -59,7 +59,7 @@ output$output.liblinearModel <- renderPrint({
     patTracks[grepl('ILFIXSUP',patTracks)]='IL[0-9]+FIXSUP'
     patTracks=paste0('(',paste(patTracks,collapse='|'),')')
     fT=list.files('../trainingData/',paste('^trdat',problem,dimension,patTracks,'Local','diff',rank,'csv',sep='.'))
-    fW=list.files(paste('..//liblinear',dimension,sep='/'),paste(ifelse(exhaustive,'exhaust','full'),problem,dimension,rank,tracks,probability,'weights',ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.'))
+    fW=list.files('../PREF/weights/',paste(ifelse(exhaustive,'exhaust','full'),problem,dimension,rank,tracks,probability,'weights',ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.'))
     if(length(fT)+any(grepl('ALL',tracks))>length(fW)){
 
       lmax=ifelse(numericDimension(input$dimension)<100,
@@ -75,7 +75,7 @@ output$output.liblinearModel <- renderPrint({
 })
 
 pref.files <- reactive({
-  list.files(paste('../liblinear',input$dimension,sep='/'),paste(input$problem,input$dimension,'[a-z]{1}','[A-Z0-9]+','[a-z]+','weights','time[dependent|independent]*','csv',sep='.'))
+  list.files(paste0('../PREF/weights/'),paste(input$problem,input$dimension,'[a-z]{1}','[A-Z0-9]+','[a-z]+','weights','time[dependent|independent]*','csv',sep='.'))
 })
 pref.files.pat = paste('(?<rank>[a-z]{1})','(?<track>[A-Z0-9]+)','(?<prob>[a-z]+)','weights','time[dependent|independent]*','csv',sep='.')
 
@@ -104,7 +104,3 @@ output$progressProbs <- renderValueBox({
   probs=unique(getAttribute(pref.files(),m,3))
   valueBox( paste0('#',length(probs)), "probabilities", color = "lime", icon = icon("eraser "))
 })
-
-
-
-

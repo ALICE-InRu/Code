@@ -70,7 +70,7 @@ get.rhoTracksRanks <- function(problems,dim,tracks=c(sdrs,'OPT','RND','ALL'),
   if(length(tracks)>1) tracks=paste0('(',paste(tracks,collapse='|'),')')
   if(length(ranks)>1) ranks=paste0('(',paste(ranks,collapse='|'),')')
 
-  files=list.files('../liblinear/CDR',paste('^full',problems,dim,ranks,tracks,probability,'weights',ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
+  files=list.files('../PREF/summary/',paste(problems,dim,ranks,tracks,probability,'weights',ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
 
   CDR=get.CDR(files,16,1,'train')
 

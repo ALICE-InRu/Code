@@ -100,7 +100,7 @@ get.CDR <- function(files,NrFeat,Model,sets='train'){
     Track=getAttribute(file,m,4)
     Prob=getAttribute(file,m,5)
 
-    fname=paste('../liblinear','CDR',file,paste(paste('F',NrFeat,sep=''),paste('Model',Model,sep=''),'on',problem,dim,set,'csv',sep='.'),sep='/')
+    fname=paste('../PREF/CDR',file,paste(paste0('F',NrFeat),paste0('Model',Model),'on',problem,dim,set,'csv',sep='.'),sep='/')
     if(!file.exists(fname)){return(NULL)}
     dat=read.csv(fname)
     dat$Problem=problem
@@ -137,8 +137,7 @@ get.CDR <- function(files,NrFeat,Model,sets='train'){
 get.prefWeights <- function(file,timedependent,asMatrix=F){
   m=regexpr("(?<Problem>[jf].[a-z0-9]+).(?<Dimension>[0-9]+x[0-9]+).",file,perl=T)
   problem=getAttribute(file,m,1)
-  dim=getAttribute(file,m,2)
-  weights=read.csv(paste0('../liblinear/',dim,'/',file))
+  weights=read.csv(paste0('../PREF/weights/',file))
   weights=subset(weights,Type=='Weight')
   if(!timedependent){ weights=weights[,c(1:4,6)] } else { weights$mean=NULL };
   if(asMatrix){
