@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Threading;
 using System.Linq;
 using System.IO;
 using System.Data;
@@ -69,20 +68,6 @@ namespace Scheduling
             radioButtonGLPKtraining.Select();
             radioLocal.Select();
 
-            labelLiblinearTypes.Visible = false;
-            comboBoxLIBLINEAR.Visible = false;
-            labelKernelFunction.Visible = false;
-            comboBoxLIBSVMkernelType.Visible = false;
-            labelKernelFunction.Visible = false;
-            labelLIBSVMdegree.Visible = false;
-            labelLIBSVMkernelType.Visible = false;
-            comboBoxLIBSVMkernelType.Visible = false;
-            textBoxLIBSVMdegree.Visible = false;
-            textBoxLIBSVMgamma.Visible = false;
-            labelLIBSVMgamma.Visible = false;
-            labelLIBSVMcoef0.Visible = false;
-            textBoxLIBSVMcoef0.Visible = false;
-
             comboBoxLiblinearLogfile.Visible = false;
             numericLiblinearModel.Visible = false;
             labelLiblinearModel.Visible = false;
@@ -92,8 +77,6 @@ namespace Scheduling
             radioImitationLearningUnsupervised.Visible = false;
             radioImitationLearningUnsupervised.Checked = true;
 
-            startAsyncButtonApplyPrefModel.Text = ButtonTextValidate;
-            startAsyncButtonGenPrefModel.Text = ButtonTextValidate;
             startAsyncButtonGenTrData.Text = ButtonTextValidate;
             startAsyncButtonRankTrData.Text = ButtonTextValidate;
             startAsyncButtonOptimize.Text = ButtonTextValidate;
@@ -104,8 +87,6 @@ namespace Scheduling
             cancelAsyncButtonFeatTrData.Visible = false;
             cancelAsyncButtonRankTrData.Visible = false;
             cancelAsyncButtonOptimize.Visible = false;
-            cancelAsyncButtonApplyPrefModel.Visible = false;
-            cancelAsyncButtonGenPrefModel.Visible = false;
             cancelAsyncButtonCMA.Visible = false;
 
             radioButtonCMAIndependent.Select();
@@ -133,12 +114,6 @@ namespace Scheduling
                     if (startAsyncButtonRankTrData.Text == ButtonTextStart)
                         startAsyncButtonRankTrData.Text = ButtonTextValidate;
                     break;
-                case "tabPrefModels":
-                    if (startAsyncButtonGenPrefModel.Text == ButtonTextStart)
-                        startAsyncButtonGenPrefModel.Text = ButtonTextValidate;
-                    if (startAsyncButtonApplyPrefModel.Text == ButtonTextStart)
-                        startAsyncButtonApplyPrefModel.Text = ButtonTextValidate;
-                    break;
                 case "tabCMA":
                     if (startAsyncButtonCMA.Text == ButtonTextStart)
                         startAsyncButtonCMA.Text = ButtonTextValidate;
@@ -157,12 +132,9 @@ namespace Scheduling
         {
             List<CheckedListBox> ckbs = new List<CheckedListBox>
             {
-                ckbDataSets,
-                ckbDim,
                 ckbProblemModel,
                 ckbRanks,
                 ckbSimpleDataSet,
-                ckbProblemRatio,
                 ckbSimpleDim,
                 ckbSimpleProblem,
                 ckbSimpleSDR
@@ -195,14 +167,7 @@ namespace Scheduling
                     ckbProblemModel.SetItemChecked(1, true);
                     ckbTracks.SetItemChecked(0, true);
                     ckbRanks.SetItemChecked(0, true);
-                    ckbProblemRatio.SetItemChecked(0, true);
-                    ckbProblemRatio.SetItemChecked(1, true);
-                    ckbDim.SetItemChecked(0, true);
-                    ckbDataSets.SetItemChecked(0, true);
-                    ckbDataSets.SetItemChecked(1, true);
                     radioLocal.Select();
-                    radioButtonLIBLINEAR.Select();
-                    textBoxCost.Text = @"100";
                     textBoxDir.Text = scheme;
                     break;
 
@@ -225,14 +190,7 @@ namespace Scheduling
                     ckbRanks.SetItemChecked(0, true);
                     ckbRanks.SetItemChecked(1, true);
                     ckbRanks.SetItemChecked(2, true);
-                    ckbProblemRatio.SetItemChecked(0, true);
-                    ckbProblemRatio.SetItemChecked(1, true);
-                    ckbDim.SetItemChecked(0, true);
-                    ckbDataSets.SetItemChecked(0, true);
-                    ckbDataSets.SetItemChecked(1, true);
                     radioLocal.Select();
-                    radioButtonLIBLINEAR.Select();
-                    textBoxCost.Text = @"100";
                     textBoxDir.Text = scheme.Substring(0, 5);
                     break;
 
@@ -276,39 +234,12 @@ namespace Scheduling
                     ckbTracks.SetItemChecked(6, true);
                     ckbTracks.SetItemChecked(7, true);
                     ckbRanks.SetItemChecked(0, true);
-                    ckbProblemRatio.SetItemChecked(0, true);
-                    ckbProblemRatio.SetItemChecked(1, true);
-                    ckbProblemRatio.SetItemChecked(2, true);
-                    ckbProblemRatio.SetItemChecked(3, true);
-                    ckbProblemRatio.SetItemChecked(4, true);
-                    ckbDim.SetItemChecked(1, true);
-                    ckbDataSets.SetItemChecked(1, true);
                     radioGlobal.Select();
-                    radioButtonLIBLINEAR.Select();
-                    textBoxCost.Text = @"100";
                     textBoxDir.Text = scheme;
                     break;
 
                     #endregion
 
-
-                case "PREF":
-
-                    #region PREF models
-
-                    tabControl.SelectTab("tabPREFmodels");
-                    tabControl_SelectedIndexChanged(sender, e);
-
-                    comboBoxModel.Select();
-
-                    ckbProblemRatio.SetItemChecked(0, true); // jrnd
-                    ckbDataSets.SetItemChecked(0, true); // train
-                    ckbDim.SetItemChecked(0, true); // 6x5
-
-                    textBoxDir.Text = scheme;
-                    break;
-
-                    #endregion
 
                 case "LIBLINEAR":
 
@@ -346,13 +277,6 @@ namespace Scheduling
                 pictureBox.Visible = false;
                 richTextBoxConsole.Visible = true;
             }
-        }
-
-        private void OnlyNumbers(TextBox box)
-        {
-            if (Regex.IsMatch(box.Text, "^[0-9]*$")) return;
-            MessageBox.Show(@"Please enter only positive integers.");
-            box.Text = box.Text.Substring(0, box.Text.Length - 1);
         }
 
         private string ReadProblem(string problem, string dim, string set, out Data problems, out bool success,
@@ -537,6 +461,7 @@ namespace Scheduling
         private void ckb_ClickAllowOnly1(object sender, EventArgs e)
         {
             CheckedListBox ckb = sender as CheckedListBox;
+            if (ckb == null) return;
             for (int ix = 0; ix < ckb.Items.Count; ++ix)
                 ckb.SetItemChecked(ix, ix == ckb.SelectedIndex);
         }
@@ -939,118 +864,7 @@ namespace Scheduling
 
         #endregion
 
-        #region tab: create training data, create preference models, apply model
-
-        private void radioButtonClassifer_CheckedChanged(object sender, EventArgs e)
-        {
-            if (radioButtonLIBSVM.Checked)
-            {
-                labelLiblinearTypes.Visible = false;
-                comboBoxLIBLINEAR.Visible = false;
-                labelLIBSVMkernelType.Visible = true;
-                comboBoxLIBSVMkernelType.Visible = true;
-            }
-            if (radioButtonLIBLINEAR.Checked)
-            {
-                labelLIBSVMkernelType.Visible = false;
-                comboBoxLIBSVMkernelType.Visible = false;
-                labelLiblinearTypes.Visible = true;
-                comboBoxLIBLINEAR.Visible = true;
-
-                labelKernelFunction.Text = @"u'*v";
-                labelLIBSVMcoef0.Visible = false;
-                textBoxLIBSVMcoef0.Visible = false;
-                textBoxLIBSVMcoef0.Text = "";
-                labelLIBSVMdegree.Visible = false;
-                textBoxLIBSVMdegree.Visible = false;
-                textBoxLIBSVMdegree.Text = "";
-                labelLIBSVMgamma.Visible = false;
-                textBoxLIBSVMgamma.Visible = false;
-                textBoxLIBSVMdegree.Text = "";
-            }
-        }
-
-        private void comboBoxLIBSVMkernelType_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (comboBoxLIBSVMkernelType.SelectedIndex != -1)
-            {
-                string selected = (string) comboBoxLIBSVMkernelType.Items[comboBoxLIBSVMkernelType.SelectedIndex];
-                switch (selected)
-                {
-                    case "polynomial":
-                        labelKernelFunction.Text = @"(1/gamma*u'v + coef0)^deg";
-                        labelLIBSVMcoef0.Visible = true;
-                        textBoxLIBSVMcoef0.Visible = true;
-                        textBoxLIBSVMcoef0.Text = @"0";
-                        labelLIBSVMdegree.Visible = true;
-                        textBoxLIBSVMdegree.Visible = true;
-                        textBoxLIBSVMdegree.Text = @"3";
-                        labelLIBSVMgamma.Visible = true;
-                        textBoxLIBSVMgamma.Visible = true;
-                        textBoxLIBSVMgamma.Text = @"13";
-                        break;
-                    case "radial basis function":
-                        labelKernelFunction.Text = @"exp(-1/gamma*|u-v|^2)";
-                        labelLIBSVMcoef0.Visible = false;
-                        textBoxLIBSVMcoef0.Visible = false;
-                        textBoxLIBSVMcoef0.Text = "";
-                        labelLIBSVMdegree.Visible = false;
-                        textBoxLIBSVMdegree.Visible = false;
-                        textBoxLIBSVMdegree.Text = "";
-                        labelLIBSVMgamma.Visible = true;
-                        textBoxLIBSVMgamma.Visible = true;
-                        textBoxLIBSVMgamma.Text = @"13";
-                        break;
-                    case "sigmoid":
-                        labelKernelFunction.Text = @"tanh(1/gamma*u'*v+coef0)";
-                        labelLIBSVMcoef0.Visible = true;
-                        textBoxLIBSVMcoef0.Visible = true;
-                        textBoxLIBSVMcoef0.Text = @"0";
-                        labelLIBSVMdegree.Visible = false;
-                        textBoxLIBSVMdegree.Visible = false;
-                        textBoxLIBSVMdegree.Text = "";
-                        labelLIBSVMgamma.Visible = true;
-                        textBoxLIBSVMgamma.Visible = true;
-                        textBoxLIBSVMgamma.Text = @"13";
-                        break;
-                    default:
-                        labelKernelFunction.Text = @"u'*v";
-                        labelLIBSVMcoef0.Visible = false;
-                        textBoxLIBSVMcoef0.Visible = false;
-                        textBoxLIBSVMcoef0.Text = "";
-                        labelLIBSVMdegree.Visible = false;
-                        textBoxLIBSVMdegree.Visible = false;
-                        textBoxLIBSVMdegree.Text = "";
-                        labelLIBSVMgamma.Visible = false;
-                        textBoxLIBSVMgamma.Visible = false;
-                        textBoxLIBSVMdegree.Text = "";
-                        break;
-                }
-            }
-        }
-
-        private void textBoxLIBSVMgamma_TextChanged(object sender, EventArgs e)
-        {
-            OnlyNumbers(textBoxLIBSVMgamma);
-        }
-
-        private void textBoxLIBSVMcoef0_TextChanged(object sender, EventArgs e)
-        {
-            OnlyNumbers(textBoxLIBSVMcoef0);
-        }
-
-        private void textBoxLIBSVMdegree_TextChanged(object sender, EventArgs e)
-        {
-            OnlyNumbers(textBoxLIBSVMdegree);
-        }
-
-        private void textBoxCost_TextChanged(object sender, EventArgs e)
-        {
-            OnlyNumbers(textBoxCost);
-        }
-
-        #endregion
-
+        
         #region backgroundworkers
 
         #region bkgWorkerGenTrData
@@ -1447,431 +1261,6 @@ namespace Scheduling
                 MessageBox.Show(String.Format("{0}. {1}", MsgTaskComplete, e.Result));
                 cancelAsyncButtonGenTrData.Visible = false;
                 startAsyncButtonGenTrData.Text = ButtonTextValidate;
-            }
-        }
-
-        #endregion
-
-        #region bkgWorkerGenPrefModel
-
-        #region start / stop
-
-        private void startAsyncButtonGenPrefModel_Click(object sender, EventArgs e)
-        {
-            string classifer, libparam, path2TrainingData, info;
-            bool success = ValidateGenPrefModel(out classifer, out libparam, out path2TrainingData, out info);
-            string[] arg = new string[] {classifer, libparam, path2TrainingData};
-            object args = arg;
-            switch (startAsyncButtonGenPrefModel.Text)
-            {
-                case ButtonTextValidate:
-                    richTextBox.Text = info;
-                    if (success)
-                        startAsyncButtonGenPrefModel.Text = ButtonTextStart;
-                    break;
-                case ButtonTextStart:
-                    while (bkgWorkerGenPrefModel.IsBusy)
-                    {
-                        /* wait */
-                    }
-                    if (!success) break;
-                    richTextBox.Text = "";
-                    richTextBoxConsole.Text = "";
-                    bkgWorkerGenPrefModel.RunWorkerAsync(args);
-                    cancelAsyncButtonGenPrefModel.Visible = true;
-                    break;
-            }
-        }
-
-        private void cancelAsyncButtonGenPrefModel_Click(object sender, EventArgs e)
-        {
-            bkgWorkerGenPrefModel.CancelAsync();
-            richTextBox.AppendText("\n\nCancelling creation of PREF models...");
-            cancelAsyncButtonOptimize.Visible = false;
-        }
-
-        #endregion
-
-        #region validate
-
-        private bool ValidateGenPrefModel(out string classifer, out string libParam, out string path2TrainingData,
-            out string info)
-        {
-            libParam = "";
-            classifer = (radioButtonLIBLINEAR.Checked ? "LIBLINEAR" : "LIBSVM");
-
-            if (!SetWorkingDirectory(out _workingDirectory, out info))
-            {
-                path2TrainingData = "";
-                return false;
-            }
-
-            // Get selected index, and then make sure it is valid.
-            int ix = comboBoxTrainingData.SelectedIndex;
-            if (ix == -1)
-            {
-                info = "No training data selected";
-                path2TrainingData = "";
-                return false;
-            }
-            path2TrainingData = comboBoxTrainingData.Items[ix].ToString();
-            info = "Preference pairs from " + path2TrainingData + " selected.\nResults will be saved in directory: " +
-                   _workingDirectory + "\n";
-
-            #region paramters for liblin or libsvm
-
-            if (textBoxCost.Text == string.Empty)
-            {
-                info = "Must choose cost for classifer.";
-                return false;
-            }
-            libParam = "-C " + textBoxCost.Text;
-
-            switch (classifer)
-            {
-                case "LIBLINEAR":
-                    if (comboBoxLIBLINEAR.SelectedIndex == -1)
-                    {
-                        info = "Choose type detail for LIBLINEAR";
-                        return false;
-                    }
-
-                    string typeDetail = comboBoxLIBLINEAR.Items[comboBoxLIBLINEAR.SelectedIndex].ToString();
-                    Match m = Regex.Match(typeDetail, @"\((.+)\)");
-                    if (m.Success) typeDetail = m.Groups[1].ToString();
-                    switch (typeDetail)
-                    {
-                        case "L2R_LR": // L2-regularized logistic regression
-                            libParam += " -t 0";
-                            break;
-                        case "L1R_LR": // L1-regularized logistic regression 
-                            libParam += " -t 6";
-                            break;
-                        case "L1R_L2LOSS_SVC": // L1-regularized L2-loss support vector classification
-                            libParam += " -t 5";
-                            break;
-                    }
-                    break;
-                case "LIBSVM":
-                    if (comboBoxLIBSVMkernelType.SelectedIndex == -1)
-                    {
-                        info = "Choose kernel function for LIBSVM";
-                        return false;
-                    }
-
-                    if (textBoxLIBSVMcoef0.Visible)
-                    {
-                        if (textBoxLIBSVMcoef0.Text == string.Empty)
-                        {
-                            info = "Set coef0 in kernel function (default 0)";
-                            return false;
-                        }
-                        libParam += " -coef0 " + textBoxLIBSVMcoef0.Text;
-                    }
-                    if (textBoxLIBSVMdegree.Visible)
-                    {
-                        if (textBoxLIBSVMdegree.Text == string.Empty)
-                        {
-                            info = "Set degree in kernel function (default 3)";
-                            return false;
-                        }
-                        libParam += " -d " + textBoxLIBSVMdegree.Text;
-                    }
-                    if (textBoxLIBSVMgamma.Visible)
-                    {
-                        if (textBoxLIBSVMgamma.Text == string.Empty)
-                        {
-                            info = "Set gamma in kernel function (default 1/num_features)";
-                            return false;
-                        }
-                        libParam += " -g " +
-                                    (1/Convert.ToDouble(textBoxLIBSVMgamma.Text)).ToString(CultureInfo.InvariantCulture)
-                                        .Replace(',', '.');
-                    }
-                    break;
-            }
-            info += "\n" + classifer + " classifier chosen with parameters:\n" + libParam + "\n";
-
-            #endregion
-
-            return true;
-        }
-
-        #endregion
-
-        private void bkgWorkerGenPrefModel_DoWork(object sender, DoWorkEventArgs e)
-        {
-            string[] arg = (string[]) e.Argument;
-            const FeatureType ARG_FEATURE_TYPE = FeatureType.Local; // put in interface!
-            LinearModel model = new LinearModel(arg[0], arg[1], arg[2], _workingDirectory, ARG_FEATURE_TYPE);
-
-            bkgWorkerGenPrefModel.ReportProgress(0,
-                SEPERATION_LINE + "Generating preference models based on specified training data ... " + SEPERATION_LINE);
-
-            #region do intensive work
-
-            DateTime start = DateTime.Now;
-            TimeSpan duration;
-            e.Result = "";
-            int iter = 0;
-            string info = model.Name;
-
-            model.TrainModel();
-
-            FileInfo results;
-            do
-            {
-                /* wait */
-                results = new FileInfo(model.PathModel);
-            } while (!results.Exists);
-
-            string[] content;
-            while (true)
-            {
-                bool success = AuxFun.ReadTextFile(model.PathModel, out content, "");
-                if (success & content.Length > 0)
-                {
-                    if (content[content.Length - 1] == "End of file")
-                        break;
-                }
-                if (bkgWorkerGenPrefModel.CancellationPending)
-                {
-                    duration = DateTime.Now - start;
-                    info += "\n\nDuration: " +
-                            duration.TotalSeconds.ToString(CultureInfo.InvariantCulture).Replace(',', '.') + " s.";
-                    bkgWorkerGenPrefModel.ReportProgress(0, info);
-                    e.Cancel = true;
-                    return;
-                }
-                bkgWorkerGenPrefModel.ReportProgress(iter, "");
-
-                if (++iter > 100) iter = 0;
-                Thread.Sleep(10000);
-
-            }
-
-            for (int i = 0; i < content.Length - 1; i++)
-                bkgWorkerGenPrefModel.ReportProgress(100, content[i]);
-
-            duration = DateTime.Now - start;
-            e.Result = "Total duration: " +
-                       duration.TotalSeconds.ToString(CultureInfo.InvariantCulture).Replace(',', '.') + " s.";
-            bkgWorkerGenPrefModel.ReportProgress(100, SEPERATION_LINE + e.Result + SEPERATION_LINE);
-
-            #endregion
-        }
-
-        private void bkgWorkerGenPrefModel_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (e.Cancelled)
-            {
-                MessageBox.Show(startAsyncButtonGenPrefModel.Text == ButtonTextResume
-                    ? "The task has been paused."
-                    : "The task has been cancelled.");
-            }
-            else if (e.Error != null)
-            {
-                MessageBox.Show(@"Error. Details: " + e.Error);
-            }
-            else
-            {
-                MessageBox.Show(String.Format("{0}. {1}", MsgTaskComplete, e.Result));
-                cancelAsyncButtonGenPrefModel.Visible = false;
-                startAsyncButtonGenPrefModel.Text = ButtonTextValidate;
-            }
-
-        }
-
-        #endregion
-
-        #region bkgWorkerApplyPrefModel
-
-        #region start /stop
-
-        private void startAsyncButtonApplyPrefModel_Click(object sender, EventArgs e)
-        {
-            richTextBox.Text = "";
-            LinearModel[] models;
-            Data[] applyData;
-            string info;
-            bool success = ValidateApplyPrefModel(out models, out applyData, out info);
-            object args = new object[] {models, applyData};
-            switch (startAsyncButtonApplyPrefModel.Text)
-            {
-                case ButtonTextValidate:
-                    richTextBox.Text = info;
-                    if (success)
-                        startAsyncButtonApplyPrefModel.Text = ButtonTextStart;
-                    break;
-                case ButtonTextStart:
-                    while (bkgWorkerApplyPrefModel.IsBusy)
-                    {
-                        /* wait */
-                    }
-                    richTextBoxConsole.Text = "";
-                    bkgWorkerApplyPrefModel.RunWorkerAsync(args);
-                    cancelAsyncButtonApplyPrefModel.Visible = true;
-                    break;
-            }
-        }
-
-        private void cancelAsyncButtonApplyPrefModel_Click(object sender, EventArgs e)
-        {
-            bkgWorkerApplyPrefModel.CancelAsync();
-            richTextBox.AppendText("\n\nCancelling application of PREF models...");
-            cancelAsyncButtonApplyPrefModel.Visible = false;
-        }
-
-        #endregion
-
-        #region validate
-
-        private bool ValidateApplyPrefModel(out LinearModel[] models, out Data[] applyProblems, out string info)
-        {
-            models = null;
-            applyProblems = null;
-            if (!SetWorkingDirectory(out _workingDirectory, out info))
-            {
-                return false;
-            }
-
-            // Get selected index, and then make sure it is valid.            
-            List<string> testInstances =
-                (from int selected in ckbProblemRatio.CheckedIndices select ckbProblemRatio.Items[selected].ToString())
-                    .ToList();
-            if (!testInstances.Any())
-            {
-                info = "Data set is missing. Choose at least one.";
-                return false;
-            }
-
-            List<string> dims =
-                (from int selected in ckbDim.CheckedIndices select ckbDim.Items[selected].ToString()).ToList();
-            if (!dims.Any() & testInstances.Any(x => x.Length <= 4))
-            {
-                info = "Dimensions for data is missing, choose 6x5 and/or 10x10.";
-                return false;
-            }
-
-            List<string> sets =
-                (from int selected in ckbDataSets.CheckedIndices select ckbDataSets.Items[selected].ToString().ToLower())
-                    .ToList();
-            if (!sets.Any() & testInstances.Any(x => x.Length <= 4))
-            {
-                info = "Data set is missing, choose test and/or training set.";
-                return false;
-            }
-
-            if (comboBoxModel.Items.Count == 0)
-            {
-                info = "Model has not been created. Run simulation first.";
-                return false;
-            }
-            if (comboBoxModel.SelectedIndex == -1)
-            {
-                info = "Model has not been selected.";
-                return false;
-            }
-            string fname = comboBoxModel.SelectedItem.ToString();
-
-            models = new LinearModel[1];
-            models[0] = new LinearModel(new FileInfo(_workingDirectory + fname));
-
-            if (!ReadData(testInstances, sets, dims, out applyProblems, out info))
-            {
-                return false;
-            }
-            info += "Validation successful\n";
-
-            return true;
-        }
-
-        #endregion
-
-        private void bkgWorkerApplyPrefModel_DoWork(object sender, DoWorkEventArgs e)
-        {
-            bkgWorkerApplyPrefModel.ReportProgress(0,
-                SEPERATION_LINE + "Apply preference model to problem instances specified ... " + SEPERATION_LINE);
-
-            #region do intensive work
-
-            object[] arg = (object[]) e.Argument;
-
-            LinearModel[] models = (LinearModel[]) arg[0];
-            Data[] applyProblems = (Data[]) arg[1];
-
-            int iter = 0, totIter = models.Length*applyProblems.Length;
-            foreach (LinearModel model in models)
-            {
-                bkgWorkerApplyPrefModel.ReportProgress((int) (100.0*iter/totIter), model.Name);
-                foreach (Data problem in applyProblems)
-                {
-                    TestingData test = new TestingData(problem, model, _workingDirectory);
-                    bkgWorkerApplyPrefModel.ReportProgress((int) (100.0*iter++/totIter),
-                        problem.Name + "." + problem.Dimension);
-
-                    if (File.Exists(test.Filename)) continue;
-                    DateTime start = DateTime.Now;
-                    TimeSpan duration;
-
-                    Data optData = problem;
-                    optData.ReadCsvOpt(_optDirectory);
-                    string info = "";
-                    foreach (DataRow instance in problem.Rows)
-                    {
-                        string name = (string) instance["Name"];
-
-                        DataRow optRow = optData.Rows.Find(name);
-                        int optimumMakespan = optRow != null ? (int) optRow["Makespan"] : int.MinValue;
-
-                        info += test.ApplyModel(instance, Track.PREF, model, optimumMakespan);
-                        //do some intense task here.  
-
-                        int pid = (int) instance["PID"];
-
-                        if (bkgWorkerApplyPrefModel.CancellationPending)
-                        {
-                            duration = DateTime.Now - start;
-                            info = "Duration: " +
-                                   duration.TotalSeconds.ToString(CultureInfo.InvariantCulture).Replace(',', '.') +
-                                   " s.";
-                            bkgWorkerApplyPrefModel.ReportProgress((int) (100.0*pid/problem.NumInstances), info);
-                            e.Cancel = true;
-                            return;
-                        }
-                        bkgWorkerApplyPrefModel.ReportProgress((int) (100.0*pid/problem.NumInstances), "");
-                    }
-                    // save current work 
-                    test.WriteCsv(true);
-
-                    duration = DateTime.Now - start;
-                    e.Result = info + "\nTotal duration: " +
-                               duration.TotalSeconds.ToString(CultureInfo.InvariantCulture).Replace(',', '.') + " s.";
-                    bkgWorkerApplyPrefModel.ReportProgress((int) (100.0*iter/totIter), e.Result);
-                }
-            }
-            bkgWorkerApplyPrefModel.ReportProgress(100, SEPERATION_LINE + e.Result + SEPERATION_LINE);
-
-            #endregion
-        }
-
-        private void bkgWorkerApplyPrefModel_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (e.Cancelled)
-            {
-                MessageBox.Show(startAsyncButtonApplyPrefModel.Text == ButtonTextResume
-                    ? "The task has been paused."
-                    : "The task has been cancelled.");
-            }
-            else if (e.Error != null)
-            {
-                MessageBox.Show(@"Error. Details: " + e.Error);
-            }
-            else
-            {
-                MessageBox.Show(String.Format("{0}. {1}", MsgTaskComplete, e.Result));
-                cancelAsyncButtonApplyPrefModel.Visible = false;
-                startAsyncButtonApplyPrefModel.Text = ButtonTextValidate;
             }
         }
 
@@ -2278,8 +1667,6 @@ namespace Scheduling
                     ValidateRankTrData(out trainingData, true);
                     startAsyncButtonGenTrData.Text = ButtonTextValidate;
                     startAsyncButtonOptimize.Text = ButtonTextValidate;
-                    startAsyncButtonGenPrefModel.Text = ButtonTextValidate;
-                    startAsyncButtonApplyPrefModel.Text = ButtonTextValidate;
                     bkgWorkerRankTrData.RunWorkerAsync(trainingData);
                     cancelAsyncButtonRankTrData.Visible = true;
                     break;
@@ -2413,28 +1800,6 @@ namespace Scheduling
 
         #endregion
 
-        private void comboBoxTrainingData_Update(object sender, EventArgs e)
-        {
-            String[] allfiles = Directory.GetFiles(_trainingDirectoy, "trdat.*.diff*.csv", SearchOption.AllDirectories);
-
-            if (allfiles.Length == 0)
-                richTextBox.AppendText("Preference pairs cannot be found in directory: " + _trainingDirectoy + "\n");
-
-            if (comboBoxTrainingData.Items.Count != allfiles.Length)
-            {
-                for (int rm = 0; rm < comboBoxTrainingData.Items.Count; rm++)
-                    comboBoxTrainingData.Items.RemoveAt(rm);
-
-                foreach (string fname in allfiles)
-                {
-                    FileInfo file = new FileInfo(fname);
-                    string name = file.Name;
-                    //if (!comboBoxTrainingData.Items.Contains(name))
-                    comboBoxTrainingData.Items.Add(name);
-                }
-            }
-        }
-
         private String[] LiblinearLogs_Update(string distribution, string dimension)
         {
             String[] allfiles = GetFilesWeight("full", distribution, dimension);
@@ -2490,25 +1855,6 @@ namespace Scheduling
             string[] files = Directory.GetFiles(String.Format("{0}weights", _prefDirectory), pattern,
                 SearchOption.TopDirectoryOnly);
             return files.Select(Path.GetFileNameWithoutExtension).ToArray();
-        }
-
-        private void comboBoxModel_Update(object sender, EventArgs e)
-        {
-
-            String[] allfiles = Directory.GetFiles(_workingDirectory, "model.*.txt", SearchOption.AllDirectories);
-
-            if (allfiles.Length == 0)
-                richTextBox.AppendText("Preference model cannot be found in directory: " + _workingDirectory + "\n");
-
-            if (comboBoxModel.Items.Count == allfiles.Length) return;
-            for (int rm = 0; rm < comboBoxModel.Items.Count; rm++)
-                comboBoxModel.Items.RemoveAt(rm);
-
-            foreach (string name in allfiles.Select(fname => new FileInfo(fname)).Select(file => file.Name))
-            {
-                //if (!comboBoxModel.Items.Contains(name))
-                comboBoxModel.Items.Add(name);
-            }
         }
 
         private void startAsyncButtonFeatTrData_Click(object sender, EventArgs e)
@@ -2679,11 +2025,8 @@ namespace Scheduling
             int iter = 0;
             int totIter = problems.Length;
             progressBarOuter.Value = 0;
-            foreach (Data problem in problems)
+            foreach (Data problem in problems.Where(problem => problem != null))
             {
-                if (problem == null)
-                    continue;
-
                 richTextBox.AppendText(String.Format("\n{0}.{1}.{2}\n", problem.Name, problem.Dimension, problem.Set));
 
                 string nameSDR = string.Format("{0}.{1}.{2}proc", firstSDR, secondSDR, splitStep);
@@ -2704,16 +2047,7 @@ namespace Scheduling
                     int optMakespan = optRow != null ? (int) optRow["Makespan"] : int.MinValue;
 
                     problem.AddHeuristicMakespan(name, jssp.Makespan, optMakespan, nameSDR);
-
-                    info = name;
-                    string errorMsg;
-                    if (jssp.Validate(out errorMsg, true))
-                        info = String.Format(" Cmax: {0}\n", jssp.Makespan);
-                    else
-                    {
-                        info += String.Format(" ERROR: Invalid solution reported: {0}\n", errorMsg);
-                    }
-                    //richTextBox.AppendText(info);
+                    
                     progressBarInner.Value = (int) (100.0*id/problem.NumInstances); //update progress bar  
                 }
                 // fin
@@ -2820,7 +2154,7 @@ namespace Scheduling
                     else
                         info += " ERROR: Invalid solution reported: " + errorMsg + "\n";
 
-                    //richTextBox.AppendText(info);
+                    richTextBox.AppendText(info);
                     progressBarInner.Value = (int) (100.0*id/problem.NumInstances); //update progress bar  
                 }
                 // fin
@@ -2954,16 +2288,6 @@ namespace Scheduling
                                 int optMakespan = optRow != null ? (int) optRow["Makespan"] : int.MinValue;
 
                                 problem.AddHeuristicMakespan(name, jssp.Makespan, optMakespan, linear.Name);
-
-                                info = name;
-                                string errorMsg;
-                                if (jssp.Validate(out errorMsg, true))
-                                    info = String.Format(" Cmax: {0}\n", jssp.Makespan);
-                                else
-                                {
-                                    info += " ERROR: Invalid solution reported: " + errorMsg + "\n";
-                                }
-                                //richTextBox.AppendText(info);
                             }
                             // fin
                             problem.WriteCsvHeuristic(file);
