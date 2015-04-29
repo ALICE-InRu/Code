@@ -9,7 +9,7 @@ using System.Linq;
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 public class CMAES
 {
-    private const int NUM_FEATURES = (int)LocalFeature.Count;
+    private const int NUM_FEATURES = (int)Features.Local.Count;
     private readonly int _dimension;
     private readonly int N; // number of objective variables (here: N = problem dimension * NumFeatures)
 
@@ -71,12 +71,12 @@ public class CMAES
         public int Generation;
     }
 
-    public CMAES(Data trainingData, string strObjFun, bool dependentModel, string cmaDirectory)
+    public CMAES(RawData trainingData, string strObjFun, bool dependentModel, string cmaDirectory)
     {
         _directory = cmaDirectory;
-        _fileNameFinalResults = String.Format("full.{0}.{1}.{2}.weights.{3}.csv", trainingData.Name,
+        _fileNameFinalResults = String.Format("full.{0}.{1}.{2}.weights.{3}.csv", trainingData.Distribution,
             trainingData.Dimension, strObjFun, dependentModel ? "timedependent" : "timeindependent");
-        _fileNameResults = String.Format(@"results\output.{0}.{1}.{2}.weights.{3}.csv", trainingData.Name,
+        _fileNameResults = String.Format(@"results\output.{0}.{1}.{2}.weights.{3}.csv", trainingData.Distribution,
             trainingData.Dimension, strObjFun, dependentModel ? "timedependent" : "timeindependent");
 
         FileInfo file = new FileInfo(String.Format(@"{0}\{1}", _directory, _fileNameFinalResults));
@@ -183,16 +183,16 @@ public class CMAES
 
     private LinearModel ConvertToLinearModel(double[] x)
     {
-        double[][] xArray = new double[(int)LocalFeature.Count][];
+        double[][] xArray = new double[(int)Features.Local.Count][];
 
         if (N == NUM_FEATURES)
         {
-            for (var iFeat = 0; iFeat < (int)LocalFeature.Count; iFeat++)
+            for (var iFeat = 0; iFeat < (int)Features.Local.Count; iFeat++)
                 xArray[iFeat] = new[] { x[iFeat] };
         }
         else
         {
-            for (var iFeat = 0; iFeat < (int)LocalFeature.Count; iFeat++)
+            for (var iFeat = 0; iFeat < (int)Features.Local.Count; iFeat++)
                 xArray[iFeat] = new double[_dimension];
 
             for (int i = 0; i < N; i++)
@@ -440,7 +440,7 @@ public class CMAES
                 {
                     int ifeat = i % numFeatures;
                     int step = (i - ifeat) / numFeatures + 1;
-                    LocalFeature feat = (LocalFeature)ifeat;
+                    Features.Local feat = (Features.Local)ifeat;
                     header += String.Format(CultureInfo.InvariantCulture, ",phi.{0}.{1}", feat, step);
                 }
                 st.WriteLine(header);
@@ -474,13 +474,13 @@ public class CMAES
                 header += String.Format(CultureInfo.InvariantCulture, ",Step.{0}", step);
             st.WriteLine(header);
 
-            for (int iFeat = 0; iFeat < (int)LocalFeature.Count; iFeat++)
+            for (int iFeat = 0; iFeat < (int)Features.Local.Count; iFeat++)
             {
-                LocalFeature feat = (LocalFeature)iFeat;
+                Features.Local feat = (Features.Local)iFeat;
                 switch (feat)
                 {
-                    case LocalFeature.step:
-                    case LocalFeature.totProc:
+                    case Features.Local.step:
+                    case Features.Local.totProc:
                         continue;
                     default:
                         string info = String.Format("Weight,{0},1,phi.{1},NA", NUM_FEATURES - 2, feat);

@@ -1,83 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Gurobi;
-
-public enum FeatureType
-{
-    None = 0,
-    Local = 1,
-    Global = 2
-};
-
-public enum LocalFeature
-{
-    #region job related
-
-    proc = 0, // processing time
-    startTime, // start time 
-    endTime, // end time 
-    jobOps, // number of jobs 
-    arrivalTime, // arrival time of job
-    //wrm, // work remaining for job
-    //mwrm, // most work remaining for schedule (could be other job)
-    totProc, // total processing times
-    wait, // wait for job
-
-    #endregion
-
-    #region mac-related
-
-    mac,
-    macOps, // number of macs
-    macFree, // current makespan for mac 
-    makespan, // current makespan for schedule
-
-    #endregion
-
-    #region slack related
-
-    step, // current step 
-    slotReduced, // slack reduced from job assignment 
-    slots, // total slack on mac
-    slotsTotal, // total slacks for schedule
-    //slotCreated, // true if slotReduced < 0
-
-    #endregion
-
-    #region work remaining
-
-    wrmMac, // work remaining for mac
-    wrmJob, // work remaining for job
-    wrmTotal, // work remaining for total
-
-    #endregion
-
-    Count
-}
-
-public enum GlobalFeature
-{
-    #region makespan related
-
-    MWR,
-    LWR,
-    SPT,
-    LPT,
-    RNDmean,
-    RNDstd,
-    RNDmax,
-    RNDmin,
-
-    #endregion
-
-    Count
-}
 
 public enum SDR
 {
@@ -89,209 +15,34 @@ public enum SDR
     RND
 }
 
-public enum Track
-{
-    MWR,
-    LWR,
-    SPT,
-    LPT,
-    OPT,
-    CMA,
-    RND,
-    PREF,
-    Count
-}
-
-public class Data : DataTable
-{
-    public readonly char ShopProblem; // jsp or fsp
-    public readonly string Name;
-    public readonly string Dimension;
-    public readonly string Set; // test or train
-    public int NumInstances;
-
-    public Data(string name, char shopProblem, string dimension, string set)
-    {
-        Name = name;
-        ShopProblem = shopProblem;
-        Dimension = dimension;
-        Set = set.ToLower();
-
-        Columns.Add("Name", typeof(string)); // unique!
-        Columns.Add("Shop", typeof(char));
-        Columns.Add("Distribution", typeof(string));
-        Columns.Add("Problem", typeof(ProblemInstance));
-        Columns.Add("Dimension", typeof(int));
-        Columns.Add("Set", typeof(string)); // test or train
-        Columns.Add("PID", typeof(int)); // problem instance Index
-        Columns.Add("NumJobs", typeof(int));
-        Columns.Add("NumMachines", typeof(int));
-        Columns.Add("Makespan", typeof(int));
-        Columns.Add("Heuristic", typeof(string));
-        Columns.Add("Solver", typeof(string));
-        Columns.Add("Solved", typeof(string)); // either Opt (optimum) or BKS (best known solution)
-        Columns.Add("Solution", typeof(int[][])); // solution of schedule corresponding to makespan
-        Columns.Add("Simplex", typeof(int)); // number of simplex iterations
-        Columns.Add("Note", typeof(string));
-        PrimaryKey = new[] { Columns["Name"] };
-    }
-
-    public void AddProblem(ProblemInstance prob, string distribution, char shopProblem, string note = "",
-        int id = -1)
-    {
-        NumInstances++;
-        if (id < 0) id = NumInstances;
-
-        string dim = String.Format("{0}x{1}", prob.NumJobs, prob.NumMachines);
-        string name = String.Format("{0}.{1}.{2}.{3}.{4}", shopProblem, distribution, dim, Set, id);
-        DataRow row = NewRow();
-        row["Name"] = name.ToLower();
-        row["Shop"] = shopProblem;
-        row["PID"] = id;
-        row["Distribution"] = distribution;
-        row["Problem"] = prob;
-        row["Dimension"] = prob.NumJobs * prob.NumMachines;
-        row["Set"] = Set;
-        row["NumJobs"] = prob.NumJobs;
-        row["NumMachines"] = prob.NumMachines;
-        row["Note"] = note;
-        row["Solver"] = string.Empty;
-        row["Solved"] = string.Empty;
-        row["Simplex"] = int.MinValue;
-        row["Makespan"] = int.MinValue;
-        Rows.Add(row);
-    }
-
-    public void AddHeuristicMakespan(string name, int makespan, int optMakespan, string heuristic,
-        string columnName = "Heuristic")
-    {
-        DataRow row = Rows.Find(name);
-        row.SetField("Makespan", makespan);
-        row.SetField(columnName, heuristic);
-    }
-
-    public void AddOptMakespan(string name, int makespan, bool optimum, int[,] xTimeJob, int simplexIterations,
-        string solver)
-    {
-        DataRow row = Rows.Find(name);
-        row.SetField("Makespan", makespan);
-        row.SetField("Solved", optimum ? "opt" : "bks");
-        row.SetField("Solution", xTimeJob);
-        row.SetField("Solver", solver);
-        row.SetField("Simplex", simplexIterations);
-    }
-
-    public void WriteCsvHeuristic(FileInfo file)
-    {
-        List<string> write = new List<string>
-        {
-            "Name",
-            "Heuristic",
-            "Makespan"
-        }; 
-        AuxFun.WriteDataTable2Csv(file, this, write, FileMode.Create, FeatureType.None);
-    }
-
-    public void WriteCsvSDR(string sdr, string directory)
-    {
-        FileInfo file = new FileInfo(String.Format("{0}{1}.{2}.csv", directory, Name, sdr));
-        List<string> write = new List<string>
-        {
-            "Name",
-            "SDR",
-            "Makespan"
-        };
-        AuxFun.WriteDataTable2Csv(file, this, write, FileMode.Append, FeatureType.None);
-    }
-
-    public void WriteCsvOpt(string directory)
-    {
-        FileInfo file = new FileInfo(String.Format("{0}opt.{1}.csv", directory, Name));
-        List<string> write = new List<string>
-        {
-            "Name",
-            "Makespan",
-            "Solved",
-            "Simplex"
-        };
-        AuxFun.WriteDataTable2Csv(file, this, write, FileMode.Append, FeatureType.None);
-    }
-
-    public bool ReadCsvOpt(string directory)
-    {
-        string fname = String.Format("opt.{0}.csv", Name);
-        List<string[]> contents = AuxFun.ReadCsv2DataTable(directory + fname);
-        if (contents == null)
-        {
-            return false;
-        }
-
-        List<string> header = contents[0].ToList();
-        contents.RemoveAt(0);
-        int name = header.FindIndex(x => x == "Name");
-        int ms = header.FindIndex(x => x == "Makespan");
-        int solved = header.FindIndex(x => x == "Solved");
-        int solver = header.FindIndex(x => x == "Solver");
-        int simplex = header.FindIndex(x => x == "Simplex");
-
-        foreach (string[] content in contents)
-        {
-            DataRow row = Rows.Find(content[name]);
-            if (row == null) continue;
-            row["Makespan"] = content[ms];
-            row["Solved"] = content[solved];
-            row["Solver"] = content[solver];
-            row["Simplex"] = content[simplex];
-        }
-
-        return true;
-    }
-
-    public bool ReadCsvSDR(SDR track, string directory)
-    {
-        string fname = String.Format("{0}.{1}.csv", Name, track);
-        List<string[]> content = AuxFun.ReadCsv2DataTable(directory + fname);
-        if (content == null)
-        {
-            return false;
-        }
-        List<string> header = content[0].ToList();
-        content.RemoveAt(0);
-        int name = header.FindIndex(x => x == "Name");
-        List<string> names = content.Select(x => x[name]).ToList();
-
-        return Rows.Cast<DataRow>().All(row => names.Exists(x => x == (string)row["Name"]));
-    }
-}
-
 
 public class LinearWeight
 {
-    public double[][] Local = new double[(int)LocalFeature.Count][];
-    public double[][] Global = new double[(int)GlobalFeature.Count][];
+    public double[][] Local = new double[(int)Features.Local.Count][];
+    public double[][] Global = new double[(int)Features.Global.Count][];
     public readonly string Name;
     public readonly int NrFeat;
     public readonly int ModelIndex;
     public readonly bool TimeIndependent;
 
-    public LinearWeight(int timeDependentSteps, string fileName, int nrFeat = (int) LocalFeature.Count,
+    public LinearWeight(int timeDependentSteps, string fileName, int nrFeat = (int) Features.Local.Count,
         int modelIndex = -1)
     {
         Name = fileName;
         ModelIndex = modelIndex;
         NrFeat = nrFeat;
 
-        if (modelIndex != -1 & nrFeat != (int)LocalFeature.Count)
+        if (modelIndex != -1 & nrFeat != (int)Features.Local.Count)
         {
             Name = String.Format("{0}//F{1}.Model{2}", fileName, nrFeat, modelIndex);
         }
 
         TimeIndependent = timeDependentSteps == 1;
 
-        for (int i = 0; i < (int)LocalFeature.Count; i++)
+        for (int i = 0; i < (int)Features.Local.Count; i++)
             Local[i] = new double[timeDependentSteps];
 
-        for (int i = 0; i < (int)GlobalFeature.Count; i++)
+        for (int i = 0; i < (int)Features.Global.Count; i++)
             Global[i] = new double[timeDependentSteps];
 
     }
@@ -302,36 +53,36 @@ public class LinearWeight
         switch (sdr)
         {
             case SDR.MWR:
-                w.Local[(int)LocalFeature.wrmJob][0] = +1;
+                w.Local[(int)Features.Local.wrmJob][0] = +1;
                 return w;
             case SDR.LWR:
-                w.Local[(int)LocalFeature.wrmJob][0] = -1;
+                w.Local[(int)Features.Local.wrmJob][0] = -1;
                 return w;
             case SDR.SPT:
-                w.Local[(int)LocalFeature.proc][0] = -1;
+                w.Local[(int)Features.Local.proc][0] = -1;
                 return w;
             case SDR.LPT:
-                w.Local[(int)LocalFeature.proc][0] = +1;
+                w.Local[(int)Features.Local.proc][0] = +1;
                 return w;
             default:
                 return w; // do nothing
         }
     }
 
-    public void ReadLinearWeights(string path, out FeatureType featureType)
+    public void ReadLinearWeights(string path, out Features.Mode featureType)
     {
-        string[] content;
-        AuxFun.ReadTextFile(path, out content, "\r\n");
+        string[] content = new[] {"asdf"};
+        //AuxFun.ReadTextFile(path, out content, "\r\n");
 
         bool foundLocal = false;
         bool foundGlobal = false;
-
+        
         foreach (string line in content)
         {
             string pattern;
-            for (int i = 0; i < (int)LocalFeature.Count; i++)
+            for (int i = 0; i < (int)Features.Local.Count; i++)
             {
-                pattern = String.Format("phi.{0}", (LocalFeature)i);
+                pattern = String.Format("phi.{0}", (Features.Local)i);
                 Match phi = Regex.Match(line, String.Format(@"(?<={0} (-?[0-9.]*)", pattern));
                 if (phi.Success)
                 {
@@ -342,9 +93,9 @@ public class LinearWeight
                 }
             }
 
-            for (int i = 0; i < (int)GlobalFeature.Count; i++)
+            for (int i = 0; i < (int)Features.Global.Count; i++)
             {
-                pattern = String.Format("phi.{0}", (GlobalFeature)i);
+                pattern = String.Format("phi.{0}", (Features.Global)i);
                 Match phi = Regex.Match(line, String.Format(@"(?<={0} (-?[0-9.]*)", pattern));
                 if (phi.Success)
                 {
@@ -356,32 +107,8 @@ public class LinearWeight
             }
         }
 
-        featureType = foundGlobal ? FeatureType.Global : foundLocal ? FeatureType.Local : FeatureType.None;
-
-        //foreach (string line in content)
-        //{
-        //    Match phi = Regex.Match(line, @"(?<=phi.)(\w+) (-?[0-9.]*)");
-        //    if (phi.Success)
-        //    {
-
-        //        string field = phi.Groups[1].ToString();
-        //        FieldInfo myFieldInfo = myType.GetField(field);
-        //        if (myFieldInfo != null)
-        //            myFieldInfo.SetValue(weights, value);
-        //        else
-        //        {
-        //            FieldInfo[] fields = myType.BaseType.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-        //            foreach (FieldInfo info in fields)
-        //            {
-        //                if (Regex.IsMatch(info.Name, field))
-        //                {
-        //                    info.SetValue(weights, value);
-        //                    break;
-        //                }
-        //            }
-        //        }
-        //    }
-        //}            
+        featureType = foundGlobal ? Features.Mode.Global : foundLocal ? Features.Mode.Local : Features.Mode.None;
+        
     }
 }
 
@@ -394,12 +121,12 @@ public class LinearModel
     public int NumInstances = 0;
     public readonly string PathTrainingData;
     public readonly string PathModel;
-    public readonly FeatureType FeatureType = FeatureType.Local;
+    public readonly Features.Mode FeatureMode = Features.Mode.Local;
     public readonly double Beta; // odds of doing optimal trajectory 
 
     #region PREF model
 
-    public LinearModel(string classifer, string param, string path2TrainingData, string dir, FeatureType featureType)
+    public LinearModel(string classifer, string param, string path2TrainingData, string dir, Features.Mode featureMode)
     {
         var file = new FileInfo(path2TrainingData);
         var m = Regex.Match(file.Name, "^trdat(.+?).csv");
@@ -411,19 +138,19 @@ public class LinearModel
         PathTrainingData = path2TrainingData;
         PathModel = dir + Name + ".txt";
 
-        FeatureType = featureType;
+        FeatureMode = featureMode;
     }
 
     public double PriorityIndex(Features phi)
     {
-        var step = Weights.TimeIndependent ? 0 : phi.Local[(int)LocalFeature.step] - 1;
+        var step = Weights.TimeIndependent ? 0 : phi.PhiLocal[(int)Features.Local.step] - 1;
         double index = 0;
 
-        for (var i = 0; i < (int)LocalFeature.Count; i++)
-            index += Weights.Local[i][step] * phi.Local[i];
+        for (var i = 0; i < (int)Features.Local.Count; i++)
+            index += Weights.Local[i][step] * phi.PhiLocal[i];
 
-        for (var i = 0; i < (int)GlobalFeature.Count; i++)
-            index += Weights.Global[i][step] * phi.Global[i];
+        for (var i = 0; i < (int)Features.Global.Count; i++)
+            index += Weights.Global[i][step] * phi.PhiGlobal[i];
 
         return index;
     }
@@ -433,7 +160,7 @@ public class LinearModel
         Name = name;
         PathModel = "User input";
         Weights = new LinearWeight(localWeights[0].Length, name) { Local = localWeights };
-        FeatureType = FeatureType.Local;
+        FeatureMode = Features.Mode.Local;
     }
 
     public LinearModel(FileInfo file)
@@ -448,7 +175,7 @@ public class LinearModel
         else // not supported
             return;
 
-        Weights.ReadLinearWeights(PathModel, out FeatureType);
+        Weights.ReadLinearWeights(PathModel, out FeatureMode);
     }
 
     #endregion
@@ -457,7 +184,7 @@ public class LinearModel
     public LinearModel(SDR sdr)
     {
         Name = String.Format("model{0}", sdr);
-        FeatureType = FeatureType.None;
+        FeatureMode = Features.Mode.None;
         Weights = EquivalentSDR(sdr);
     }
 
@@ -467,27 +194,27 @@ public class LinearModel
         switch (sdr)
         {
             case SDR.MWR:
-                w.Local[(int)LocalFeature.wrmJob][0] = +1;
+                w.Local[(int)Features.Local.wrmJob][0] = +1;
                 return w;
             case SDR.LWR:
-                w.Local[(int)LocalFeature.wrmJob][0] = -1;
+                w.Local[(int)Features.Local.wrmJob][0] = -1;
                 return w;
             case SDR.SPT:
-                w.Local[(int)LocalFeature.proc][0] = -1;
+                w.Local[(int)Features.Local.proc][0] = -1;
                 return w;
             case SDR.LPT:
-                w.Local[(int)LocalFeature.proc][0] = +1;
+                w.Local[(int)Features.Local.proc][0] = +1;
                 return w;
             default:
                 return w; // do nothing
         }
     }
 
-    public LinearModel(Data distribution)
+    public LinearModel(RawData distribution)
     {
-        Name = "CMA" + distribution.Name;
-        FeatureType = FeatureType.Local;
-        Weights = SetCMAWeight(distribution.Name);
+        Name = "CMA" + distribution.Distribution;
+        FeatureMode = Features.Mode.Local;
+        Weights = SetCMAWeight(distribution.Distribution);
         Classifer = "CMA-ES";
     }
 
@@ -511,7 +238,7 @@ public class LinearModel
                 break;
         }
 
-        var loggedWeights = AuxFun.ReadLoggedLinearWeights(logFile);
+        var loggedWeights = ReadLoggedLinearWeights(logFile);
         if (loggedWeights == null)
             return; // error
 
@@ -522,19 +249,105 @@ public class LinearModel
             Name = w.Name;
             break;
         }
-        FeatureType = FeatureType.Local;
+        FeatureMode = Features.Mode.Local;
         Classifer = "PREF";
     }
 
     private LinearWeight SetCMAWeight(string distribution, string objFun = "Cmax")
     {
-        FeatureType featureType;
+        Features.Mode featureType;
         var path = String.Format("CMAES\\model.{0}.CMAES.min_{1}", distribution, objFun);
         var weights = new LinearWeight(1, path);
         if (File.Exists(path))
             weights.ReadLinearWeights(path, out featureType);
 
         return weights;
+    }
+
+    private static LinearWeight[] ReadLoggedLinearWeights(FileInfo file)
+    {
+        string[] allContent;
+        ReadTextFile(file.FullName, out allContent, "\r\n");
+        var models = new List<LinearWeight>();
+
+        // 	Weight,NrFeat,Model,Feature,NA,values
+        const string SCIENTIFIC_NUMBER = @"[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?";
+        var regModel = new Regex(String.Format("Weight,([0-9]+),([0-9]+),phi.([a-zA-Z]*),NA,({0})", SCIENTIFIC_NUMBER));
+        var regWeight = new Regex(SCIENTIFIC_NUMBER);
+
+        var strLocalFeature = new string[(int)Features.Local.Count];
+        for (var i = 0; i < (int)Features.Local.Count; i++)
+            strLocalFeature[i] = String.Format("{0}", (Features.Local)i);
+
+        LinearWeight weights = null;
+        var timeindependent = Regex.Match(file.Name, "timeindependent").Success;
+
+        var dim = Regex.Match(file.Name, "([0-9]+x[0-9]+)");
+        var dimension = dim.Groups[0].Value;
+        var timeindependentSteps = timeindependent ? 1 : RawData.DimString2Num(dimension);
+
+        int nrFeat = -1, featFound = -1;
+        foreach (var line in allContent)
+        {
+            var m = regModel.Match(line);
+            if (!m.Success) continue;
+            if (featFound == nrFeat | featFound == -1)
+            {
+                if (weights != null) models.Add(weights);
+                nrFeat = Convert.ToInt32(m.Groups[1].Value);
+                var idModel = Convert.ToInt32(m.Groups[2].Value);
+                weights = new LinearWeight(timeindependentSteps, file.Name.Substring(0, file.Name.Length - 4),
+                    nrFeat, idModel);
+                featFound = 0;
+            }
+
+            var local = m.Groups[3].Value;
+            if (timeindependent) // global model 
+            {
+                var value = Convert.ToDouble(m.Groups[4].Value, CultureInfo.InvariantCulture);
+                for (var i = 0; i < (int)Features.Local.Count; i++)
+                {
+                    if (String.Compare(local, strLocalFeature[i], StringComparison.InvariantCultureIgnoreCase) != 0)
+                        continue;
+                    if (weights != null) weights.Local[i][0] = value;
+                    featFound++;
+                    break;
+                }
+            }
+            else
+            {
+                for (var i = 0; i < (int)Features.Local.Count; i++)
+                {
+                    if (String.Compare(local, strLocalFeature[i], StringComparison.InvariantCultureIgnoreCase) != 0)
+                        continue;
+                    var wMatches = regWeight.Matches(line);
+                    for (var step = 0; step < wMatches.Count; step++) // first two captures include NrFeat + Model 
+                    {
+                        var value = Convert.ToDouble(wMatches[step].Groups[1].Value,
+                            CultureInfo.InvariantCulture);
+                        if (weights != null) weights.Local[i][step] = value;
+                    }
+                    featFound++;
+                    break;
+                }
+            }
+        }
+        if (weights != null) models.Add(weights);
+        //if (models.Count == 697)
+        return models.ToArray();
+    }
+
+    public static bool ReadTextFile(string path2File, out string[] allContent, string sep)
+    {
+        allContent = null;
+        if (!File.Exists(path2File))
+            return false;
+
+        var fullContent = File.ReadAllText(path2File);
+        allContent = sep != ""
+            ? Regex.Split(fullContent, "[\r\n ]*" + sep + "[\r\n ]*")
+            : Regex.Split(fullContent, "[\r\n]+");
+        return true;
     }
 }
 

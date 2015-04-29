@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
 using Gurobi;
@@ -10,17 +9,14 @@ using Gurobi;
 /// </summary>
 public class ProblemInstance
 {
-    public readonly char ShopProblem;
     public readonly int NumJobs;
     public readonly int NumMachines;
     public readonly int[,] Sigma;
     public readonly int[,] Procs;
     public readonly int Dimension;
 
-    public ProblemInstance(char shopProblem, int numJobs, int numMachines, int[] processingTimes,
-        int[] permutationMatrix)
+    public ProblemInstance(int numJobs, int numMachines, int[] processingTimes, int[] permutationMatrix)
     {
-        ShopProblem = shopProblem;
         NumJobs = numJobs;
         NumMachines = numMachines;
         Dimension = numJobs*numMachines;
@@ -312,7 +308,7 @@ public class Schedule
         return slot;
     }
 
-    public Features Dispatch1(int job, FeatureType featureMode) // commits dispatch! 
+    public Features Dispatch1(int job, Features.Mode mode) // commits dispatch! 
     {
         Dispatch dispatch;
         int slot = FindDispatch(job, out dispatch);
@@ -323,10 +319,10 @@ public class Schedule
 
         Features phi = new Features();
 
-        switch (featureMode)
+        switch (mode)
         {
-            case FeatureType.Global:
-                phi.GetEquivFeatures(job, this);
+            case Features.Mode.Equiv:
+                phi.GetEquivPhi(job, this);
                 break;
         }
 
@@ -339,20 +335,28 @@ public class Schedule
             ReadyJobs.Remove(job);
         Makespan = _macs.Max(x => x.Makespan);
 
-        switch (featureMode)
+        switch (mode)
         {
-            case FeatureType.Global:
-                //phi.getLocalFeatures(jobs[job], macs[dispatch.Mac], procs[job][dispatch.Mac], jobs.Sum(p => p.workRemaining), macs.Sum(p => p.totSlack), makespan, sequence.Count, dispatch.StartTime, arrivalTime, slotReduced);
-                phi.GetGlobalFeatures(this);
+            case Features.Mode.Global:
+                phi.GetGlobalPhi(this);
                 return phi;
-            case FeatureType.Local:
-                phi.GetLocalFeatures(_jobs[job], _macs[dispatch.Mac], _prob.Procs[job, dispatch.Mac],
+            case Features.Mode.Local:
+                phi.GetLocalPhi(_jobs[job], _macs[dispatch.Mac], _prob.Procs[job, dispatch.Mac],
                     _jobs.Sum(p => p.WorkRemaining), _macs.Sum(p => p.TotSlack), Makespan, Sequence.Count,
                     dispatch.StartTime, arrivalTime, slotReduced);
                 return phi;
             //case FeatureType.None:
             default:
                 return null;
+        }
+    }
+
+    public void ApplySDR(SDR sdr, Features.Mode mode)
+    {
+        for (int step = Sequence.Count; step < _prob.Dimension; step++)
+        {
+            var job = JobChosenBySDR(sdr);
+            Dispatch1(job, mode);
         }
     }
 
@@ -364,19 +368,10 @@ public class Schedule
         {
             var sdr = step < stepSplit ? sdrFirst : sdrSecond;
             var job = JobChosenBySDR(sdr);
-            Dispatch1(job, FeatureType.None);
+            Dispatch1(job, Features.Mode.None);
         }
     }
-
-    public void ApplySDR(SDR sdr, FeatureType featureMode)
-    {
-        for (int step = Sequence.Count; step < _prob.Dimension; step++)
-        {
-            var job = JobChosenBySDR(sdr);
-            Dispatch1(job, featureMode);
-        }
-    }
-
+   
     public void ApplyCDR(LinearModel linModel)
     {
         for (int step = Sequence.Count; step < _prob.Dimension; step++)
@@ -384,11 +379,11 @@ public class Schedule
             List<double> priority = new List<double>(ReadyJobs.Count);
             priority.AddRange(from j in ReadyJobs
                               let lookahead = Clone()
-                              select lookahead.Dispatch1(j, linModel.FeatureType)
+                              select lookahead.Dispatch1(j, linModel.FeatureMode)
                                   into feat
                                   select linModel.PriorityIndex(feat));
             var job = ReadyJobs[priority.FindIndex(p => Math.Abs(p - priority.Max()) < 0.001)];
-            Dispatch1(job, FeatureType.None);
+            Dispatch1(job, Features.Mode.None);
         }
     }
 
@@ -626,21 +621,97 @@ public class Schedule
 
 public class Features
 {
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    public enum Mode
+    {
+        None = 0,
+        Local,
+        Global,
+        Equiv
+    };
+
+    public enum Local
+    {
+        #region job related
+
+        proc = 0, // processing time
+        startTime, // start time 
+        endTime, // end time 
+        jobOps, // number of jobs 
+        arrivalTime, // arrival time of job
+        //wrm, // work remaining for job
+        //mwrm, // most work remaining for schedule (could be other job)
+        totProc, // total processing times
+        wait, // wait for job
+
+        #endregion
+
+        #region mac-related
+
+        mac,
+        macOps, // number of macs
+        macFree, // current makespan for mac 
+        makespan, // current makespan for schedule
+
+        #endregion
+
+        #region slack related
+
+        step, // current step 
+        slotReduced, // slack reduced from job assignment 
+        slots, // total slack on mac
+        slotsTotal, // total slacks for schedule
+        //slotCreated, // true if slotReduced < 0
+
+        #endregion
+
+        #region work remaining
+
+        wrmMac, // work remaining for mac
+        wrmJob, // work remaining for job
+        wrmTotal, // work remaining for total
+
+        #endregion
+
+        Count
+    }
+
+    public enum Global
+    {
+        #region makespan related
+
+        MWR,
+        LWR,
+        SPT,
+        LPT,
+        // ReSharper disable once InconsistentNaming
+        RNDmean,
+        // ReSharper disable once InconsistentNaming
+        RNDstd,
+        // ReSharper disable once InconsistentNaming
+        RNDmax,
+        // ReSharper disable once InconsistentNaming
+        RNDmin,
+
+        #endregion
+
+        Count
+    }
+
+    // ReSharper disable once InconsistentNaming
     private int[] RND = new int[100];
-    public int[] Local = new int[(int)LocalFeature.Count];
-    public double[] Global = new double[(int)GlobalFeature.Count];
+    public int[] PhiLocal = new int[(int)Local.Count];
+    public double[] PhiGlobal = new double[(int)Global.Count];
     public bool[] Equiv = new bool[(int)SDR.Count];
 
     public Features Difference(Features other)
     {
         Features diff = new Features();
 
-        for (int i = 0; i < (int)LocalFeature.Count; i++)
-            diff.Local[i] = Local[i] - other.Local[i];
+        for (int i = 0; i < (int)Local.Count; i++)
+            diff.PhiLocal[i] = PhiLocal[i] - other.PhiLocal[i];
 
-        for (int i = 0; i < (int)GlobalFeature.Count; i++)
-            diff.Global[i] = Global[i] - other.Global[i];
+        for (int i = 0; i < (int)Global.Count; i++)
+            diff.PhiGlobal[i] = PhiGlobal[i] - other.PhiGlobal[i];
 
         for (int i = 0; i < (int)SDR.Count; i++)
             diff.Equiv[i] = Equiv[i] == other.Equiv[i];
@@ -649,33 +720,33 @@ public class Features
         return diff;
     }
 
-    public void GetLocalFeatures(Schedule.Jobs job, Schedule.Macs mac, int proc, int wrmTotal, int slotsTotal,
+    public void GetLocalPhi(Schedule.Jobs job, Schedule.Macs mac, int proc, int wrmTotal, int slotsTotal,
         int makespan, int step, int startTime, int arrivalTime, int reduced)
     {
         #region job related
 
-        Local[(int)LocalFeature.proc] = proc;
-        Local[(int)LocalFeature.startTime] = startTime;
-        Local[(int)LocalFeature.endTime] = startTime + proc;
-        Local[(int)LocalFeature.jobOps] = job.MacCount;
-        Local[(int)LocalFeature.arrivalTime] = arrivalTime;
-        Local[(int)LocalFeature.wait] = startTime - arrivalTime;
+        PhiLocal[(int)Local.proc] = proc;
+        PhiLocal[(int)Local.startTime] = startTime;
+        PhiLocal[(int)Local.endTime] = startTime + proc;
+        PhiLocal[(int)Local.jobOps] = job.MacCount;
+        PhiLocal[(int)Local.arrivalTime] = arrivalTime;
+        PhiLocal[(int)Local.wait] = startTime - arrivalTime;
 
         #endregion
 
         #region machine related
 
-        Local[(int)LocalFeature.mac] = mac.Index;
-        Local[(int)LocalFeature.macFree] = mac.Makespan;
-        Local[(int)LocalFeature.macOps] = mac.JobCount;
+        PhiLocal[(int)Local.mac] = mac.Index;
+        PhiLocal[(int)Local.macFree] = mac.Makespan;
+        PhiLocal[(int)Local.macOps] = mac.JobCount;
 
         #endregion
 
         #region schedule related
 
-        Local[(int)LocalFeature.totProc] = job.TotProcTime;
-        Local[(int)LocalFeature.makespan] = makespan;
-        Local[(int)LocalFeature.step] = step;
+        PhiLocal[(int)Local.totProc] = job.TotProcTime;
+        PhiLocal[(int)Local.makespan] = makespan;
+        PhiLocal[(int)Local.step] = step;
 
         #endregion
 
@@ -684,24 +755,24 @@ public class Features
         /* add current processing time in order for <w,phi> can be equivalent to MWR/LWR 
             * (otherwise it would find the job with most/least work remaining in the next step,
             * i.e. after the one-step lookahead */
-        Local[(int)LocalFeature.wrmMac] = mac.WorkRemaining + proc;
-        Local[(int)LocalFeature.wrmJob] = job.WorkRemaining + proc;
-        Local[(int)LocalFeature.wrmTotal] = wrmTotal + proc;
+        PhiLocal[(int)Local.wrmMac] = mac.WorkRemaining + proc;
+        PhiLocal[(int)Local.wrmJob] = job.WorkRemaining + proc;
+        PhiLocal[(int)Local.wrmTotal] = wrmTotal + proc;
 
         #endregion
 
         #region flow related
 
-        Local[(int)LocalFeature.slotReduced] = reduced;
-        Local[(int)LocalFeature.slots] = mac.TotSlack;
-        Local[(int)LocalFeature.slotsTotal] = slotsTotal;
+        PhiLocal[(int)Local.slotReduced] = reduced;
+        PhiLocal[(int)Local.slots] = mac.TotSlack;
+        PhiLocal[(int)Local.slotsTotal] = slotsTotal;
         //local[(int)LocalFeature.slotCreated] = reduced > 0 ? 0 : 1;
 
         #endregion
 
     }
 
-    public void GetGlobalFeatures(Schedule current)
+    public void GetGlobalPhi(Schedule current)
     {
         Schedule lookahead;
 
@@ -709,21 +780,27 @@ public class Features
         {
             SDR sdr = (SDR)i;
             lookahead = current.Clone();
-            lookahead.ApplySDR(sdr, FeatureType.None);
-            Global[(int)(GlobalFeature)(sdr)] = lookahead.Makespan;
+            lookahead.ApplySDR(sdr, Mode.None);
+            PhiGlobal[(int)(Global)(sdr)] = lookahead.Makespan;
         }
 
         for (int i = 0; i < RND.Length; i++)
         {
             lookahead = current.Clone();
-            lookahead.ApplySDR(SDR.RND, FeatureType.None);
+            lookahead.ApplySDR(SDR.RND, Mode.None);
             RND[i] = lookahead.Makespan;
         }
 
-        Global[(int)GlobalFeature.RNDmin] = RND.Min();
-        Global[(int)GlobalFeature.RNDmax] = RND.Max();
-        Global[(int)GlobalFeature.RNDmean] = RND.Average();
-        Global[(int)GlobalFeature.RNDstd] = StandardDev(RND, Global[(int)GlobalFeature.RNDmean]);
+        PhiGlobal[(int)Global.RNDmin] = RND.Min();
+        PhiGlobal[(int)Global.RNDmax] = RND.Max();
+        PhiGlobal[(int)Global.RNDmean] = RND.Average();
+        PhiGlobal[(int)Global.RNDstd] = StandardDev(RND, PhiGlobal[(int)Global.RNDmean]);
+    }
+
+    public void GetEquivPhi(int job, Schedule current)
+    {
+        for (int i = 0; i < (int)SDR.Count; i++)
+            Equiv[i] = job == current.JobChosenBySDR((SDR)i);
     }
 
     private static double StandardDev(IList<int> values, double mean)
@@ -736,10 +813,4 @@ public class Features
         return Math.Sqrt(variance / n);
     }
 
-    public void GetEquivFeatures(int job, Schedule current)
-    {
-        for (int i = 0; i < (int)SDR.Count; i++)
-            Equiv[i] = job == current.JobChosenBySDR((SDR)i);
-    }
 }
-

@@ -18,13 +18,6 @@ public partial class About : Page
         return TrdatExtended.SelectedItem != null;
     }
 
-    private int NumTraining(string dim)
-    {
-        return dim == "10x10"
-            ? IsExtended() ? 1000 : 300
-            : IsExtended() ? 5000 : 500;
-    }
-
     protected void CreateLocalTrdat_Click(object sender, EventArgs e)
     {
         if (!TrdatProblems.Items.Cast<ListItem>().Any(x => x.Selected))
@@ -35,36 +28,16 @@ public partial class About : Page
             lblCreateLocalTrdat.Text = "... please choose at least one trajectory.";
 
         int numTracks = 0;
-        foreach (ListItem problem in TrdatProblems.Items.Cast<ListItem>().Where(x => x.Selected))
+        foreach (TrainingSet trSet in from problem in TrdatProblems.Items.Cast<ListItem>().Where(x => x.Selected)
+            from dim in TrdatDims.Items.Cast<ListItem>().Where(x => x.Selected)
+            from track in TrdatTracks.Items.Cast<ListItem>().Where(x => x.Selected)
+            select new TrainingSet(problem.Value, dim.Value, track.Value, IsExtended()))
         {
-            foreach (ListItem dim in TrdatDims.Items.Cast<ListItem>().Where(x => x.Selected))
+            for (int pid = trSet.AlreadyAutoSavedPID + 1; pid <= trSet.NumInstances; pid++)
             {
-                foreach (ListItem track in TrdatTracks.Items.Cast<ListItem>().Where(x => x.Selected))
-                {
-                    int startPID = 1;
-                    FileInfo trdat =
-                        new FileInfo(
-                            String.Format("C:\\Users\\helga\\Alice\\Code\\trainingData\\trdat.{0}.{1}.{2}{3}.Local.csv",
-                                problem.Value, dim.Value, track.Value, IsExtended() ? "EXT" : ""));
-                    if (trdat.Exists)
-                    {
-                        var firstLine = File.ReadLines(trdat.FullName).First();
-                        var lastLine = File.ReadLines(trdat.FullName).Last();
-                        if (firstLine != lastLine)
-                        {
-                            string[] splitFirst = firstLine.Split(',');
-                            string[] splitLast = lastLine.Split(',');
-                            startPID = Convert.ToInt32(splitLast[splitFirst.ToList().FindIndex(x => x == "PID")]) + 1;
-                        }
-                    }
-                    if (startPID < NumTraining(dim.ToString()))
-                    {
-                        //String.Format("\n{0} from {1}-{2}", trdat.Name, startPID, numTraining);
-                        // do something here
-                    }
-                    lblCreateLocalTrdat.Text = String.Format("{0} trajectories created", ++numTracks);
-                }
+                trSet.CollectTrainingSet(pid);
             }
+            lblCreateLocalTrdat.Text = String.Format("{0} trajectories created", ++numTracks);
         }
     }
 
