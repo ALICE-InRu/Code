@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Gurobi;
+using JobShop;
 
 /// <summary>
 /// Summary description for JobShop

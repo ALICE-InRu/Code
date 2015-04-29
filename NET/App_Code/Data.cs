@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Reflection.Emit;
 using System.Text.RegularExpressions;
-using System.Web.UI.WebControls;
+using JobShop;
 
 /// <summary>
 /// Parent class for all JobShop data
@@ -438,9 +437,9 @@ public class SDRData : RawData
             }
 
             foreach (var info in from DataRow row in Rows
-                                    let pid = (int)row["PID"]
-                                    where pid > AlreadyAutoSavedPID
-                                    select String.Format("{0},{1},{2}", row["Name"], row["SDR"], row["Makespan"]))
+                let pid = (int)row["PID"]
+                where pid > AlreadyAutoSavedPID
+                select String.Format("{0},{1},{2}", row["Name"], row["SDR"], row["Makespan"]))
             {
                 st.WriteLine(info);
             }
@@ -629,9 +628,9 @@ public class TrainingSet : RawData
             }
 
             foreach (var info in from DataRow row in Rows
-                                    let pid = (int)row["PID"]
-                                    where pid > AlreadyAutoSavedPID
-                                    select String.Format("{0},{1}", row["Name"], row["Makespan"]))
+                let pid = (int)row["PID"]
+                where pid > AlreadyAutoSavedPID
+                select String.Format("{0},{1}", row["Name"], row["Makespan"]))
             {
                 st.WriteLine(info);
             }
@@ -691,7 +690,6 @@ public class TrainingSet : RawData
         return false;
     }
 
-    const int TMLIM_OPT = 60 * 10; // max 10 min for optimum
     const int TMLIM_STEP = 60 * 2; // max 2 min per step/possible dispatch
 
     public string CollectTrainingSet(int pid)
@@ -700,8 +698,7 @@ public class TrainingSet : RawData
         DataRow instance = Rows.Find(name);
         ProblemInstance prob = (ProblemInstance) instance["Problem"];
 
-        GurobiJspModel gurobiModel = new GurobiJspModel(prob, name, TMLIM_OPT, true);
-        gurobiModel.SetTimeLimit(TMLIM_STEP);
+        GurobiJspModel gurobiModel = new GurobiJspModel(prob, name, TMLIM_STEP, true);
 
         Schedule jssp = new Schedule(prob);
         int currentNumFeatures = 0;
