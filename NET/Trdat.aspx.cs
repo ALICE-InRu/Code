@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using Microsoft.VisualBasic.FileIO;
 
-public partial class About : System.Web.UI.Page
+public partial class About : Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
@@ -140,5 +139,34 @@ public partial class About : System.Web.UI.Page
         if(numGlobal==0)
             lblCreateGlobalTrdat.Text = String.Format("Local features need to be present for retracing.");
     }
+
+    private void ReadTrajectory(FileInfo localTrainingData)
+    {
+        using (TextFieldParser parser = new TextFieldParser(localTrainingData.FullName))
+        {
+            parser.TextFieldType = FieldType.Delimited;
+            parser.SetDelimiters(",");
+            string[] fields = parser.ReadFields();
+            if (fields == null) return;
+            List<string> header = fields.ToList();
+            int iPID = header.FindIndex(x => x == "PID");
+            int iStep = header.FindIndex(x => x == "Step");
+            int iDispatch = header.FindIndex(x => x == "Dispatch");
+            int iFollowed = header.FindIndex(x => x == "Followed");
+            int iResultingOptMakespan = header.FindIndex(x => x == "ResultingOptMakespan");
+
+            while (!parser.EndOfData)
+            {
+                //Processing row
+                fields = parser.ReadFields();
+                foreach (string field in fields)
+                {
+                    //TODO: Process field
+                }
+            }
+        }
+        
+    }
+
 
 }

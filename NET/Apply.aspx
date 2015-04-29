@@ -43,7 +43,9 @@
         </asp:CheckBoxList>
     </p>
     <p>
-        <asp:Button ID="ApplyModel" runat="server" Text="Button" />
+        <asp:Button ID="ApplyModel" runat="server" Text="Apply" 
+            onclick="ApplyModel_Click" />
+        <asp:Label ID="lblApplyModel" runat="server" Text=""></asp:Label>
     </p>
     <p>
         <textarea id="TextAreaApplyModel" name="S2" rows="10"></textarea>

@@ -1,5 +1,5 @@
 ﻿<%@ Page Title="Training data" Language="C#" MasterPageFile="~/Site.master" AutoEventWireup="true"
-    CodeFile="TrainingData.aspx.cs" Inherits="About" %>
+    CodeFile="Trdat.aspx.cs" Inherits="About" %>
 
 <asp:Content ID="HeaderContent" runat="server" ContentPlaceHolderID="HeadContent">
     <style type="text/css">
