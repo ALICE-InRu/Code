@@ -10,7 +10,7 @@ namespace ALICE
     /// </summary>
     public class OPTData : RawData
     {
-        public OPTData()
+        public OPTData(string distribution, string dimension, string set) : base(distribution, dimension, set)
         {
             FileInfo =
                 new FileInfo(string.Format("C://Users//helga//Alice//Code//OPT//{0}.{1}.{2}.csv", Distribution, Dimension,

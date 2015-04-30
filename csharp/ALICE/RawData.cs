@@ -44,12 +44,7 @@ namespace ALICE
             ReadProblemText();
 
         }
-
-        protected RawData()
-        {
-            throw new NotImplementedException();
-        }
-
+        
         public static int DimString2Num(string dim)
         {
             var jobxmac = Regex.Split(dim, "x");

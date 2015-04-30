@@ -51,6 +51,9 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="CMAES.cs" />
+    <Compile Include="HeuristicData.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="RawData.cs">
       <SubType>Component</SubType>
     </Compile>
