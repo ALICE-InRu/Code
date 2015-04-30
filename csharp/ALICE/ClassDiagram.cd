@@ -1,0 +1,109 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="ALICE.CMAES" Collapsed="true">
+    <Position X="9.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ECFAFAANIAIEAARAACBAFAIACJQASlAwYBhghFUAIBA=</HashCode>
+      <FileName>CMAES.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.RawData" Collapsed="true">
+    <Position X="3.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAIAAAAABIQAEABACAAAAAAAQEgAAEAAQAASBAA=</HashCode>
+      <FileName>RawData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.GurobiJspModel" Collapsed="true">
+    <Position X="13.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AUAAQIIMACAoAAQFAgAAIAAABCAAAAAAAgAAAECAEAA=</HashCode>
+      <FileName>GurobiJspModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.ProblemInstance" Collapsed="true">
+    <Position X="9.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQEAAAAAAgAAAAAAAAAABAAQEAAAAAAAAABAAA=</HashCode>
+      <FileName>ProblemInstance.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.LinearAlgebra" Collapsed="true">
+    <Position X="9.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAIAFAhgBAAEAARAAABAQAAAgAJAAAAAAwAAAA=</HashCode>
+      <FileName>LinearAlgebra.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.LinearWeight" Collapsed="true">
+    <Position X="13.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAAAAAAAAAAAAAAAAAQAABJAAAAAAAAAACABAAA=</HashCode>
+      <FileName>LinearWeight.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.OPTData" Collapsed="true">
+    <Position X="5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAgAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>OPTData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.SDRData" Collapsed="true">
+    <Position X="7.25" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAIAAEAAAA=</HashCode>
+      <FileName>SDRData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.CDRData" Collapsed="true">
+    <Position X="0.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>CDRData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.TrainingSet" Collapsed="true">
+    <Position X="2.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAQgAAABAAAAiJAAAAAAAAAgAQBAAgAAgEAAECIQA=</HashCode>
+      <FileName>TrainingSet.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.PreferenceSet" Collapsed="true">
+    <Position X="2.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAAABEABEAAggAAAAAAAgAAAgAAAAAAAAA=</HashCode>
+      <FileName>PreferenceSet.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.Schedule" Collapsed="true">
+    <Position X="11.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAoAQBAAAACAAAAAAAAEACAIAAEAgAIgQAAAAgEgABE=</HashCode>
+      <FileName>Schedule.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.Features" Collapsed="true">
+    <Position X="11.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAAEAAUAABABAAAAQAAAQAAAAAAAAgAAAAA=</HashCode>
+      <FileName>Features.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.LinearModel" Collapsed="true">
+    <Position X="11.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAgAAIIAAAAAAIBAAEAAAAQAAAYAAAAABEAAAAAAQQA=</HashCode>
+      <FileName>LinearModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Enum Name="ALICE.SDR" Collapsed="true">
+    <Position X="9.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQABOAAQAAAAAAAAAAAAAA=</HashCode>
+      <FileName>SDR.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

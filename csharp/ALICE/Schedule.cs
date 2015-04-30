@@ -1,57 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using Gurobi;
 
 namespace ALICE
 {
-    /// <summary>
-    /// Summary description for JobShop
-    /// </summary>
-    public class ProblemInstance
-    {
-        public readonly int NumJobs;
-        public readonly int NumMachines;
-        public readonly int[,] Sigma;
-        public readonly int[,] Procs;
-        public readonly int Dimension;
-
-        public ProblemInstance(int numJobs, int numMachines, int[] processingTimes, int[] permutationMatrix)
-        {
-            NumJobs = numJobs;
-            NumMachines = numMachines;
-            Dimension = numJobs * numMachines;
-            Procs = Array2Matrix(processingTimes);
-            Sigma = Array2Matrix(permutationMatrix);
-        }
-
-        public int[,] Array2Matrix(int[] array)
-        {
-            int[,] matrix = new int[NumJobs, NumMachines];
-            for (int job = 0; job < NumJobs; job++)
-            {
-                for (int mac = 0; mac < NumMachines; mac++)
-                    matrix[job, mac] = array[job * NumMachines + mac];
-            }
-            return matrix;
-        }
-
-        // sequence is a list of <job,mac,starttime>        
-        public int[,] Optimize(string folder, string solver, string name, out int optMakespan, out bool success,
-            out int simplexIterations, int tmlim = 6000, List<Schedule.Dispatch> constraints = null)
-        {
-            GurobiJspModel model = new GurobiJspModel(this, name, tmlim);
-            var xTimeJob = constraints != null
-                ? model.Lookahead(constraints, out optMakespan)
-                : model.Optimise(out optMakespan);
-            simplexIterations = model.SimplexIterations;
-            success = model.Status == GRB.Status.OPTIMAL;
-            model.Dispose();
-            return xTimeJob;
-        }
-    }
-
     public class Schedule
     {
         private readonly Func<int[], int, int, int> _slotAllocation;
@@ -291,7 +244,7 @@ namespace ALICE
             int minSlot = _macs[mac].Makespan;
             for (int jobPrime = 0; jobPrime <= _macs[mac].JobCount; jobPrime++)
                 if (slotSizes[jobPrime] >= time & slotSizes[jobPrime] < minSlot)
-                // fits, and smaller than last slot
+                    // fits, and smaller than last slot
                 {
                     slot = jobPrime;
                 }
@@ -380,10 +333,10 @@ namespace ALICE
             {
                 List<double> priority = new List<double>(ReadyJobs.Count);
                 priority.AddRange(from j in ReadyJobs
-                                  let lookahead = Clone()
-                                  select lookahead.Dispatch1(j, linModel.FeatureMode)
-                                      into feat
-                                      select linModel.PriorityIndex(feat));
+                    let lookahead = Clone()
+                    select lookahead.Dispatch1(j, linModel.FeatureMode)
+                    into feat
+                    select linModel.PriorityIndex(feat));
                 var job = ReadyJobs[priority.FindIndex(p => Math.Abs(p - priority.Max()) < 0.001)];
                 Dispatch1(job, Features.Mode.None);
             }
@@ -406,8 +359,8 @@ namespace ALICE
                 case SDR.SPT:
                     List<int> times = new List<int>(ReadyJobs.Count);
                     times.AddRange(from job in ReadyJobs
-                                   let mac = _prob.Sigma[job, _jobs[job].MacCount]
-                                   select _prob.Procs[job, mac]);
+                        let mac = _prob.Sigma[job, _jobs[job].MacCount]
+                        select _prob.Procs[job, mac]);
                     return sdr == SDR.SPT
                         ? ReadyJobs[times.FindIndex(w => w == times.Min())]
                         : ReadyJobs[times.FindIndex(w => w == times.Max())];
@@ -617,202 +570,6 @@ namespace ALICE
                 // make the color fully opaque
                 return Color.FromArgb(255, colorBytes[0], colorBytes[1], colorBytes[2]);
             }
-        }
-
-    }
-
-    public class Features
-    {
-        public enum Mode
-        {
-            None = 0,
-            Local,
-            Global,
-            Equiv
-        };
-
-        public enum Local
-        {
-            #region job related
-
-            proc = 0, // processing time
-            startTime, // start time 
-            endTime, // end time 
-            jobOps, // number of jobs 
-            arrivalTime, // arrival time of job
-            //wrm, // work remaining for job
-            //mwrm, // most work remaining for schedule (could be other job)
-            totProc, // total processing times
-            wait, // wait for job
-
-            #endregion
-
-            #region mac-related
-
-            mac,
-            macOps, // number of macs
-            macFree, // current makespan for mac 
-            makespan, // current makespan for schedule
-
-            #endregion
-
-            #region slack related
-
-            step, // current step 
-            slotReduced, // slack reduced from job assignment 
-            slots, // total slack on mac
-            slotsTotal, // total slacks for schedule
-            //slotCreated, // true if slotReduced < 0
-
-            #endregion
-
-            #region work remaining
-
-            wrmMac, // work remaining for mac
-            wrmJob, // work remaining for job
-            wrmTotal, // work remaining for total
-
-            #endregion
-
-            Count
-        }
-
-        public enum Global
-        {
-            #region makespan related
-
-            MWR,
-            LWR,
-            SPT,
-            LPT,
-            // ReSharper disable once InconsistentNaming
-            RNDmean,
-            // ReSharper disable once InconsistentNaming
-            RNDstd,
-            // ReSharper disable once InconsistentNaming
-            RNDmax,
-            // ReSharper disable once InconsistentNaming
-            RNDmin,
-
-            #endregion
-
-            Count
-        }
-
-        // ReSharper disable once InconsistentNaming
-        private int[] RND = new int[100];
-        public int[] PhiLocal = new int[(int)Local.Count];
-        public double[] PhiGlobal = new double[(int)Global.Count];
-        public bool[] Equiv = new bool[(int)SDR.Count];
-
-        public Features Difference(Features other)
-        {
-            Features diff = new Features();
-
-            for (int i = 0; i < (int)Local.Count; i++)
-                diff.PhiLocal[i] = PhiLocal[i] - other.PhiLocal[i];
-
-            for (int i = 0; i < (int)Global.Count; i++)
-                diff.PhiGlobal[i] = PhiGlobal[i] - other.PhiGlobal[i];
-
-            for (int i = 0; i < (int)SDR.Count; i++)
-                diff.Equiv[i] = Equiv[i] == other.Equiv[i];
-
-            diff.RND = null;
-            return diff;
-        }
-
-        public void GetLocalPhi(Schedule.Jobs job, Schedule.Macs mac, int proc, int wrmTotal, int slotsTotal,
-            int makespan, int step, int startTime, int arrivalTime, int reduced)
-        {
-            #region job related
-
-            PhiLocal[(int)Local.proc] = proc;
-            PhiLocal[(int)Local.startTime] = startTime;
-            PhiLocal[(int)Local.endTime] = startTime + proc;
-            PhiLocal[(int)Local.jobOps] = job.MacCount;
-            PhiLocal[(int)Local.arrivalTime] = arrivalTime;
-            PhiLocal[(int)Local.wait] = startTime - arrivalTime;
-
-            #endregion
-
-            #region machine related
-
-            PhiLocal[(int)Local.mac] = mac.Index;
-            PhiLocal[(int)Local.macFree] = mac.Makespan;
-            PhiLocal[(int)Local.macOps] = mac.JobCount;
-
-            #endregion
-
-            #region schedule related
-
-            PhiLocal[(int)Local.totProc] = job.TotProcTime;
-            PhiLocal[(int)Local.makespan] = makespan;
-            PhiLocal[(int)Local.step] = step;
-
-            #endregion
-
-            #region work remaining
-
-            /* add current processing time in order for <w,phi> can be equivalent to MWR/LWR 
-            * (otherwise it would find the job with most/least work remaining in the next step,
-            * i.e. after the one-step lookahead */
-            PhiLocal[(int)Local.wrmMac] = mac.WorkRemaining + proc;
-            PhiLocal[(int)Local.wrmJob] = job.WorkRemaining + proc;
-            PhiLocal[(int)Local.wrmTotal] = wrmTotal + proc;
-
-            #endregion
-
-            #region flow related
-
-            PhiLocal[(int)Local.slotReduced] = reduced;
-            PhiLocal[(int)Local.slots] = mac.TotSlack;
-            PhiLocal[(int)Local.slotsTotal] = slotsTotal;
-            //local[(int)LocalFeature.slotCreated] = reduced > 0 ? 0 : 1;
-
-            #endregion
-
-        }
-
-        public void GetGlobalPhi(Schedule current)
-        {
-            Schedule lookahead;
-
-            for (int i = 0; i < (int)SDR.Count; i++)
-            {
-                SDR sdr = (SDR)i;
-                lookahead = current.Clone();
-                lookahead.ApplySDR(sdr, Mode.None);
-                PhiGlobal[(int)(Global)(sdr)] = lookahead.Makespan;
-            }
-
-            for (int i = 0; i < RND.Length; i++)
-            {
-                lookahead = current.Clone();
-                lookahead.ApplySDR(SDR.RND, Mode.None);
-                RND[i] = lookahead.Makespan;
-            }
-
-            PhiGlobal[(int)Global.RNDmin] = RND.Min();
-            PhiGlobal[(int)Global.RNDmax] = RND.Max();
-            PhiGlobal[(int)Global.RNDmean] = RND.Average();
-            PhiGlobal[(int)Global.RNDstd] = StandardDev(RND, PhiGlobal[(int)Global.RNDmean]);
-        }
-
-        public void GetEquivPhi(int job, Schedule current)
-        {
-            for (int i = 0; i < (int)SDR.Count; i++)
-                Equiv[i] = job == current.JobChosenBySDR((SDR)i);
-        }
-
-        private static double StandardDev(IList<int> values, double mean)
-        {
-            double variance = 0;
-            var n = values.Count;
-            for (var i = 0; i < n; i++)
-                variance += Math.Pow((values[i] - mean), 2);
-
-            return Math.Sqrt(variance / n);
         }
 
     }

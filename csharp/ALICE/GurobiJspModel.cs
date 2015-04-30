@@ -43,13 +43,20 @@ namespace ALICE
             _fileName = String.Format("jssp.{0}.log", name);
 
             // Model
-            _env = new GRBEnv(_fileName);
-            if (tmlim > 0)
-                _env.Set(GRB.DoubleParam.TimeLimit, tmlim);
-            _env.Set(GRB.IntParam.LogToConsole, 0);
+            try
+            {
+                _env = new GRBEnv(_fileName);
+                if (tmlim > 0)
+                    _env.Set(GRB.DoubleParam.TimeLimit, tmlim);
+                _env.Set(GRB.IntParam.LogToConsole, 0);
 
-            _model = new GRBModel(_env);
-            _model.Set(GRB.StringAttr.ModelName, "jsp");
+                _model = new GRBModel(_env);
+                _model.Set(GRB.StringAttr.ModelName, "jsp");
+            }
+            catch (GRBException e)
+            {
+                Console.WriteLine("Error code: " + e.ErrorCode + ". " + e.Message);
+            }
 
             DecisionVariables();
             ProcessingOrder(prob.Procs, prob.Sigma);
