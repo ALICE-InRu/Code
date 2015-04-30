@@ -1,24 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scheduling", "Scheduling.csproj", "{3BE0079C-2F27-411E-9D68-8D17D73C7169}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ALICE", "ALICE\ALICE.csproj", "{85B36136-5472-4D99-A02F-B61FCAFC0AC5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3BE0079C-2F27-411E-9D68-8D17D73C7169}.Debug|x64.ActiveCfg = Debug|x64
-		{3BE0079C-2F27-411E-9D68-8D17D73C7169}.Debug|x64.Build.0 = Debug|x64
-		{3BE0079C-2F27-411E-9D68-8D17D73C7169}.Debug|x86.ActiveCfg = Debug|x86
-		{3BE0079C-2F27-411E-9D68-8D17D73C7169}.Debug|x86.Build.0 = Debug|x86
-		{3BE0079C-2F27-411E-9D68-8D17D73C7169}.Release|x64.ActiveCfg = Release|x64
-		{3BE0079C-2F27-411E-9D68-8D17D73C7169}.Release|x64.Build.0 = Release|x64
-		{3BE0079C-2F27-411E-9D68-8D17D73C7169}.Release|x86.ActiveCfg = Release|x86
-		{3BE0079C-2F27-411E-9D68-8D17D73C7169}.Release|x86.Build.0 = Release|x86
+		{85B36136-5472-4D99-A02F-B61FCAFC0AC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{85B36136-5472-4D99-A02F-B61FCAFC0AC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{85B36136-5472-4D99-A02F-B61FCAFC0AC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{85B36136-5472-4D99-A02F-B61FCAFC0AC5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

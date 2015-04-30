@@ -328,6 +328,12 @@
             Algorithm used to solve the MIP node relaxations.
             </summary>
         </member>
+        <member name="F:Gurobi.GRB.IntParam.NoRelHeuristic">
+            <summary>
+            Enables the NoRel heuristic, which searches for feasible solutions
+            to a MIP model before solving the root relaxation.
+            </summary>
+        </member>
         <member name="F:Gurobi.GRB.IntParam.PumpPasses">
             <summary>
             Number of passes of the MIP feasibility pump heuristic performed.
@@ -566,14 +572,6 @@
             <summary>
             Parallel Gurobi MIP thread count.  The default value of 0 uses all
             of the processors in the machine.
-            </summary>
-        </member>
-        <member name="F:Gurobi.GRB.IntParam.InfUnbdRay">
-            <summary>
-            Indicator to make information, such as primal and dual solutions,
-            Farkas dual and unbounded ray, available on infeasible or
-            unbounded models. The default value of 0 means that information
-            may not be available.
             </summary>
         </member>
         <member name="F:Gurobi.GRB.IntParam.MIQCPMethod">
@@ -831,6 +829,11 @@
             Variable branching priority.
             </summary>
         </member>
+        <member name="F:Gurobi.GRB.IntAttr.VarPreStat">
+            <summary>
+            Status of variable in presolved model.
+            </summary>
+        </member>
         <member name="F:Gurobi.GRB.IntAttr.IISMinimal">
             <summary>
             Indicates whether the current IIS is minimal.
@@ -929,6 +932,11 @@
         <member name="F:Gurobi.GRB.DoubleAttr.Start">
             <summary>
             Variable MIP start values.
+            </summary>
+        </member>
+        <member name="F:Gurobi.GRB.DoubleAttr.PreFixVal">
+            <summary>
+            For variables fixed by presolve, gives the value of the variable.
             </summary>
         </member>
         <member name="F:Gurobi.GRB.DoubleAttr.RHS">
