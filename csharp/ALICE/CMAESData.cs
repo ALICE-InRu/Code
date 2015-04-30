@@ -8,23 +8,20 @@ using System.Linq;
 namespace ALICE
 {
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    public class CMAES
+    public class CMAESData : OPTData
     {
         private const int NUM_FEATURES = (int) Features.Local.Count;
-        private readonly int _dimension;
         private readonly int N; // number of objective variables (here: N = problem dimension * NumFeatures)
 
-        private readonly ProblemInstance[] _trainingData;
+        
         private readonly int[] _optMakespans;
 
-        private readonly int _numInstances;
         private readonly Func<double[], double> _objFun;
 
         public bool OptimistationComplete { get; private set; }
 
         public int Generation { get; private set; }
-        private int _alreadyAutoSavedGeneration = -1;
-
+        
         public int CountEval { get; private set; }
         public int StopEval { get; private set; } // stop after stopeval number of function evaluations
         private double sigma; // coordinate wise standard deviation (step size)
@@ -47,9 +44,8 @@ namespace ALICE
         private readonly double chiN; // expectation of ||N(0,I)|| == norm(randn(N,1))
         private double _eigenEval; // track update of B and D
 
-        private readonly string _fileNameFinalResults;
-        private readonly string _fileNameResults;
-        private readonly string _directory;
+        private readonly FileInfo FileInfoResults;
+        
         private Offspring[] _population;
 
         private readonly List<SummaryCMA> _output = new List<SummaryCMA>();
@@ -72,57 +68,43 @@ namespace ALICE
             public int Generation;
         }
 
-        public CMAES(RawData trainingData, string strObjFun, bool dependentModel, string cmaDirectory)
+        public CMAESData(string distribution, string dimension, string strObjFun, bool dependentModel)
+            : base(distribution, dimension, "train")
         {
-            _directory = cmaDirectory;
-            _fileNameFinalResults = String.Format("full.{0}.{1}.{2}.weights.{3}.csv", trainingData.Distribution,
-                trainingData.Dimension, strObjFun, dependentModel ? "timedependent" : "timeindependent");
-            _fileNameResults = String.Format(@"results\output.{0}.{1}.{2}.weights.{3}.csv", trainingData.Distribution,
-                trainingData.Dimension, strObjFun, dependentModel ? "timedependent" : "timeindependent");
+            FileInfo =
+                new FileInfo(String.Format("full.{0}.{1}.{2}.weights.{3}.csv", Distribution, Dimension, strObjFun,
+                    dependentModel ? "timedependent" : "timeindependent"));
+            FileInfoResults =
+                new FileInfo(String.Format(@"results\output.{0}.{1}.{2}.weights.{3}.csv", Distribution, Dimension,
+                    strObjFun, dependentModel ? "timedependent" : "timeindependent"));
 
-            FileInfo file = new FileInfo(String.Format(@"{0}\{1}", _directory, _fileNameFinalResults));
-            if (file.Exists)
+            if (FileInfo.Exists)
             {
-                Step = String.Format("Optimistation already completed, see results in {0}", file.Name);
+                Step = String.Format("Optimistation already completed, see results in {0}", FileInfo.Name);
                 OptimistationComplete = true;
                 return;
             }
 
-            file = new FileInfo(String.Format(@"{0}\{1}", _directory, _fileNameResults));
-            if (file.Directory != null && !file.Directory.Exists)
-                Directory.CreateDirectory(file.Directory.FullName);
-
-            if (file.Exists)
+            if (FileInfoResults.Exists)
             {
                 // need to read last run here - until then, start from scratch
                 // _alreadyAutoSavedGeneration = Generation;
-                file.Delete();
+                throw new NotImplementedException();
+                // FileInfoResults.Delete();
             }
-
-            ProblemInstance prob = (ProblemInstance) trainingData.Rows[0]["Problem"];
-            int maxInstances = prob.Dimension >= 100 ? 300 : 500;
-            _numInstances = Math.Min(maxInstances, trainingData.NumInstances);
-            _dimension = prob.Dimension;
-
-            _trainingData = new ProblemInstance[_numInstances];
-            for (int pid = 0; pid < _numInstances; pid++)
-                _trainingData[pid] = (ProblemInstance) trainingData.Rows[pid]["Problem"];
-
+            
             //Get the method information using the method info class
             if (strObjFun.ToLower().Contains("makespan"))
                 _objFun = MinimumMakespan;
             else
             {
-                _optMakespans = new int[_numInstances];
-                for (int pid = 0; pid < _numInstances; pid++)
-                    _optMakespans[pid] = (int) trainingData.Rows[pid]["Makespan"];
-
+                _optMakespans = OptimumArray();
                 _objFun = MinimumRho;
             }
 
             N = NUM_FEATURES;
             if (dependentModel)
-                N *= _dimension;
+                N *= NumDimension;
 
             #region --------------------  Initialization --------------------------------
 
@@ -194,7 +176,7 @@ namespace ALICE
             else
             {
                 for (var iFeat = 0; iFeat < (int) Features.Local.Count; iFeat++)
-                    xArray[iFeat] = new double[_dimension];
+                    xArray[iFeat] = new double[NumDimension];
 
                 for (int i = 0; i < N; i++)
                 {
@@ -211,10 +193,10 @@ namespace ALICE
         {
             LinearModel linear = ConvertToLinearModel(x);
 
-            int[] makespans = new int[_numInstances];
-            for (int pid = 0; pid < _numInstances; pid++)
+            int[] makespans = new int[NumInstances];
+            for (int pid = 0; pid < NumInstances; pid++)
             {
-                Schedule jssp = new Schedule(_trainingData[pid]);
+                Schedule jssp = GetEmptySchedule(GetName(pid));
                 jssp.ApplyCDR(linear);
                 makespans[pid] = jssp.Makespan;
             }
@@ -232,8 +214,8 @@ namespace ALICE
             if (_optMakespans == null) return double.NaN;
 
             int[] makespans = ApplyWeights(x);
-            double[] rho = new double[_numInstances];
-            for (int i = 0; i < _numInstances; i++)
+            double[] rho = new double[NumInstances];
+            for (int i = 0; i < NumInstances; i++)
                 rho[i] = Schedule.RhoMeasure(_optMakespans[i], makespans[i]);
 
             return rho.Average();
@@ -406,32 +388,22 @@ namespace ALICE
         public void WriteFinalResultsCSV()
         {
             WriteResultsCSV();
-
-            FileInfo fileinfo = new FileInfo(string.Format(@"{0}\{1}", _directory, _fileNameFinalResults));
-
             SummaryCMA best = _output.FindLast(x => Math.Abs(x.Fitness - _output.Min(y => y.Fitness)) < 1e-8);
             LinearModel bestWeights = ConvertToLinearModel(best.DistributionMeanVector);
 
-            WriteCMAFinalResults(fileinfo, bestWeights);
+            WriteCMAFinalResults(bestWeights);
         }
 
         public void WriteResultsCSV()
         {
-            FileInfo fileinfo = new FileInfo(string.Format(@"{0}\{1}", _directory, _fileNameResults));
+            WriteCMAResults(_output.Where(x => x.Generation > AlreadyAutoSavedPID).ToList(), N, NUM_FEATURES);
 
-            WriteCMAResults(fileinfo, FileMode.Append,
-                _output.Where(x => x.Generation > _alreadyAutoSavedGeneration).ToList(), N, NUM_FEATURES);
-
-            _alreadyAutoSavedGeneration = Generation;
+            AlreadyAutoSavedPID = Generation;
         }
 
-        public static void WriteCMAResults(FileInfo file, FileMode fileMode, List<SummaryCMA> output,
-            int numDecsVariables, int numFeatures)
+        public void WriteCMAResults(List<SummaryCMA> output, int numDecsVariables, int numFeatures)
         {
-            if (file.Extension != ".csv")
-                file = new FileInfo(file.FullName + ".csv");
-
-            var fs = new FileStream(file.FullName, fileMode, FileAccess.Write);
+            var fs = new FileStream(FileInfoResults.FullName, FileMode.Append, FileAccess.Write);
             using (var st = new StreamWriter(fs))
             {
                 if (fs.Length == 0) // header is missing 
@@ -461,12 +433,9 @@ namespace ALICE
             fs.Close();
         }
 
-        public static void WriteCMAFinalResults(FileInfo file, LinearModel linearModel)
+        public void WriteCMAFinalResults(LinearModel linearModel)
         {
-            if (file.Extension != ".csv")
-                file = new FileInfo(file.FullName + ".csv");
-
-            var fs = new FileStream(file.FullName, FileMode.Create, FileAccess.Write);
+            var fs = new FileStream(FileInfo.FullName, FileMode.Create, FileAccess.Write);
             using (var st = new StreamWriter(fs))
             {
                 string header = "Type,NrFeat,Model,Feature,mean";

@@ -14,6 +14,7 @@ namespace ALICE
 
         private readonly List<PrefSet>[,] _diffData;
         private readonly Func<List<TrSet>, int, int, int> _rankingFunction;
+        private readonly Ranking _ranking; 
 
         public enum Ranking
         {
@@ -41,7 +42,8 @@ namespace ALICE
 
             Columns.Add("Rank", typeof(int));
 
-            switch ((Ranking)rank)
+            _ranking = (Ranking)rank;
+            switch (_ranking)
             {
                 case Ranking.All:
                     _rankingFunction = AllRankings;
@@ -61,14 +63,18 @@ namespace ALICE
             _diffData = new List<PrefSet>[NumInstances, NumDimension];
         }
 
-        public void CreatePreferencePairs(int pid)
+        public string CreatePreferencePairs(int pid)
         {
+            int currentNumPreferences = 0;
             RankPreferences(pid);
             for (var step = 0; step < NumDimension; step++)
             {
                 var prefs = TrData[pid, step].ToList().OrderBy(p => p.Rank).ToList();
-                NumPreferences += _rankingFunction(prefs, pid, step);
+                currentNumPreferences += _rankingFunction(prefs, pid, step);
             }
+            NumPreferences += currentNumPreferences;
+            return String.Format("{0}.{1}.{2} {3}.{4} #{5}", Distribution, Dimension, pid, StrTrack, _ranking,
+                currentNumPreferences);
         }
 
         private int BasicRanking(List<TrSet> prefs, int pid, int step)

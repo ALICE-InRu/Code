@@ -18,7 +18,7 @@ namespace ALICE
         {
             NumJobs = numJobs;
             NumMachines = numMachines;
-            Dimension = numJobs * numMachines;
+            Dimension = numJobs*numMachines;
             Procs = Array2Matrix(processingTimes);
             Sigma = Array2Matrix(permutationMatrix);
         }
@@ -29,13 +29,13 @@ namespace ALICE
             for (int job = 0; job < NumJobs; job++)
             {
                 for (int mac = 0; mac < NumMachines; mac++)
-                    matrix[job, mac] = array[job * NumMachines + mac];
+                    matrix[job, mac] = array[job*NumMachines + mac];
             }
             return matrix;
         }
 
         // sequence is a list of <job,mac,starttime>        
-        public int[,] Optimize(string folder, string solver, string name, out int optMakespan, out bool success,
+        public int[,] Optimize(string name, out int optMakespan, out bool success,
             out int simplexIterations, int tmlim = 6000, List<Schedule.Dispatch> constraints = null)
         {
             GurobiJspModel model = new GurobiJspModel(this, name, tmlim);

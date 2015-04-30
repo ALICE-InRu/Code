@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace ALICE
 {
@@ -95,18 +96,16 @@ namespace ALICE
             Columns.Add("ResultingOptMakespan", typeof(int));
             Columns.Add("Features", typeof(Features));
 
-            List<string[]> allContent = ReadCSV();
-            if (allContent != null && allContent.Count > 1)
+            var firstLine = File.ReadLines(FileInfo.FullName).First();
+            var lastLine = File.ReadLines(FileInfo.FullName).Last();
+            if (lastLine != firstLine && lastLine != null)
             {
-                var firstLine = allContent[0];
-                var lastLine = allContent[allContent.Count - 1];
-                if (firstLine != lastLine)
-                {
-                    AlreadyAutoSavedPID =
-                        Convert.ToInt32(lastLine[firstLine.ToList().FindIndex(x => x == "PID")]);
-                }
-            }
+                AlreadyAutoSavedPID =
+                    Convert.ToInt32(
+                        Regex.Split(lastLine, ",")[Regex.Split(firstLine, ",").ToList().FindIndex(x => x == "PID")]);
 
+            }
+            
             TrData = new TrSet[NumInstances, NumDimension][];
 
             switch (_track)
@@ -155,12 +154,9 @@ namespace ALICE
 
         public void Retrace(int pid, Features.Mode featureMode)
         {
-            var name = GetName(pid);
-            var instance = Rows.Find(name);
-            var prob = (ProblemInstance)instance["Problem"];
-
-            var jssp = new Schedule(prob);
-            for (var step = 0; step < prob.Dimension; step++)
+            string name = GetName(pid);
+            var jssp = GetEmptySchedule(name);
+            for (var step = 0; step < NumDimension; step++)
             {
                 #region find features of possible jobs
 
@@ -188,7 +184,6 @@ namespace ALICE
                 }
 
                 #endregion
-
                 jssp.Dispatch1(dispatchedJob, Features.Mode.None);
             }
         }

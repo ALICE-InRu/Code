@@ -58,6 +58,18 @@ namespace ALICE
             return String.Format("{0}.{1}.{2}.{3}", Distribution, Dimension, Set, pid).ToLower();
         }
 
+        internal ProblemInstance GetProblem(string name)
+        {
+            var instance = Rows.Find(name);
+            return instance == null ? null : (ProblemInstance) instance["Problem"];
+        }
+
+        internal Schedule GetEmptySchedule(string name)
+        {
+            ProblemInstance prob = GetProblem(name);
+            return prob == null ? null : new Schedule(prob);
+        }
+
         private void WriteGeneratedData()
         {
             if (FileInfo == null || FileInfo.Directory == null) return;

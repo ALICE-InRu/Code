@@ -10,8 +10,11 @@ namespace ALICE
     /// </summary>
     public class OPTData : RawData
     {
-        public OPTData(string distribution, string dimension, string set) : base(distribution, dimension, set)
+        public readonly int TimeLimit;
+
+        public OPTData(string distribution, string dimension, string set, int timeLimit_sec = -1) : base(distribution, dimension, set)
         {
+            TimeLimit = timeLimit_sec;
             FileInfo =
                 new FileInfo(string.Format("C://Users//helga//Alice//Code//OPT//{0}.{1}.{2}.csv", Distribution, Dimension,
                     Set));
@@ -19,19 +22,56 @@ namespace ALICE
             Columns.Add("Solved", typeof(string));
             Columns.Add("Optimum", typeof(int));
             Columns.Add("Solution", typeof(int[,]));
-            Columns.Add("Solver", typeof(string));
             Columns.Add("Simplex", typeof(int));
         }
 
-        public void AddOptMakespan(string name, int makespan, bool solved, int[,] xTimeJob, int simplexIterations,
-            string solver)
+        public void Optimise()
+        {
+            for(int pid = AlreadyAutoSavedPID+1; pid<NumInstances; pid++)
+                Optimise(pid);
+            Write();
+        }
+
+        public string Optimise(int pid)
+        {
+            int opt;
+            bool solved;
+            int simplexIterations;
+            string name = GetName(pid);
+            ProblemInstance prob = GetProblem(name);
+            int[,] xTimeJob = prob.Optimize(name, out opt, out solved, out simplexIterations, TimeLimit);
+                // INTENSE WORK
+
+            Schedule jssp = new Schedule(prob);
+            jssp.SetCompleteSchedule(xTimeJob, opt);
+
+            string errorMsg;
+            if (!jssp.Validate(out errorMsg, true))
+            {
+                return String.Format("Error {0}", errorMsg);
+            }
+
+            AddOptMakespan(name, opt, solved, xTimeJob, simplexIterations);
+            return String.Format("{0}: {1}{2}", pid, opt, (solved ? "" : "*"));
+        }
+
+        public void AddOptMakespan(string name, int makespan, bool solved, int[,] xTimeJob, int simplexIterations)
         {
             var row = Rows.Find(name);
             row.SetField("Solved", solved ? "opt" : "bks");
             row.SetField("Optimum", makespan);
             row.SetField("Solution", xTimeJob);
-            row.SetField("Solver", solver);
             row.SetField("Simplex", simplexIterations);
+        }
+
+        internal int[] OptimumArray()
+        {
+            int[] opts = new int[Rows.Count];
+            for (int i = 0; i < Rows.Count; i++)
+            {
+                opts[i] = (int) Rows[i]["Optimum"];
+            }
+            return opts;
         }
 
         public bool Read()

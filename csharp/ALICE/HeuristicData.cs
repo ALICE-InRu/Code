@@ -16,7 +16,13 @@ namespace ALICE
             _heuristicName = heuristicName;
             _heuristicValue = heuristicValue;
             Columns.Add("Makespan", typeof (int));
-            Columns.Add("Makespan", typeof (int));
+            Columns.Add(heuristicName, typeof (string));
+        }
+
+        internal void AddMakespan(string name, int makespan)
+        {
+            var row = Rows.Find(name);
+            row.SetField("Makespan", makespan);
         }
 
         internal bool Read(bool all)
