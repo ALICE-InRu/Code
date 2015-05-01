@@ -1,7 +1,0 @@
-C:\Users\helga\Alice\Code\csharp\ALICE\ALICE\bin\x86\Debug\ALICE.dll
-C:\Users\helga\Alice\Code\csharp\ALICE\ALICE\bin\x86\Debug\ALICE.pdb
-C:\Users\helga\Alice\Code\csharp\ALICE\ALICE\bin\x86\Debug\alglibnet2.dll
-C:\Users\helga\Alice\Code\csharp\ALICE\ALICE\bin\x86\Debug\Gurobi60.NET.dll
-C:\Users\helga\Alice\Code\csharp\ALICE\ALICE\bin\x86\Debug\Gurobi60.NET.xml
-C:\Users\helga\Alice\Code\csharp\ALICE\ALICE\obj\x86\Debug\ALICE.dll
-C:\Users\helga\Alice\Code\csharp\ALICE\ALICE\obj\x86\Debug\ALICE.pdb
