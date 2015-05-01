@@ -12,14 +12,15 @@ namespace ALICE
     {
         public readonly int TimeLimit; // in minutes
 
-        public OPTData(string distribution, string dimension, DataSet set, bool extended, int timeLimit_sec = -1)
+        public OPTData(string distribution, string dimension, DataSet set, bool extended, int timeLimit_min = -1)
             : base(distribution, dimension, set, extended)
         {
-            TimeLimit = timeLimit_sec;
+            TimeLimit = timeLimit_min;
             FileInfo =
-                new FileInfo(string.Format("C://Users//helga//Alice//Code//OPT//{0}.{1}.{2}.csv", Distribution,
-                    Dimension,
-                    Set));
+                new FileInfo(string.Format("C://Users//helga//Alice//Code//OPT//{0}.{1}.{2}.csv",
+                    Distribution, Dimension, Set));
+
+            SetAlreadySavedPID(false);
 
             Columns.Add("Solved", typeof (string));
             Columns.Add("Optimum", typeof (int));
@@ -29,7 +30,7 @@ namespace ALICE
 
         public void Optimise()
         {
-            for (int pid = AlreadySavedPID + 1; pid < NumInstances; pid++)
+            for (int pid = AlreadySavedPID + 1; pid <= NumInstances; pid++)
                 Optimise(pid);
             Write();
         }
@@ -41,8 +42,11 @@ namespace ALICE
             int simplexIterations;
             string name = GetName(pid);
             ProblemInstance prob = GetProblem(name);
-            int[,] xTimeJob = prob.Optimize(name, out opt, out solved, out simplexIterations, TimeLimit);
+            if (prob == null)
+                return String.Format("{0}:{1} doen't exist!", FileInfo.Name, pid);
+
             // INTENSE WORK
+            int[,] xTimeJob = prob.Optimize(name, out opt, out solved, out simplexIterations, TimeLimit);
 
             Schedule jssp = new Schedule(prob);
             jssp.SetCompleteSchedule(xTimeJob, opt);
@@ -54,7 +58,7 @@ namespace ALICE
             }
 
             AddOptMakespan(name, opt, solved, xTimeJob, simplexIterations);
-            return String.Format("{0}: {1}{2}", pid, opt, (solved ? "" : "*"));
+            return String.Format("{0}:{1} {2}{3}", FileInfo.Name, pid, opt, (solved ? "" : "*"));
         }
 
         public void AddOptMakespan(string name, int makespan, bool solved, int[,] xTimeJob, int simplexIterations)
@@ -74,25 +78,6 @@ namespace ALICE
                 opts[i] = (int) Rows[i]["Optimum"];
             }
             return opts;
-        }
-
-        public bool Read()
-        {
-            var contents = ReadCSV();
-            if (contents == null) return false;
-            contents.RemoveAt(0); // HEADER
-
-            foreach (var content in contents)
-            {
-                var row = Rows.Find(content[0]);
-                if (row == null) continue;
-                row["Optimum"] = content[1];
-                row["Solved"] = content[2];
-
-                AlreadySavedPID = (int) row["PID"];
-            }
-
-            return true;
         }
 
         public void Write()

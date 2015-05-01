@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
-using System.Management.Instrumentation;
 using System.Windows.Forms;
 using ALICE;
 
@@ -12,7 +11,7 @@ namespace Chesire
 {
     public partial class App : Form
     {
-        private const int HALFHOUR = 30*60*1000; // ms
+        private const int AUTOSAVE = 30; // minutes
 
         public App()
         {
@@ -83,7 +82,7 @@ namespace Chesire
 
             if (sdrDatas.Length == 0)
             {
-                textContent.AppendText("\n\nCannot apply SDR:");
+                textContent.AppendText("\nCannot apply SDR:");
                 if (Problems.CheckedItems.Count == 0)
                     textContent.AppendText("\n\tPlease choose at least one problem distribution.");
                 if (Dimension.CheckedItems.Count == 0)
@@ -92,7 +91,7 @@ namespace Chesire
                     textContent.AppendText("\n\tPlease choose at least train or test set.");
                 if (SDR.CheckedItems.Count == 0)
                     textContent.AppendText("\n\tPlease choose at least one SDR.");
-                textContent.AppendText("\n\n");              
+                textContent.AppendText("\n");
                 return;
             }
 
@@ -170,14 +169,14 @@ namespace Chesire
 
             if (optSets.Length == 0)
             {
-                textContent.AppendText("\n\nCannot optimise set:");
+                textContent.AppendText("\nCannot optimise set:");
                 if (Problems.CheckedItems.Count == 0)
                     textContent.AppendText("\n\tPlease choose at least one problem distribution.");
                 if (Dimension.CheckedItems.Count == 0)
                     textContent.AppendText("\n\tPlease choose at least one problem dimension.");
                 if (Set.CheckedItems.Count == 0)
                     textContent.AppendText("\n\tPlease choose at least train or test set.");
-                textContent.AppendText("\n\n");
+                textContent.AppendText("\n");
                 return;
             }
 
@@ -191,9 +190,9 @@ namespace Chesire
         }
 
         private void cancelAsyncButtonOptimize_Click(object sender, EventArgs e)
-        { 
+        {
             bkgWorkerOptimise.CancelAsync();
-            textHeader.AppendText("\n\nCancelling optimization...");
+            textHeader.AppendText("\nCancelling optimization...");
             cancelAsyncButtonOptimize.Visible = false;
         }
 
@@ -203,39 +202,55 @@ namespace Chesire
         //[System.Diagnostics.DebuggerNonUserCodeAttribute()]  
         private void bkgWorkerOptimise_DoWork(object sender, DoWorkEventArgs e)
         {
-            throw new NotImplementedException();
-
             //NOTE: we shouldn't use a try catch block here (unless you rethrow the exception)  
             //the background worker will be able to detect any exception on this code.  
             //if any exception is produced, it will be available to you on   
             //the RunWorkerCompletedEventArgs object, method bkgWorkerOptimise_RunWorkerCompleted  
-            
-            OPTData[] opts = (OPTData[]) e.Argument;
+
+            OPTData[] sets = (OPTData[]) e.Argument;
+            e.Result = "";
             int iter = 0;
-            foreach (OPTData opt in opts)
+            foreach (var set in sets)
             {
                 DateTime start = DateTime.Now;
-                e.Result = "";
-                bkgWorkerOptimise.ReportProgress(0,
-                    string.Format("Optimising {0} with time limit {1}min", opt.FileInfo.Name, opt.TimeLimit));
-                string info;
-                for (int pid = opt.AlreadySavedPID + 1; pid < opt.NumInstances; pid++)
-                {
-                    info = opt.Optimise(pid);
-                    bkgWorkerOptimise.ReportProgress((int) (100.0*pid/opt.NumInstances), info);
+                DateTime autoSave = DateTime.Now;
 
-                    if (bkgWorkerOptimise.CancellationPending)
+                bkgWorkerOptimise.ReportProgress((int) (100.0*iter/sets.Length),
+                    new object[] {0, String.Format("Starting optimising {0}", set.FileInfo.Name)});
+
+                for (int pid = set.AlreadySavedPID + 1; pid <= set.NumInstances; pid++)
+                {
+                    string info = set.Optimise(pid);
+                    bkgWorkerOptimise.ReportProgress((int) (100.0*pid/set.NumInstances),
+                        new object[] {1, info});
+
+                    if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE)
                     {
-                        info = String.Format("\n\nDuration: {0:0}", (DateTime.Now - start).TotalMinutes);
-                        bkgWorkerOptimise.ReportProgress((int) (100.0*pid/opt.NumInstances), info);
-                        e.Cancel = true;
-                        return;
+                        set.Write();
+                        bkgWorkerOptimise.ReportProgress((int) (100.0*iter/sets.Length),
+                            new object[]
+                            {
+                                0,
+                                String.Format("Auto saving {0} ({1:0}min)", set.FileInfo.Name,
+                                    (DateTime.Now - autoSave).TotalMinutes)
+                            });
+                        autoSave = DateTime.Now;
                     }
+
+                    if (!bkgWorkerOptimise.CancellationPending) continue;
+                    bkgWorkerOptimise.ReportProgress((int) (100.0*pid/set.NumInstances),
+                        new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
+                    e.Cancel = true;
+                    return;
                 }
-                opt.Write();
-                bkgWorkerOptimise.ReportProgress((int) (100.0*++iter/opts.Length), e.Result);
-                e.Result = String.Format("{0} total duration: {1:0} s.", opt.FileInfo.Name,
-                    (DateTime.Now - start).TotalMinutes);
+                set.Write();
+                bkgWorkerOptimise.ReportProgress((int) (100.0*++iter/sets.Length),
+                    new object[]
+                    {
+                        0,
+                        String.Format("Finished optimising {0} ({1:0}min)", set.FileInfo.Name,
+                            (DateTime.Now - start).TotalMinutes)
+                    });
             }
         }
 
@@ -253,14 +268,14 @@ namespace Chesire
 
             if (trSets.Length == 0)
             {
-                textContent.AppendText("\n\nCannot collect training set:");
+                textContent.AppendText("\nCannot collect training set:");
                 if (Problems.CheckedItems.Count == 0)
                     textContent.AppendText("\n\tPlease choose at least one problem distribution.");
                 if (Dimension.CheckedItems.Count == 0)
                     textContent.AppendText("\n\tPlease choose at least one problem dimension.");
                 if (Tracks.CheckedItems.Count == 0)
                     textContent.AppendText("\n\tPlease choose at least one training trajectory.");
-                textContent.AppendText("\n\n");              
+                textContent.AppendText("\n");              
                 return;
             }
 
@@ -275,7 +290,7 @@ namespace Chesire
         private void cancelAsyncButtonTrSet_Click(object sender, EventArgs e)
         {
             bkgWorkerTrSet.CancelAsync();
-            textHeader.AppendText("\n\nCancelling generation of training data...");
+            textHeader.AppendText("\nCancelling generation of training data...");
             cancelAsyncButtonTrSet.Visible = false;
         }
 
@@ -301,11 +316,11 @@ namespace Chesire
                     {
                         trset.Write();
                         bkgWorkerTrSet.ReportProgress((int) (100.0*pid/trset.NumInstances),
-                            String.Format("\n\nDuration: {0:0}min.", (DateTime.Now - start).Minutes));
+                            String.Format("\nDuration: {0:0}min.", (DateTime.Now - start).Minutes));
                         e.Cancel = true;
                         return;
                     }
-                    if (autoSave.ElapsedMilliseconds <= HALFHOUR) continue;
+                    if (autoSave.ElapsedMilliseconds <= AUTOSAVE) continue;
                     trset.Write();
                     autoSave.Restart();
                 }
@@ -329,7 +344,7 @@ namespace Chesire
 
             if (featureMode == Features.Mode.None)
             {
-                textContent.AppendText("\n\nCannot optimise set:");
+                textContent.AppendText("\nCannot optimise set:");
                 textContent.AppendText("\n\tPlease choose a feature mode.");
             }
 
@@ -341,14 +356,14 @@ namespace Chesire
 
             if (retraceSets.Length == 0)
             {
-                textContent.AppendText("\n\nCannot optimise set:");
+                textContent.AppendText("\nCannot optimise set:");
                 if (Problems.CheckedItems.Count == 0)
                     textContent.AppendText("\n\tPlease choose at least one problem distribution.");
                 if (Dimension.CheckedItems.Count == 0)
                     textContent.AppendText("\n\tPlease choose at least one problem dimension.");
                 if (Tracks.CheckedItems.Count == 0)
                     textContent.AppendText("\n\tPlease choose at least one training trajectory.");
-                textContent.AppendText("\n\n");
+                textContent.AppendText("\n");
                 return;
             }
             
@@ -365,7 +380,7 @@ namespace Chesire
         {
             bkgWorkerRetrace.CancelAsync();
             textHeader.AppendText(
-                "\n\nCancelling feature update of training data...");
+                "\nCancelling feature update of training data...");
             cancelAsyncButtonRetrace.Visible = false;
         }
 
@@ -388,7 +403,7 @@ namespace Chesire
                  
                     if (!bkgWorkerRetrace.CancellationPending) continue;
                     bkgWorkerRetrace.ReportProgress((int) (100.0*pid/set.AlreadySavedPID),
-                        new object[] {1, "Cancelled!"});
+                        new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
                     e.Cancel = true;
                     return;
                 }
@@ -423,7 +438,7 @@ namespace Chesire
         private void cancelAsyncButtonPrefSet_Click(object sender, EventArgs e)
         {
             bkgWorkerPrefSet.CancelAsync();
-            textHeader.AppendText("\n\nCancelling ranking of training data...");
+            textHeader.AppendText("\nCancelling ranking of training data...");
             cancelAsyncButtonRankTrData.Visible = false;
         }
 
@@ -477,7 +492,7 @@ namespace Chesire
 
             if (bdrDatas.Length == 0)
             {
-                textContent.AppendText("\n\nCannot apply BDR:");
+                textContent.AppendText("\nCannot apply BDR:");
                 if (Problems.CheckedItems.Count == 0)
                     textContent.AppendText("\n\tPlease choose at least one problem distribution.");
                 if (Dimension.CheckedItems.Count == 0)
@@ -488,7 +503,7 @@ namespace Chesire
                     textContent.AppendText("\n\tPlease choose at least one SDR for first half.");
                 if (SDR2.CheckedItems.Count == 0)
                     textContent.AppendText("\n\tPlease choose at least one SDR for second  half.");
-                textContent.AppendText("\n\n");
+                textContent.AppendText("\n");
                 return;
             }
 
@@ -524,7 +539,7 @@ namespace Chesire
         private void cancelAsyncButtonCMA_click(object sender, EventArgs e)
         {
             bkgWorkerTrSet.CancelAsync();
-            textHeader.AppendText("\n\nCancelling CMA-ES optimisation...");
+            textHeader.AppendText("\nCancelling CMA-ES optimisation...");
             cancelAsyncButtonTrSet.Visible = false;
         }
 
@@ -551,7 +566,7 @@ namespace Chesire
 
                     if (bkgWorkerTrSet.CancellationPending)
                     {
-                        string info = String.Format("\n\nDuration: {0:0} s.", (DateTime.Now - start).TotalSeconds);
+                        string info = String.Format("\nDuration: {0:0} s.", (DateTime.Now - start).TotalSeconds);
                         cmaes.WriteResultsCSV();
                         bkgWorkerCMAES.ReportProgress((int) (100.0*cmaes.CountEval/cmaes.StopEval), info);
                         e.Cancel = true;
@@ -559,7 +574,7 @@ namespace Chesire
                     }
                     bkgWorkerCMAES.ReportProgress((int) (100.0*cmaes.CountEval/cmaes.StopEval), cmaes.Step);
 
-                    if (autoSave.ElapsedMilliseconds <= HALFHOUR) continue;
+                    if (autoSave.ElapsedMilliseconds <= AUTOSAVE) continue;
                     cmaes.WriteResultsCSV();
                     autoSave.Restart();
                 }

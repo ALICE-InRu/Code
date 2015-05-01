@@ -653,7 +653,7 @@ namespace Chesire
             this.labelTmLimit.Name = "labelTmLimit";
             this.labelTmLimit.Size = new System.Drawing.Size(114, 13);
             this.labelTmLimit.TabIndex = 35;
-            this.labelTmLimit.Text = "Time limit per instance:";
+            this.labelTmLimit.Text = "Time limit (min):";
             // 
             // cancelAsyncButtonOptimize
             // 
@@ -668,30 +668,12 @@ namespace Chesire
             // TimeLimit
             // 
             this.TimeLimit.Location = new System.Drawing.Point(80, 31);
-            this.TimeLimit.Maximum = new decimal(new int[]
-            {
-                6000,
-                0,
-                0,
-                0
-            });
-            this.TimeLimit.Minimum = new decimal(new int[]
-            {
-                1,
-                0,
-                0,
-                0
-            });
+            this.TimeLimit.Maximum = 60;
+            this.TimeLimit.Minimum = 10;
             this.TimeLimit.Name = "TimeLimit";
             this.TimeLimit.Size = new System.Drawing.Size(44, 20);
             this.TimeLimit.TabIndex = 34;
-            this.TimeLimit.Value = new decimal(new int[]
-            {
-                10,
-                0,
-                0,
-                0
-            });
+            this.TimeLimit.Value = AUTOSAVE;
             // 
             // startAsyncButtonOptimize
             // 
