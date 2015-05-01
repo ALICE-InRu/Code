@@ -14,7 +14,6 @@ namespace ALICE
 
         private readonly List<PrefSet>[,] _diffData;
         private readonly Func<List<TrSet>, int, int, int> _rankingFunction;
-        private readonly Ranking _ranking; 
 
         public enum Ranking
         {
@@ -32,18 +31,18 @@ namespace ALICE
             public bool Followed;
         }
 
-        public PreferenceSet(string problem, string dim, string track, bool extended, char rank)
-            : base(problem, dim, track, extended)
+        public PreferenceSet(string problem, string dim, Trajectory track, bool extended, char rank)
+            : base(problem, dim, track, extended, Features.Mode.Local)
         {
             FileInfo =
                 new FileInfo(string.Format(
-                    "C://Users//helga//Alice//Code//trainingData//trdat.{0}.{1}.{2}.Local.diff.{3}.csv",
-                    Distribution, Dimension, StrTrack, rank));
+                    "C://Users//helga//Alice//Code//trainingData//trdat.{0}.diff.{1}.csv",
+                    FileInfo.Name, rank));
 
             Columns.Add("Rank", typeof(int));
 
-            _ranking = (Ranking)rank;
-            switch (_ranking)
+            var ranking = (Ranking)rank;
+            switch (ranking)
             {
                 case Ranking.All:
                     _rankingFunction = AllRankings;
@@ -54,8 +53,7 @@ namespace ALICE
                 case Ranking.FullPareto:
                     _rankingFunction = FullParetoRanking;
                     break;
-                //case Ranking.PartialPareto:
-                default:
+                case Ranking.PartialPareto:
                     _rankingFunction = PartialParetoRanking;
                     break;
             }
@@ -73,8 +71,7 @@ namespace ALICE
                 currentNumPreferences += _rankingFunction(prefs, pid, step);
             }
             NumPreferences += currentNumPreferences;
-            return String.Format("{0}.{1}.{2} {3}.{4} #{5}", Distribution, Dimension, pid, StrTrack, _ranking,
-                currentNumPreferences);
+            return String.Format("{0}:{1} #{2} pref", FileInfo.Name, pid, currentNumPreferences);
         }
 
         private int BasicRanking(List<TrSet> prefs, int pid, int step)

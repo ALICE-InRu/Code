@@ -16,10 +16,10 @@ namespace ALICE
         public readonly string Distribution;
         public readonly int NumDimension;
         public readonly string Dimension;
-        public readonly DataSet Set; // test or train
+        public readonly DataSet Set;
         public int NumInstances;
 
-        public enum DataSet
+        public new enum DataSet
         {
             train,
             test

@@ -49,6 +49,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BDRData.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="CDRData.cs">
       <SubType>Component</SubType>
     </Compile>

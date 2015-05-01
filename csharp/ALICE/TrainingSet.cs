@@ -27,17 +27,8 @@ namespace ALICE
             Count
         }
 
-        private Trajectory LookupTrack(String track)
-        {
-            for (int i = 0; i < (int)Trajectory.Count; i++)
-                if (track.Equals(String.Format("{0}", (Trajectory)i)))
-                    return (Trajectory)i;
-            return Trajectory.RND;
-        }
-
         private readonly Func<Schedule, TrSet[], LinearModel, int> _trajectory;
         internal readonly Trajectory Track;
-        internal string StrTrack;
 
         public int NumFeatures;
         public readonly TrSet[,][] TrData;
@@ -65,12 +56,11 @@ namespace ALICE
             }
         }
 
-        public TrainingSet(string distribution, string dim, string track, bool extended)
+        public TrainingSet(string distribution, string dim, Trajectory track, bool extended,
+            Features.Mode featureMode = Features.Mode.Local)
             : base(distribution, dim, DataSet.train, extended)
         {
-            Track= LookupTrack(track);
-            StrTrack = String.Format("{0}{1}", track, extended ? "EXT" : "");
-
+            Track = track;
             switch (Track)
             {
                 case Trajectory.ILFIX:
@@ -86,14 +76,14 @@ namespace ALICE
 
             FileInfo =
                 new FileInfo(string.Format(
-                    "C://Users//helga//Alice//Code//trainingData//trdat.{0}.{1}.{2}.{3}.csv",
-                    Distribution, Dimension, StrTrack, Features.Mode.Local));
+                    "C://Users//helga//Alice//Code//trainingData//trdat.{0}.{1}.{2}{3}.{4}.csv",
+                    Distribution, Dimension, track, extended ? "EXT" : "", featureMode));
 
-            Columns.Add("Step", typeof(int));
-            Columns.Add("Dispatch", typeof(Schedule.Dispatch));
-            Columns.Add("Followed", typeof(bool));
-            Columns.Add("ResultingOptMakespan", typeof(int));
-            Columns.Add("Features", typeof(Features));
+            Columns.Add("Step", typeof (int));
+            Columns.Add("Dispatch", typeof (Schedule.Dispatch));
+            Columns.Add("Followed", typeof (bool));
+            Columns.Add("ResultingOptMakespan", typeof (int));
+            Columns.Add("Features", typeof (Features));
 
             var firstLine = File.ReadLines(FileInfo.FullName).First();
             var lastLine = File.ReadLines(FileInfo.FullName).Last();
@@ -104,7 +94,7 @@ namespace ALICE
                         Regex.Split(lastLine, ",")[Regex.Split(firstLine, ",").ToList().FindIndex(x => x == "PID")]);
 
             }
-            
+
             TrData = new TrSet[NumInstances, NumDimension][];
 
             switch (Track)
@@ -157,7 +147,7 @@ namespace ALICE
         {
             string name = GetName(pid);
             DataRow instance = Rows.Find(name);
-            ProblemInstance prob = (ProblemInstance)instance["Problem"];
+            ProblemInstance prob = (ProblemInstance) instance["Problem"];
 
             GurobiJspModel gurobiModel = new GurobiJspModel(prob, name, TMLIM_STEP);
 
@@ -173,7 +163,7 @@ namespace ALICE
             }
             gurobiModel.Dispose();
             NumFeatures += currentNumFeatures;
-            return String.Format("{0}.{1}.{2} {3} #{4}", Distribution, Dimension, pid, StrTrack, currentNumFeatures);
+            return String.Format("{0}:{1} #{2} phi", FileInfo.Name, pid, currentNumFeatures);
         }
 
         private TrSet[] FindFeaturesForAllJobs(Schedule jssp, GurobiJspModel gurobiModel)
@@ -185,7 +175,7 @@ namespace ALICE
                 prefs[r] = new TrSet
                 {
                     Feature = lookahead.Dispatch1(jssp.ReadyJobs[r], Features.Mode.Local),
-                    Dispatch = lookahead.Sequence[lookahead.Sequence.Count - 1],
+                    Dispatch = lookahead.Sequence[lookahead.Sequence.Count - 1]
                 };
                 // need to optimize to label featuers correctly -- this is computationally intensive
                 gurobiModel.Lookahead(prefs[r].Dispatch, out prefs[r].ResultingOptMakespan);

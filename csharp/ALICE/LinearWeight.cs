@@ -59,7 +59,7 @@ namespace ALICE
 
         public void ReadLinearWeights(string path, out Features.Mode featureType)
         {
-            string[] content = new[] { "asdf" };
+            string[] content = { "asdf" };
             //AuxFun.ReadTextFile(path, out content, "\r\n");
 
             bool foundLocal = false;

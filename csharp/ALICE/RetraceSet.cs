@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 
 namespace ALICE
@@ -9,15 +8,11 @@ namespace ALICE
 
         private readonly Features.Mode _featureMode;
 
-        public RetraceSet(string distribution, string dimension, string track, bool extended, Features.Mode featureMode)
+        public RetraceSet(string distribution, string dimension, Trajectory track, bool extended, Features.Mode featureMode)
             : base(distribution, dimension, track, extended)
         {
             _featureMode = featureMode;
 
-            FileInfo =
-                new FileInfo(string.Format(
-                    "C://Users//helga//Alice//Code//trainingData//trdat.{0}.{1}.{2}.{3}.csv",
-                    Distribution, Dimension, StrTrack, _featureMode));
 
         }
 
