@@ -33,8 +33,7 @@ namespace ALICE
             get { return _model.GetConstrs().Count(); }
         }
 
-        public GurobiJspModel(ProblemInstance prob, string name, int tmlim = -1,
-            bool optimise = false)
+        public GurobiJspModel(ProblemInstance prob, string name, int tmlim_min)
         {
             _n = prob.NumJobs;
             _m = prob.NumMachines;
@@ -46,8 +45,8 @@ namespace ALICE
             try
             {
                 _env = new GRBEnv(_fileName);
-                if (tmlim > 0)
-                    _env.Set(GRB.DoubleParam.TimeLimit, tmlim);
+                if (tmlim_min > 0)
+                    _env.Set(GRB.DoubleParam.TimeLimit, tmlim_min*60);
                 _env.Set(GRB.IntParam.LogToConsole, 0);
 
                 _model = new GRBModel(_env);
@@ -63,7 +62,6 @@ namespace ALICE
             DisjunctiveCondition(prob.Procs);
             Objective(prob.Procs, prob.Sigma);
 
-            if (!optimise) return;
             TrueOptimumDecVars = Optimise(out TrueOptimum);
             //if (TrueOptimum > 0) // Objective cutoff
             //    _model.GetEnv().Set(GRB.DoubleParam.Cutoff, TrueOptimum + 0.5);

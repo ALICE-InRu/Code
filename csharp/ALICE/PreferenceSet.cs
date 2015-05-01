@@ -147,7 +147,6 @@ namespace ALICE
                 {
                     var rank = cmax.FindIndex(ms => ms == pref.ResultingOptMakespan);
                     pref.Rank = rank;
-                    Rows.Find(pref.Name)["Rank"] = rank;
                 }
             }
         }

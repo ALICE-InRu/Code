@@ -73,9 +73,11 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RetraceSet.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Schedule.cs" />
     <Compile Include="LinearWeight.cs" />
-    <Compile Include="SDR.cs" />
     <Compile Include="SDRData.cs">
       <SubType>Component</SubType>
     </Compile>

@@ -54,7 +54,8 @@
     <CodeAnalysisFailOnMissingRules>false</CodeAnalysisFailOnMissingRules>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>cheshirecat.ico</ApplicationIcon>
+    <ApplicationIcon>
+    </ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>Chesire.Program</StartupObject>
@@ -119,7 +120,6 @@
     <None Include="trainingData\cmdLiblinear.R" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="cheshirecat.ico" />
     <Content Include="lp\fssp-post.mod" />
     <Content Include="lp\fssp-pre.mod" />
     <Content Include="lp\jssp-post.mod" />

@@ -12,7 +12,7 @@ namespace ALICE
     /// </summary>
     public class TrainingSet : RawData
     {
-        public enum Track
+        public enum Trajectory
         {
             MWR,
             LWR,
@@ -26,18 +26,17 @@ namespace ALICE
             ILFIX,
             Count
         }
-        private Track LookupTrack(String track)
+
+        private Trajectory LookupTrack(String track)
         {
-            for (int i = 0; i < (int)Track.Count; i++)
-                if (track.Equals(String.Format("{0}", (Track)i)))
-                    return (Track)i;
-            return Track.RND;
+            for (int i = 0; i < (int)Trajectory.Count; i++)
+                if (track.Equals(String.Format("{0}", (Trajectory)i)))
+                    return (Trajectory)i;
+            return Trajectory.RND;
         }
 
-        private readonly bool _extended;
-
         private readonly Func<Schedule, TrSet[], LinearModel, int> _trajectory;
-        private readonly Track _track;
+        internal readonly Trajectory Track;
         internal string StrTrack;
 
         public int NumFeatures;
@@ -46,19 +45,8 @@ namespace ALICE
 
         internal readonly LinearModel Model;
 
-        public int NumTrain
-        {
-            get
-            {
-                return (Dimension == "10x10")
-                    ? (_extended ? 1000 : 300)
-                    : (_extended ? 5000 : 500);
-            }
-        }
-
         public class TrSet : PreferenceSet.PrefSet
         {
-            public string Name;
             public Schedule.Dispatch Dispatch;
             public int SimplexIterations;
 
@@ -78,17 +66,28 @@ namespace ALICE
         }
 
         public TrainingSet(string distribution, string dim, string track, bool extended)
-            : base(distribution, dim, "train")
+            : base(distribution, dim, DataSet.train, extended)
         {
-            _track = LookupTrack(track);
-            _extended = extended;
-            Model = null; // fix me
+            Track= LookupTrack(track);
             StrTrack = String.Format("{0}{1}", track, extended ? "EXT" : "");
+
+            switch (Track)
+            {
+                case Trajectory.ILFIX:
+                case Trajectory.ILSUP:
+                case Trajectory.ILUNSUP:
+                    throw new NotImplementedException();
+                case Trajectory.CMA:
+                    throw new NotImplementedException();
+                default:
+                    Model = null;
+                    break;
+            }
 
             FileInfo =
                 new FileInfo(string.Format(
-                    "C://Users//helga//Alice//Code//trainingData//trdat.{0}.{1}.{2}.Local.csv",
-                    Distribution, Dimension, StrTrack));
+                    "C://Users//helga//Alice//Code//trainingData//trdat.{0}.{1}.{2}.{3}.csv",
+                    Distribution, Dimension, StrTrack, Features.Mode.Local));
 
             Columns.Add("Step", typeof(int));
             Columns.Add("Dispatch", typeof(Schedule.Dispatch));
@@ -100,7 +99,7 @@ namespace ALICE
             var lastLine = File.ReadLines(FileInfo.FullName).Last();
             if (lastLine != firstLine && lastLine != null)
             {
-                AlreadyAutoSavedPID =
+                AlreadySavedPID =
                     Convert.ToInt32(
                         Regex.Split(lastLine, ",")[Regex.Split(firstLine, ",").ToList().FindIndex(x => x == "PID")]);
 
@@ -108,17 +107,17 @@ namespace ALICE
             
             TrData = new TrSet[NumInstances, NumDimension][];
 
-            switch (_track)
+            switch (Track)
             {
-                case Track.CMA:
-                case Track.ILUNSUP:
+                case Trajectory.CMA:
+                case Trajectory.ILUNSUP:
                     _trajectory = ChooseWeightedJob;
                     break;
-                case Track.OPT:
+                case Trajectory.OPT:
                     _trajectory = ChooseOptJob;
                     break;
-                case Track.ILSUP:
-                case Track.ILFIX:
+                case Trajectory.ILSUP:
+                case Trajectory.ILFIX:
                     _trajectory = UseImitationLearning;
                     break;
                 default:
@@ -142,7 +141,7 @@ namespace ALICE
 
                 foreach (var info in from DataRow row in Rows
                     let pid = (int)row["PID"]
-                    where pid > AlreadyAutoSavedPID
+                    where pid > AlreadySavedPID
                     select String.Format("{0},{1}", row["Name"], row["Makespan"]))
                 {
                     st.WriteLine(info);
@@ -152,54 +151,7 @@ namespace ALICE
             fs.Close();
         }
 
-        public void Retrace(int pid, Features.Mode featureMode)
-        {
-            string name = GetName(pid);
-            var jssp = GetEmptySchedule(name);
-            for (var step = 0; step < NumDimension; step++)
-            {
-                #region find features of possible jobs
-
-                var prefs = TrData[pid, step];
-                if (!ValidDispatches(prefs, jssp))
-                    throw new Exception("Retracing gave an invalid dispatch");
-
-                int dispatchedJob;
-                if (prefs.Length > 0)
-                {
-                    foreach (var p in prefs)
-                    {
-                        var lookahead = jssp.Clone();
-                        p.Feature = lookahead.Dispatch1(p.Dispatch.Job, featureMode);
-                        var row = Rows.Find(p.Name);
-                        row["Features"] = p.Feature;
-                    }
-
-                    var followed = prefs.ToList().Find(p => p.Followed);
-                    dispatchedJob = followed == null ? jssp.JobChosenBySDR((SDR)_track) : followed.Dispatch.Job;
-                }
-                else
-                {
-                    dispatchedJob = jssp.ReadyJobs.Count > 1 ? jssp.JobChosenBySDR((SDR)_track) : jssp.ReadyJobs[0];
-                }
-
-                #endregion
-                jssp.Dispatch1(dispatchedJob, Features.Mode.None);
-            }
-        }
-
-        private bool ValidDispatches(TrSet[] prefs, Schedule jssp)
-        {
-            if (prefs.ToList().FindIndex(p => p.Dispatch.Mac < 0) == -1) return true;
-            foreach (TrSet pref in prefs)
-            {
-                jssp.FindDispatch(pref.Dispatch.Job, out pref.Dispatch);
-                Rows.Find(pref.Name)["Dispatch"] = pref.Dispatch;
-            }
-            return false;
-        }
-
-        const int TMLIM_STEP = 60 * 2; // max 2 min per step/possible dispatch
+        const int TMLIM_STEP = 2; // max 2 min per step/possible dispatch
 
         public string CollectTrainingSet(int pid)
         {
@@ -207,7 +159,7 @@ namespace ALICE
             DataRow instance = Rows.Find(name);
             ProblemInstance prob = (ProblemInstance)instance["Problem"];
 
-            GurobiJspModel gurobiModel = new GurobiJspModel(prob, name, TMLIM_STEP, true);
+            GurobiJspModel gurobiModel = new GurobiJspModel(prob, name, TMLIM_STEP);
 
             Schedule jssp = new Schedule(prob);
             int currentNumFeatures = 0;
@@ -271,7 +223,7 @@ namespace ALICE
 
         private int ChooseSDRJob(Schedule jssp, TrSet[] prefs = null, LinearModel mode = null)
         {
-            return jssp.JobChosenBySDR((SDR)_track);
+            return jssp.JobChosenBySDR((SDRData.SDR) Track);
         }
     }
 }

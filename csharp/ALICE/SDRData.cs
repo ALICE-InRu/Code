@@ -7,20 +7,32 @@ namespace ALICE
     /// </summary>
     public class SDRData : HeuristicData
     {
-        private readonly SDR _sdr ; 
-
-        public SDRData(string distribution, string dimension, string set, SDR sdr)
-            : base(distribution, dimension, set, "SDR", sdr.ToString())
+        public enum SDR
         {
-            _sdr = sdr; 
+            MWR,
+            LWR,
+            SPT,
+            LPT,
+            Count,
+            RND
+        }
+
+        private readonly SDR _sdr;
+
+        public SDRData(string distribution, string dimension, DataSet set, bool extended, SDR sdr)
+            : base(distribution, dimension, set, extended, "SDR", sdr.ToString())
+        {
+            _sdr = sdr;
             FileInfo =
                 new FileInfo(string.Format("C://Users//helga//Alice//Code//SDR//{0}.{1}.{2}.csv", Distribution,
                     Dimension, Set));
+
+            Read(false);
         }
 
         public void Apply()
         {
-            for (int pid = AlreadyAutoSavedPID + 1; pid < NumInstances; pid++)
+            for (int pid = AlreadySavedPID + 1; pid <= NumInstances; pid++)
                 Apply(pid);
             Write();
         }

@@ -1,70 +1,70 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Class Name="ALICE.CDRData" Collapsed="true">
-    <Position X="0.5" Y="4.25" Width="1.5" />
+    <Position X="0.75" Y="2.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>CDRData.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="ALICE.CMAESData" Collapsed="true">
-    <Position X="3.25" Y="5" Width="1.5" />
+    <Position X="4.5" Y="3.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>ACFAFAANIAIEAARAAABAFAIASJQAQhAwYBhghFEAIBA=</HashCode>
       <FileName>CMAESData.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="ALICE.Features" Collapsed="true">
-    <Position X="11.5" Y="0.5" Width="1.5" />
+    <Position X="9.75" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>ACAAAAAAAAAEAAUAABABAAAAQAAAQAAAAAAAAgAAAAA=</HashCode>
       <FileName>Features.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="ALICE.GurobiJspModel" Collapsed="true">
-    <Position X="13.25" Y="0.5" Width="1.5" />
+    <Position X="11.5" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AUAAQIIMACAoAAQFAgAAIAAABCAAAAAAAgAAAECAEAA=</HashCode>
       <FileName>GurobiJspModel.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="ALICE.HeuristicData">
-    <Position X="1.75" Y="1.25" Width="1.5" />
+  <Class Name="ALICE.HeuristicData" Collapsed="true">
+    <Position X="2.75" Y="2.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAgBAAAAAAIAAAAQAEAAAA=</HashCode>
       <FileName>HeuristicData.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="ALICE.LinearAlgebra" Collapsed="true">
-    <Position X="9.75" Y="1.5" Width="1.5" />
+    <Position X="13.25" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>CAAAAAAIAFAhgBAAEAARAAABAQAAAgAJAAAAAAwAAAA=</HashCode>
       <FileName>LinearAlgebra.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="ALICE.LinearModel" Collapsed="true">
-    <Position X="11.5" Y="1.5" Width="1.5" />
+    <Position X="9.75" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>IAgAAIIAAAAAAIBAAEAAAAQAAAYAAAAABEAAAAAAQQA=</HashCode>
       <FileName>LinearModel.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="ALICE.LinearWeight" Collapsed="true">
-    <Position X="13.25" Y="1.5" Width="1.5" />
+    <Position X="11.5" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAABAAAAAAAAAAAAAAAAAAQAABJAAAAAAAAAACABAAA=</HashCode>
       <FileName>LinearWeight.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="ALICE.OPTData">
-    <Position X="4.25" Y="1.75" Width="1.5" />
+  <Class Name="ALICE.OPTData" Collapsed="true">
+    <Position X="4.5" Y="2.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAgAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAEAAAQ=</HashCode>
+      <HashCode>AAAAAAoAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAEAAAQ=</HashCode>
       <FileName>OPTData.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="ALICE.PreferenceSet" Collapsed="true">
-    <Position X="5.25" Y="4.75" Width="1.5" />
+    <Position X="6.5" Y="3.5" Width="1.5" />
     <NestedTypes>
       <Enum Name="ALICE.PreferenceSet.Ranking" Collapsed="true">
         <TypeIdentifier>
@@ -78,75 +78,59 @@
       </Class>
     </NestedTypes>
     <TypeIdentifier>
-      <HashCode>AAAAAAAAABAAABEABEAAggAAAAAAAgAAAgAAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAAABAAABEABEAAggAAAAAAAgAAAgAAAAAAAIA=</HashCode>
       <FileName>PreferenceSet.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="ALICE.ProblemInstance" Collapsed="true">
-    <Position X="9.75" Y="2.5" Width="1.5" />
+    <Position X="13.25" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAQEAAAAAAgAAAAAAAAAABAAQEAAAAAAAAABAAA=</HashCode>
       <FileName>ProblemInstance.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="ALICE.RawData" Collapsed="true">
-    <Position X="5" Y="0.5" Width="1.5" />
-    <NestedTypes>
-      <Enum Name="ALICE.RawData.ManipulateProcs" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>RawData.cs</NewMemberFileName>
-        </TypeIdentifier>
-      </Enum>
-      <Class Name="ALICE.RawData.NameAndNumber" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>RawData.cs</NewMemberFileName>
-        </TypeIdentifier>
-      </Class>
-    </NestedTypes>
+    <Position X="3.75" Y="0.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>ABAAAAIAAAAABIQAEABACAAAAEAAQEgAAEAAQAASBAA=</HashCode>
+      <HashCode>ABAKAAIAAAAABIQAEABACAAAAEAAQEAAAEAAQAASBAA=</HashCode>
       <FileName>RawData.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="ALICE.Schedule" Collapsed="true">
-    <Position X="11.5" Y="2.5" Width="1.5" />
+    <Position X="9.75" Y="2.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>CAoAQBAAAACAAAAAAAAEACAIAAEAgAIgQAAAAgEgABE=</HashCode>
       <FileName>Schedule.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="ALICE.SDRData" Collapsed="true">
-    <Position X="0.5" Y="5.25" Width="1.5" />
+    <Position X="0.75" Y="1" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAABAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAAABAABAAAAAEAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>SDRData.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="ALICE.TrainingSet">
-    <Position X="7" Y="1.25" Width="1.5" />
+  <Class Name="ALICE.TrainingSet" Collapsed="true">
+    <Position X="6.5" Y="2.25" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
     <NestedTypes>
-      <Enum Name="ALICE.TrainingSet.Track" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>TrainingSet.cs</NewMemberFileName>
-        </TypeIdentifier>
-      </Enum>
       <Class Name="ALICE.TrainingSet.TrSet" Collapsed="true">
         <TypeIdentifier>
           <NewMemberFileName>TrainingSet.cs</NewMemberFileName>
         </TypeIdentifier>
       </Class>
+      <Enum Name="ALICE.TrainingSet.Trajectory" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>TrainingSet.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
     </NestedTypes>
     <TypeIdentifier>
-      <HashCode>AAQAQgAAABAAAAiJAAAAAAAAAgAQBAAgAAgEAAECIQA=</HashCode>
+      <HashCode>AAAAQgAAAEAAAAiJAAAAAAAAAgAQBAAgAAgAAAECAQA=</HashCode>
       <FileName>TrainingSet.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Enum Name="ALICE.SDR" Collapsed="true">
-    <Position X="9.75" Y="3.75" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQABOAAQAAAAAAAAAAAAAA=</HashCode>
-      <FileName>SDR.cs</FileName>
-    </TypeIdentifier>
-  </Enum>
   <Font Name="Segoe UI" Size="9" />
 </ClassDiagram>

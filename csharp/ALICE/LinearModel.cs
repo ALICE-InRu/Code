@@ -74,30 +74,29 @@ namespace ALICE
         }
 
         #endregion
-
-
-        public LinearModel(SDR sdr)
+        
+        public LinearModel(SDRData.SDR sdr)
         {
             Name = String.Format("model{0}", sdr);
             FeatureMode = Features.Mode.None;
             Weights = EquivalentSDR(sdr);
         }
 
-        private LinearWeight EquivalentSDR(SDR sdr)
+        private LinearWeight EquivalentSDR(SDRData.SDR sdr)
         {
             var w = new LinearWeight(1, sdr.ToString());
             switch (sdr)
             {
-                case SDR.MWR:
+                case SDRData.SDR.MWR:
                     w.Local[(int)Features.Local.wrmJob][0] = +1;
                     return w;
-                case SDR.LWR:
+                case SDRData.SDR.LWR:
                     w.Local[(int)Features.Local.wrmJob][0] = -1;
                     return w;
-                case SDR.SPT:
+                case SDRData.SDR.SPT:
                     w.Local[(int)Features.Local.proc][0] = -1;
                     return w;
-                case SDR.LPT:
+                case SDRData.SDR.LPT:
                     w.Local[(int)Features.Local.proc][0] = +1;
                     return w;
                 default:

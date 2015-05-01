@@ -46,8 +46,8 @@ namespace ALICE
                 _macs[mac] = new Macs(mac, wrm);
             }
 
-            _slotAllocation = slotAllocation.Equals("First")
-                ? (Func<int[], int, int, int>)FirstSlotChosen
+            _slotAllocation = slotAllocation.Substring(0, 5).ToLower().Equals("first")
+                ? (Func<int[], int, int, int>) FirstSlotChosen
                 : SmallestSlotChosen;
 
             if (rnd == null)
@@ -240,7 +240,7 @@ namespace ALICE
 
         private int SmallestSlotChosen(int[] slotSizes, int mac, int time)
         {
-            int slot = -1;
+            int slot = slotSizes.Length - 1;
             int minSlot = _macs[mac].Makespan;
             for (int jobPrime = 0; jobPrime <= _macs[mac].JobCount; jobPrime++)
                 if (slotSizes[jobPrime] >= time & slotSizes[jobPrime] < minSlot)
@@ -306,7 +306,7 @@ namespace ALICE
             }
         }
 
-        public void ApplySDR(SDR sdr, Features.Mode mode)
+        public void ApplySDR(SDRData.SDR sdr, Features.Mode mode)
         {
             for (int step = Sequence.Count; step < _prob.Dimension; step++)
             {
@@ -315,7 +315,7 @@ namespace ALICE
             }
         }
 
-        public void ApplyBDR(SDR sdrFirst, SDR sdrSecond, int stepSplitProc)
+        public void ApplyBDR(SDRData.SDR sdrFirst, SDRData.SDR sdrSecond, int stepSplitProc)
         {
             int stepSplit = (int)(stepSplitProc / 100.0 * _prob.Dimension);
 
@@ -342,26 +342,26 @@ namespace ALICE
             }
         }
 
-        public int JobChosenBySDR(SDR sdr)
+        public int JobChosenBySDR(SDRData.SDR sdr)
         {
             switch (sdr)
             {
-                case SDR.LWR:
-                case SDR.MWR:
+                case SDRData.SDR.LWR:
+                case SDRData.SDR.MWR:
                     List<int> wrm = new List<int>(ReadyJobs.Count);
                     wrm.AddRange(ReadyJobs.Select(job => _jobs[job].WorkRemaining));
 
-                    return sdr == SDR.LWR
+                    return sdr == SDRData.SDR.LWR
                         ? ReadyJobs[wrm.FindIndex(w => w == wrm.Min())]
                         : ReadyJobs[wrm.FindIndex(w => w == wrm.Max())];
 
-                case SDR.LPT:
-                case SDR.SPT:
+                case SDRData.SDR.LPT:
+                case SDRData.SDR.SPT:
                     List<int> times = new List<int>(ReadyJobs.Count);
                     times.AddRange(from job in ReadyJobs
                         let mac = _prob.Sigma[job, _jobs[job].MacCount]
                         select _prob.Procs[job, mac]);
-                    return sdr == SDR.SPT
+                    return sdr == SDRData.SDR.SPT
                         ? ReadyJobs[times.FindIndex(w => w == times.Min())]
                         : ReadyJobs[times.FindIndex(w => w == times.Max())];
 

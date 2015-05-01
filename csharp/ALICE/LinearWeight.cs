@@ -35,21 +35,21 @@ namespace ALICE
 
         }
 
-        public LinearWeight EquivalentSDR(SDR sdr)
+        public LinearWeight EquivalentSDR(SDRData.SDR sdr)
         {
             LinearWeight w = new LinearWeight(1, sdr.ToString());
             switch (sdr)
             {
-                case SDR.MWR:
+                case SDRData.SDR.MWR:
                     w.Local[(int)Features.Local.wrmJob][0] = +1;
                     return w;
-                case SDR.LWR:
+                case SDRData.SDR.LWR:
                     w.Local[(int)Features.Local.wrmJob][0] = -1;
                     return w;
-                case SDR.SPT:
+                case SDRData.SDR.SPT:
                     w.Local[(int)Features.Local.proc][0] = -1;
                     return w;
-                case SDR.LPT:
+                case SDRData.SDR.LPT:
                     w.Local[(int)Features.Local.proc][0] = +1;
                     return w;
                 default:

@@ -86,7 +86,7 @@ namespace ALICE
         private int[] RND = new int[100];
         public int[] PhiLocal = new int[(int)Local.Count];
         public double[] PhiGlobal = new double[(int)Global.Count];
-        public bool[] Equiv = new bool[(int)SDR.Count];
+        public bool[] Equiv = new bool[(int)SDRData.SDR.Count];
 
         public Features Difference(Features other)
         {
@@ -98,7 +98,7 @@ namespace ALICE
             for (int i = 0; i < (int)Global.Count; i++)
                 diff.PhiGlobal[i] = PhiGlobal[i] - other.PhiGlobal[i];
 
-            for (int i = 0; i < (int)SDR.Count; i++)
+            for (int i = 0; i < (int)SDRData.SDR.Count; i++)
                 diff.Equiv[i] = Equiv[i] == other.Equiv[i];
 
             diff.RND = null;
@@ -161,9 +161,9 @@ namespace ALICE
         {
             Schedule lookahead;
 
-            for (int i = 0; i < (int)SDR.Count; i++)
+            for (int i = 0; i < (int)SDRData.SDR.Count; i++)
             {
-                SDR sdr = (SDR)i;
+                SDRData.SDR sdr = (SDRData.SDR)i;
                 lookahead = current.Clone();
                 lookahead.ApplySDR(sdr, Mode.None);
                 PhiGlobal[(int)(Global)(sdr)] = lookahead.Makespan;
@@ -172,7 +172,7 @@ namespace ALICE
             for (int i = 0; i < RND.Length; i++)
             {
                 lookahead = current.Clone();
-                lookahead.ApplySDR(SDR.RND, Mode.None);
+                lookahead.ApplySDR(SDRData.SDR.RND, Mode.None);
                 RND[i] = lookahead.Makespan;
             }
 
@@ -184,8 +184,8 @@ namespace ALICE
 
         public void GetEquivPhi(int job, Schedule current)
         {
-            for (int i = 0; i < (int)SDR.Count; i++)
-                Equiv[i] = job == current.JobChosenBySDR((SDR)i);
+            for (int i = 0; i < (int)SDRData.SDR.Count; i++)
+                Equiv[i] = job == current.JobChosenBySDR((SDRData.SDR)i);
         }
 
         private static double StandardDev(IList<int> values, double mean)

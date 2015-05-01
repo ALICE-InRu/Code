@@ -36,9 +36,9 @@ namespace ALICE
 
         // sequence is a list of <job,mac,starttime>        
         public int[,] Optimize(string name, out int optMakespan, out bool success,
-            out int simplexIterations, int tmlim = 6000, List<Schedule.Dispatch> constraints = null)
+            out int simplexIterations, int tmlim_min, List<Schedule.Dispatch> constraints = null)
         {
-            GurobiJspModel model = new GurobiJspModel(this, name, tmlim);
+            GurobiJspModel model = new GurobiJspModel(this, name, tmlim_min);
             var xTimeJob = constraints != null
                 ? model.Lookahead(constraints, out optMakespan)
                 : model.Optimise(out optMakespan);

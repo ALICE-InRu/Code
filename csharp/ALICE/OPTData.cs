@@ -10,24 +10,26 @@ namespace ALICE
     /// </summary>
     public class OPTData : RawData
     {
-        public readonly int TimeLimit;
+        public readonly int TimeLimit; // in minutes
 
-        public OPTData(string distribution, string dimension, string set, int timeLimit_sec = -1) : base(distribution, dimension, set)
+        public OPTData(string distribution, string dimension, DataSet set, bool extended, int timeLimit_sec = -1)
+            : base(distribution, dimension, set, extended)
         {
             TimeLimit = timeLimit_sec;
             FileInfo =
-                new FileInfo(string.Format("C://Users//helga//Alice//Code//OPT//{0}.{1}.{2}.csv", Distribution, Dimension,
+                new FileInfo(string.Format("C://Users//helga//Alice//Code//OPT//{0}.{1}.{2}.csv", Distribution,
+                    Dimension,
                     Set));
 
-            Columns.Add("Solved", typeof(string));
-            Columns.Add("Optimum", typeof(int));
-            Columns.Add("Solution", typeof(int[,]));
-            Columns.Add("Simplex", typeof(int));
+            Columns.Add("Solved", typeof (string));
+            Columns.Add("Optimum", typeof (int));
+            Columns.Add("Solution", typeof (int[,]));
+            Columns.Add("Simplex", typeof (int));
         }
 
         public void Optimise()
         {
-            for(int pid = AlreadyAutoSavedPID+1; pid<NumInstances; pid++)
+            for (int pid = AlreadySavedPID + 1; pid < NumInstances; pid++)
                 Optimise(pid);
             Write();
         }
@@ -40,7 +42,7 @@ namespace ALICE
             string name = GetName(pid);
             ProblemInstance prob = GetProblem(name);
             int[,] xTimeJob = prob.Optimize(name, out opt, out solved, out simplexIterations, TimeLimit);
-                // INTENSE WORK
+            // INTENSE WORK
 
             Schedule jssp = new Schedule(prob);
             jssp.SetCompleteSchedule(xTimeJob, opt);
@@ -87,7 +89,7 @@ namespace ALICE
                 row["Optimum"] = content[1];
                 row["Solved"] = content[2];
 
-                AlreadyAutoSavedPID = (int)row["PID"];
+                AlreadySavedPID = (int) row["PID"];
             }
 
             return true;
@@ -105,8 +107,8 @@ namespace ALICE
                 }
 
                 foreach (var info in from DataRow row in Rows
-                    let pid = (int)row["PID"]
-                    where pid > AlreadyAutoSavedPID
+                    let pid = (int) row["PID"]
+                    where pid > AlreadySavedPID
                     select String.Format("{0},{1},{2}", row["Name"], row["Optimum"], row["Solved"]))
                 {
                     st.WriteLine(info);

@@ -16,24 +16,37 @@ namespace ALICE
         public readonly string Distribution;
         public readonly int NumDimension;
         public readonly string Dimension;
-        public readonly string Set; // test or train
+        public readonly DataSet Set; // test or train
         public int NumInstances;
 
-        public int AlreadyAutoSavedPID;
+        public enum DataSet
+        {
+            train,
+            test
+        };
 
-        public RawData(string distribution, string dimension, string set)
+        public int AlreadySavedPID;
+
+        public RawData(string distribution, string dimension, DataSet set, bool extended)
         {
             Distribution = distribution;
             Dimension = dimension;
             NumDimension = DimString2Num(dimension);
-            Set = set.ToLower();
+            Set = set;
 
             FileInfo =
                 new FileInfo(String.Format("C://Users//helga//Alice//Code//rawData//{0}.{1}.{2}.txt",
                     Distribution, Dimension, Set));
 
             if (!FileInfo.Exists)
+            {
                 WriteGeneratedData();
+                FileInfo = new FileInfo(FileInfo.FullName);
+                if (!FileInfo.Exists)
+                    throw new Exception(
+                        String.Format("Failed generating problem instances! Check if they are located in {0}",
+                            FileInfo.DirectoryName));
+            }
 
             Columns.Add("Name", typeof(string)); // unique!
             Columns.Add("PID", typeof(int)); // problem instance Index
@@ -41,8 +54,7 @@ namespace ALICE
 
             PrimaryKey = new[] { Columns["Name"] };
 
-            ReadProblemText();
-
+            ReadProblemText(extended);
         }
         
         public static int DimString2Num(string dim)
@@ -94,37 +106,33 @@ namespace ALICE
             var rnd = (Distribution[0] == 'j' ? new Random(SEED) : null);
 
             string workDir = String.Format("{0}//generator//{1}", FileInfo.Directory.FullName,
-                Distribution.Substring(2, Distribution.Length));
+                Distribution.Substring(2));
 
             if (!Directory.Exists(workDir)) return;
-
             var files = Directory.GetFiles(workDir);
+            if (files.Length <= 0) return;
 
-            int start = 0, finish = files.Length;
-            string setInfo;
-            if (Set == "test")
+            int start, finish;
+            if (Set == DataSet.test)
             {
                 start = files.Length / 2;
-                setInfo = "TEST";
+                finish = files.Length;
             }
             else
             {
+                start = 0;
                 finish = files.Length / 2;
-                setInfo = "TRAIN";
             }
 
             var sorted = files.ToList().Select(str => new NameAndNumber(str))
                 .OrderBy(n => n.Name)
                 .ThenBy(n => n.Number).ToList();
 
-            //Data problems = new Data(shopProblem + "." + distr, shopProblem);
             const string LONG_SEP = SEP + SEP + SEP;
             using (var writer = new StreamWriter(FileInfo.FullName))
             {
-                setInfo += " SET problems from subfolder " + workDir +
-                           (rnd != null ? " with random machine order (seed=" + SEED + ")" : "") +
-                           String.Format("\n\n{0}", LONG_SEP);
-                writer.WriteLine(setInfo);
+                writer.WriteLine("{0} SET problems from subfolder {1}{2}\n\n{3}", Set.ToString().ToUpper(), workDir,
+                    (rnd != null ? String.Format(" with random machine order (seed={0})", SEED) : ""), LONG_SEP);
 
                 for (var id = start; id < finish; id++)
                 {
@@ -151,8 +159,6 @@ namespace ALICE
                 }
                 writer.WriteLine("\n{0}\nEND OF DATA\n{0}", SEP);
             }
-
-            FileInfo = new FileInfo(FileInfo.FullName);
         }
 
         private enum ManipulateProcs
@@ -193,37 +199,33 @@ namespace ALICE
             public int Number { get; private set; }
         }
 
-        private void ReadProblemText(int maxTrain = 500, int onlyReadPID = -1)
+        private void ReadProblemText(bool extended)
         {
             if (!FileInfo.Exists) return;
+            int maxNumInstances = extended ? 5000 : 500; 
 
             var fullContent = File.ReadAllText(FileInfo.FullName);
             var allContent = Regex.Split(fullContent, "[\r\n ]*[+]+[\r\n ]*");
 
             var shortName = string.Empty;
             var regShortName = new Regex("^instance ([a-zA-Z0-9. ]*)");
-            var id = 0;
             foreach (var content in allContent)
             {
                 var m = regShortName.Match(content);
                 if (m.Success)
                 {
-                    id++;
                     shortName = m.Groups[1].Value;
                 }
                 else if (shortName != string.Empty)
                 {
-                    if (id == onlyReadPID | onlyReadPID < 0)
-                    {
-                        var prob = ReadSingleProblem(content);
-                        AddProblem(prob);
-                    }
+                    var prob = ReadSingleProblem(content);
+                    AddProblem(prob);
                     shortName = string.Empty;
                 }
-                if (Rows.Count >= maxTrain)
-                    return;
+                if (Rows.Count >= maxNumInstances)
+                    break;
             }
-            //AuxFun.writeRawDataCsv(fname, dir, data); 
+            NumInstances = Rows.Count;
         }
 
         private ProblemInstance ReadSingleProblem(string content, Random rnd = null)

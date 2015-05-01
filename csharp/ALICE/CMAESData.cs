@@ -69,7 +69,7 @@ namespace ALICE
         }
 
         public CMAESData(string distribution, string dimension, string strObjFun, bool dependentModel)
-            : base(distribution, dimension, "train")
+            : base(distribution, dimension, DataSet.train, false)
         {
             FileInfo =
                 new FileInfo(String.Format("full.{0}.{1}.{2}.weights.{3}.csv", Distribution, Dimension, strObjFun,
@@ -396,9 +396,9 @@ namespace ALICE
 
         public void WriteResultsCSV()
         {
-            WriteCMAResults(_output.Where(x => x.Generation > AlreadyAutoSavedPID).ToList(), N, NUM_FEATURES);
+            WriteCMAResults(_output.Where(x => x.Generation > AlreadySavedPID).ToList(), N, NUM_FEATURES);
 
-            AlreadyAutoSavedPID = Generation;
+            AlreadySavedPID = Generation;
         }
 
         public void WriteCMAResults(List<SummaryCMA> output, int numDecsVariables, int numFeatures)
