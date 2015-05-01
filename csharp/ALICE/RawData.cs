@@ -56,7 +56,34 @@ namespace ALICE
 
             ReadProblemText(extended);
         }
-        
+
+        internal void SetAlreadySavedPID(bool warn = true)
+        {
+            if (!FileInfo.Exists) return;
+            var firstLine = File.ReadLines(FileInfo.FullName).First();
+            var lastLine = File.ReadLines(FileInfo.FullName).Last();
+            if (lastLine == firstLine || lastLine == null) return;
+
+            var firstSplit = Regex.Split(firstLine, ",").ToList();
+            var lastSplit = Regex.Split(lastLine, ",").ToArray();
+
+            int iPID = firstSplit.FindIndex(x => x == "PID");
+            if (iPID > 0)
+            {
+                AlreadySavedPID = Convert.ToInt32(lastSplit[iPID]);
+            }
+            else
+            {
+                int iName = firstSplit.FindIndex(x => x == "Name");
+                string[] name = Regex.Split(lastSplit[iName], "\\.").ToArray();
+                AlreadySavedPID = Convert.ToInt32(name[4]);
+            }
+
+
+            if (warn && AlreadySavedPID > NumInstances)
+                throw new Exception("Use extended data set, otherwise you will lose information!");
+        }
+
         public static int DimString2Num(string dim)
         {
             var jobxmac = Regex.Split(dim, "x");
