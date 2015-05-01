@@ -27,19 +27,36 @@ namespace ALICE
             Count
         }
 
-        private readonly Func<Schedule, TrSet[], LinearModel, int> _trajectory;
+        private readonly Func<Schedule, List<TrSet>, LinearModel, int> _trajectory;
         internal readonly Trajectory Track;
 
         public int NumFeatures;
-        public readonly TrSet[,][] TrData;
+        internal Features.Mode FeatureMode = Features.Mode.Local; 
+        
+        public readonly List<TrSet>[,] TrData;
         internal Random Random = new Random();
 
         internal readonly LinearModel Model;
+        
 
         public class TrSet : PreferenceSet.PrefSet
         {
             public Schedule.Dispatch Dispatch;
             public int SimplexIterations;
+
+            public TrSet(Schedule.Dispatch dispatch, Features features)
+            {
+                Dispatch = dispatch;
+                Feature = features;
+            }
+
+            public TrSet(Schedule.Dispatch dispatch, bool followed, int resultingOptMakespan, int rank)
+            {
+                Dispatch = dispatch;
+                Followed = followed;
+                ResultingOptMakespan = resultingOptMakespan;
+                Rank = rank;
+            }
 
             public PreferenceSet.PrefSet Difference(TrSet other)
             {
@@ -56,9 +73,8 @@ namespace ALICE
             }
         }
 
-        public TrainingSet(string distribution, string dim, Trajectory track, bool extended,
-            Features.Mode featureMode = Features.Mode.Local)
-            : base(distribution, dim, DataSet.train, extended)
+        public TrainingSet(string distribution, string dimension, Trajectory track, bool extended)
+            : base(distribution, dimension, DataSet.train, extended)
         {
             Track = track;
             switch (Track)
@@ -77,7 +93,7 @@ namespace ALICE
             FileInfo =
                 new FileInfo(string.Format(
                     "C://Users//helga//Alice//Code//trainingData//trdat.{0}.{1}.{2}{3}.{4}.csv",
-                    Distribution, Dimension, track, extended ? "EXT" : "", featureMode));
+                    Distribution, Dimension, track, extended ? "EXT" : "", FeatureMode));
 
             Columns.Add("Step", typeof (int));
             Columns.Add("Dispatch", typeof (Schedule.Dispatch));
@@ -93,9 +109,11 @@ namespace ALICE
                     Convert.ToInt32(
                         Regex.Split(lastLine, ",")[Regex.Split(firstLine, ",").ToList().FindIndex(x => x == "PID")]);
 
+                if (AlreadySavedPID > NumInstances)
+                    throw new Exception("Use extended data set, otherwise you will lose information!");
             }
 
-            TrData = new TrSet[NumInstances, NumDimension][];
+            TrData = new List<TrSet>[NumInstances,NumDimension];
 
             switch (Track)
             {
@@ -118,15 +136,61 @@ namespace ALICE
 
         public void Write()
         {
-            var fs = new FileStream(FileInfo.FullName, FileMode.Append, FileAccess.Write);
+            Write(FileMode.Append);
+        }
+
+        internal void Write(FileMode fileMode)
+        {
+            var fs = new FileStream(FileInfo.FullName, fileMode, FileAccess.Write);
             using (var st = new StreamWriter(fs))
             {
                 if (fs.Length == 0) // header is missing 
                 {
                     var header = "PID,Step,Dispatch,Followed,ResultingOptMakespan";
-                    for (var i = 0; i < (int)Features.Local.Count; i++)
-                        header += string.Format(",phi.{0}", (Features.Local)i);
+                    switch (FeatureMode)
+                    {
+                        case Features.Mode.Global:
+                            for (var i = 0; i < (int) Features.Global.Count; i++)
+                                header += string.Format(",phi.{0}", (Features.Global) i);
+                            break;
+                        case Features.Mode.Local:
+                            for (var i = 0; i < (int) Features.Local.Count; i++)
+                                header += string.Format(",phi.{0}", (Features.Local) i);
+                            break;
+                    }
+                    header += ",Rank";
                     st.WriteLine(header);
+                }
+
+                for (int pid = fileMode == FileMode.Append ? AlreadySavedPID + 1 : 1; pid < NumInstances; pid++)
+                {
+                    for (int step = 0; step < NumDimension; step++)
+                    {
+                        var prefs = TrData[pid - 1, step];
+                        if (prefs == null)
+                        {
+                            AlreadySavedPID = pid - 1;
+                            return;
+                        }
+                        foreach (var pref in prefs)
+                        {
+                            string info = String.Format("{0},{1},{2},{3},{4}", pid, step, pref.Dispatch.Name,
+                                pref.Followed ? 1 : 0, pref.ResultingOptMakespan);
+                            switch (FeatureMode)
+                            {
+                                case Features.Mode.Global:
+                                    for (var i = 0; i < (int)Features.Global.Count; i++)
+                                        info += string.Format(",{0:0}", pref.Feature.PhiGlobal[i]);
+                                    break;
+                                case Features.Mode.Local:
+                                    for (var i = 0; i < (int) Features.Local.Count; i++)
+                                        info += string.Format(",{0:0}", pref.Feature.PhiLocal[i]);
+                                    break;
+                            }
+                            info += String.Format(",{0}", pref.Rank);
+                            st.WriteLine(info);
+                        }
+                    }
                 }
 
                 foreach (var info in from DataRow row in Rows
@@ -155,43 +219,40 @@ namespace ALICE
             int currentNumFeatures = 0;
             for (int step = 0; step < prob.Dimension; step++)
             {
-                TrData[pid, step] = FindFeaturesForAllJobs(jssp, gurobiModel);
-                int dispatchedJob = _trajectory(jssp, TrData[pid, step], Model);
+                TrData[pid - 1, step] = FindFeaturesForAllJobs(jssp, gurobiModel);
+                int dispatchedJob = _trajectory(jssp, TrData[pid - 1, step], Model);
                 jssp.Dispatch1(dispatchedJob, Features.Mode.None);
                 gurobiModel.CommitConstraint(jssp.Sequence[step], step);
-                currentNumFeatures = TrData[pid, step].Length;
+                currentNumFeatures += TrData[pid - 1, step].Count;
             }
             gurobiModel.Dispose();
             NumFeatures += currentNumFeatures;
             return String.Format("{0}:{1} #{2} phi", FileInfo.Name, pid, currentNumFeatures);
         }
 
-        private TrSet[] FindFeaturesForAllJobs(Schedule jssp, GurobiJspModel gurobiModel)
+        private List<TrSet> FindFeaturesForAllJobs(Schedule jssp, GurobiJspModel gurobiModel)
         {
             TrSet[] prefs = new TrSet[jssp.ReadyJobs.Count];
             for (int r = 0; r < jssp.ReadyJobs.Count; r++)
             {
                 Schedule lookahead = jssp.Clone();
-                prefs[r] = new TrSet
-                {
-                    Feature = lookahead.Dispatch1(jssp.ReadyJobs[r], Features.Mode.Local),
-                    Dispatch = lookahead.Sequence[lookahead.Sequence.Count - 1]
-                };
+                Features phi = lookahead.Dispatch1(jssp.ReadyJobs[r], FeatureMode); // commit the lookahead
+                prefs[r] = new TrSet(lookahead.Sequence[lookahead.Sequence.Count - 1], phi);
                 // need to optimize to label featuers correctly -- this is computationally intensive
                 gurobiModel.Lookahead(prefs[r].Dispatch, out prefs[r].ResultingOptMakespan);
                 prefs[r].SimplexIterations = gurobiModel.SimplexIterations;
             }
-            return prefs;
+            return prefs.ToList();
         }
 
-        private int ChooseOptJob(Schedule jssp, TrSet[] prefs, LinearModel model = null)
+        private int ChooseOptJob(Schedule jssp, List<TrSet> prefs, LinearModel model = null)
         {
             int minMakespan = prefs.Min(p => p.ResultingOptMakespan);
-            List<TrSet> optimums = prefs.ToList().Where(p => p.ResultingOptMakespan == minMakespan).ToList();
+            List<TrSet> optimums = prefs.Where(p => p.ResultingOptMakespan == minMakespan).ToList();
             return optimums.Count == 1 ? optimums[0].Dispatch.Job : optimums[Random.Next(0, optimums.Count)].Dispatch.Job;
         }
 
-        private int ChooseWeightedJob(Schedule jssp, TrSet[] prefs, LinearModel model)
+        private int ChooseWeightedJob(Schedule jssp, List<TrSet> prefs, LinearModel model)
         {
             List<double> priority = new List<double>(jssp.ReadyJobs.Count);
             for (int r = 0; r < jssp.ReadyJobs.Count; r++)
@@ -199,7 +260,7 @@ namespace ALICE
             return jssp.ReadyJobs[priority.FindIndex(p => Math.Abs(p - priority.Max()) < 0.001)];
         }
 
-        private int UseImitationLearning(Schedule jssp, TrSet[] prefs, LinearModel model)
+        private int UseImitationLearning(Schedule jssp, List<TrSet> prefs, LinearModel model)
         {
             // pi_i = beta_i*pi_star + (1-beta_i)*pi_i^hat
             // i: ith iteration of imitation learning
@@ -211,7 +272,7 @@ namespace ALICE
                 : ChooseOptJob(jssp, prefs);
         }
 
-        private int ChooseSDRJob(Schedule jssp, TrSet[] prefs = null, LinearModel mode = null)
+        private int ChooseSDRJob(Schedule jssp, List<TrSet> prefs = null, LinearModel mode = null)
         {
             return jssp.JobChosenBySDR((SDRData.SDR) Track);
         }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace ALICE
 {
@@ -73,6 +74,17 @@ namespace ALICE
                 Job = job;
                 Mac = mac;
                 StartTime = startTime;
+            }
+
+            public Dispatch(string name)
+            {
+                var split = name.Split('.');
+                if (split.Length < 3)
+                    throw new Exception("Dispatch name is not of the right form");
+
+                Job = Convert.ToInt32(split[0]);
+                Mac = Convert.ToInt32(split[1]);
+                StartTime = Convert.ToInt32(split[2]); 
             }
 
             public Dispatch Clone()

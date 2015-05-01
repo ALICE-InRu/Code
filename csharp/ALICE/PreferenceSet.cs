@@ -31,8 +31,8 @@ namespace ALICE
             public bool Followed;
         }
 
-        public PreferenceSet(string problem, string dim, Trajectory track, bool extended, char rank)
-            : base(problem, dim, track, extended, Features.Mode.Local)
+        public PreferenceSet(string distribution, string dimension, Trajectory track, bool extended, char rank)
+            : base(distribution, dimension, track, extended)
         {
             FileInfo =
                 new FileInfo(string.Format(

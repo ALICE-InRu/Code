@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Management.Instrumentation;
 using System.Windows.Forms;
 using ALICE;
 
@@ -118,15 +119,18 @@ namespace Chesire
         {
             //This event is raised on the main thread.  
             //It is safe to access UI controls here.              
-            string info = Convert.ToString(e.UserState);
-            if (info != "")
+            object[] info = (object[]) e.UserState;
+            if (Convert.ToInt32(info[0]) == 0)
             {
-                textContent.AppendText(info);
-                textContent.AppendText(Environment.NewLine);
                 progressBarOuter.Value = e.ProgressPercentage;
                 progressBarInner.Value = e.ProgressPercentage > 0 ? 100 : 0;
+                textHeader.AppendText(String.Format("\n{0}", info[1]));
             }
-            else progressBarInner.Value = e.ProgressPercentage;
+            else
+            {
+                progressBarInner.Value = e.ProgressPercentage;
+                textContent.AppendText(String.Format("\n{0}", info[1]));
+            }
         }
 
         //This is executed after the task is complete whatever the task has completed: a) successfully, b) with error c) has been cancelled  
@@ -318,15 +322,42 @@ namespace Chesire
 
         private void startAsyncButtonRetrace_Click(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
 
+            var featureMode = PhiGlobal.Checked
+                ? Features.Mode.Global
+                : PhiLocal.Checked ? Features.Mode.Local : Features.Mode.None;
+
+            if (featureMode == Features.Mode.None)
+            {
+                textContent.AppendText("\n\nCannot optimise set:");
+                textContent.AppendText("\n\tPlease choose a feature mode.");
+            }
+
+            RetraceSet[] retraceSets = (from problem in Problems.CheckedItems.Cast<string>()
+                from dim in Dimension.CheckedItems.Cast<string>()
+                from track in Tracks.CheckedItems.Cast<TrainingSet.Trajectory>()
+                select new RetraceSet(problem, dim, track, Extended.CheckedItems.Count > 0, featureMode))
+                .Where(x => x.AlreadySavedPID > 0).ToArray();
+
+            if (retraceSets.Length == 0)
+            {
+                textContent.AppendText("\n\nCannot optimise set:");
+                if (Problems.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one problem distribution.");
+                if (Dimension.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one problem dimension.");
+                if (Tracks.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one training trajectory.");
+                textContent.AppendText("\n\n");
+                return;
+            }
+            
             while (bkgWorkerRetrace.IsBusy)
             {
                 /* wait */
             }
-
-
-            //bkgWorkerFeatTrData.RunWorkerAsync(args);
+            
+            bkgWorkerRetrace.RunWorkerAsync(retraceSets);
             cancelAsyncButtonRetrace.Visible = true;
         }
 
@@ -340,9 +371,36 @@ namespace Chesire
 
         private void bkgWorkerRetrace_DoWork(object sender, DoWorkEventArgs e)
         {
-            throw new NotImplementedException();
-            // object[] arg = (object[]) e.Argument;
-            bkgWorkerRetrace.ReportProgress((int) (0), e.Result);
+            RetraceSet[] retraceSets = (RetraceSet[]) e.Argument;
+            e.Result = "";
+            int iter = 0;
+            foreach (var set in retraceSets)
+            {
+                DateTime start = DateTime.Now;
+                bkgWorkerRetrace.ReportProgress((int) (100.0*iter/retraceSets.Length),
+                    new object[] {0, String.Format("Starting retracing {0}", set.FileInfo.Name)});
+
+                for (int pid = 1; pid <= set.AlreadySavedPID; pid++)
+                {
+                    string info = set.Retrace(pid);
+                    bkgWorkerRetrace.ReportProgress((int) (100.0*pid/set.AlreadySavedPID),
+                        new object[] {1, info});
+                 
+                    if (!bkgWorkerRetrace.CancellationPending) continue;
+                    bkgWorkerRetrace.ReportProgress((int) (100.0*pid/set.AlreadySavedPID),
+                        new object[] {1, "Cancelled!"});
+                    e.Cancel = true;
+                    return;
+                }
+                set.Write();
+                bkgWorkerRetrace.ReportProgress((int) (100.0*++iter/retraceSets.Length),
+                    new object[]
+                    {
+                        0,
+                        String.Format("Finished retracing {0} ({1:0}min)", set.FileInfo.Name,
+                            (DateTime.Now - start).TotalMinutes)
+                    });
+            }
         }
 
         #endregion
