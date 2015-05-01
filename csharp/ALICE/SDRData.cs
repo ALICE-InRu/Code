@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace ALICE
@@ -24,16 +25,30 @@ namespace ALICE
         {
             _sdr = sdr;
             FileInfo =
-                new FileInfo(string.Format("C://Users//helga//Alice//Code//SDR//{0}.{1}.{2}.csv", Distribution,
-                    Dimension, Set));
+                new FileInfo(string.Format("C://Users//helga//Alice//Code//{3}//{0}.{1}.{2}.csv", Distribution,
+                    Dimension, Set, "SDR"));
+            Read(false);
+        }
 
+        protected SDRData(string distribution, string dimension, DataSet set, bool extended, string heuristicName,
+            string heuristicValue)
+            : base(distribution, dimension, set, extended, heuristicName, heuristicValue)
+        {
+            FileInfo =
+                new FileInfo(string.Format("C://Users//helga//Alice//Code//{3}//{0}.{1}.{2}.csv", Distribution,
+                    Dimension, Set, heuristicName));
             Read(false);
         }
 
         public void Apply()
         {
+            ApplyAll(Apply);
+        }
+
+        internal void ApplyAll(Func<int, Schedule> apply1)
+        {
             for (int pid = AlreadySavedPID + 1; pid <= NumInstances; pid++)
-                Apply(pid);
+                apply1(pid);
             Write();
         }
 

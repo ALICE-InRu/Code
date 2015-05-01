@@ -37,7 +37,7 @@ namespace ALICE
                 var row = Rows.Find(content[0]);
                 if (row == null) continue;
                 if (!all && HeuristicValue != content[1]) continue;
-                row["SDR"] = content[1];
+                row[HeuristicName] = content[1];
                 row["Makespan"] = Convert.ToInt32(content[2]);
                 AlreadySavedPID = (int) row["PID"];
             }
