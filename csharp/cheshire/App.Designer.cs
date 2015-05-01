@@ -327,30 +327,12 @@ namespace Chesire
             // splitBDR
             // 
             this.splitBDR.Location = new System.Drawing.Point(65, 15);
-            this.splitBDR.Maximum = new decimal(new int[]
-            {
-                500,
-                0,
-                0,
-                0
-            });
-            this.splitBDR.Minimum = new decimal(new int[]
-            {
-                1,
-                0,
-                0,
-                0
-            });
             this.splitBDR.Name = "splitBDR";
             this.splitBDR.Size = new System.Drawing.Size(40, 20);
             this.splitBDR.TabIndex = 49;
-            this.splitBDR.Value = new decimal(new int[]
-            {
-                50,
-                0,
-                0,
-                0
-            });
+            this.splitBDR.Value = 40;
+            this.splitBDR.Maximum = 100;
+            this.splitBDR.Minimum = 0;
             // 
             // label7
             // 
@@ -359,7 +341,7 @@ namespace Chesire
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(65, 13);
             this.label7.TabIndex = 51;
-            this.label7.Text = "Split at step:";
+            this.label7.Text = "Split (%):";
             // 
             // label8
             // 

@@ -90,7 +90,7 @@ namespace Chesire
                 if (Set.CheckedItems.Count == 0)
                     textContent.AppendText("\n\tPlease choose at least train or test set.");
                 if (SDR.CheckedItems.Count == 0)
-                    textContent.AppendText("\n\tPlease choose at least one simple priority dispatching rule.");
+                    textContent.AppendText("\n\tPlease choose at least one SDR.");
                 textContent.AppendText("\n\n");              
                 return;
             }
@@ -103,9 +103,10 @@ namespace Chesire
                 sdrData.Apply();
                 progressBarInner.Value = 100;
                 progressBarOuter.Value = 100*(++iter/sdrDatas.Length);
-                textHeader.AppendText(String.Format("\n{0} updated for {1}:{2}", sdrData.FileInfo.Name,
+                textContent.AppendText(String.Format("\n{0} updated for {1}:{2}", sdrData.FileInfo.Name,
                     sdrData.HeuristicName, sdrData.HeuristicValue));
             }
+            textHeader.AppendText(String.Format("\nSDR configurations: #{0} ", sdrDatas.Length));
         }
 
 
@@ -242,7 +243,7 @@ namespace Chesire
         {
             TrainingSet[] trSets = (from problem in Problems.CheckedItems.Cast<string>()
                 from dim in Dimension.CheckedItems.Cast<string>()
-                from track in Tracks.CheckedItems.Cast<string>()
+                from track in Tracks.CheckedItems.Cast<TrainingSet.Trajectory>()
                 select new TrainingSet(problem, dim, track, Extended.CheckedItems.Count > 0)).Where(
                     x => x.AlreadySavedPID < x.NumInstances).ToArray();
 
@@ -351,7 +352,7 @@ namespace Chesire
         private void startAsyncButtonPrefSet_Click(object sender, EventArgs e)
         {
             throw new NotImplementedException();
-            PreferenceSet prefSet = new PreferenceSet("j.rnd", "6x5", "OPT", false, 'p');
+            PreferenceSet prefSet = new PreferenceSet("j.rnd", "6x5", TrainingSet.Trajectory.OPT, false, 'p');
             while (bkgWorkerPrefSet.IsBusy)
             {
                 /* wait */
@@ -406,7 +407,45 @@ namespace Chesire
 
         private void buttonSimpleBDR_Click(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            BDRData[] bdrDatas = (from problem in Problems.CheckedItems.Cast<string>()
+                from dim in Dimension.CheckedItems.Cast<string>()
+                from set in Set.CheckedItems.Cast<RawData.DataSet>()
+                from sdr1 in SDR1.CheckedItems.Cast<SDRData.SDR>()
+                from sdr2 in SDR2.CheckedItems.Cast<SDRData.SDR>()
+                select
+                    new BDRData(problem, dim, set, Extended.CheckedItems.Count > 0, sdr1, sdr2,
+                        Convert.ToInt32(splitBDR.Value))).Where(
+                            x => x.AlreadySavedPID < x.NumInstances).ToArray();
+
+            if (bdrDatas.Length == 0)
+            {
+                textContent.AppendText("\n\nCannot apply BDR:");
+                if (Problems.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one problem distribution.");
+                if (Dimension.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one problem dimension.");
+                if (Set.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least train or test set.");
+                if (SDR1.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one SDR for first half.");
+                if (SDR2.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one SDR for second  half.");
+                textContent.AppendText("\n\n");
+                return;
+            }
+
+            int iter = 0;
+            progressBarOuter.Value = 0;
+            foreach (var bdrData in bdrDatas)
+            {
+                progressBarInner.Value = 0;
+                bdrData.Apply();
+                progressBarInner.Value = 100;
+                progressBarOuter.Value = 100 * (++iter / bdrDatas.Length);
+                textContent.AppendText(String.Format("\n{0} updated for {1}:{2}", bdrData.FileInfo.Name,
+                    bdrData.HeuristicName, bdrData.HeuristicValue));
+            }
+            textHeader.AppendText(String.Format("\nBDR configurations: #{0} ", bdrDatas.Length));
         }
 
         private void startAsyncButtonCMA_click(object sender, EventArgs e)
