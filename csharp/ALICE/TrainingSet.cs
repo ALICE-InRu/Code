@@ -101,17 +101,7 @@ namespace ALICE
             Columns.Add("ResultingOptMakespan", typeof (int));
             Columns.Add("Features", typeof (Features));
 
-            var firstLine = File.ReadLines(FileInfo.FullName).First();
-            var lastLine = File.ReadLines(FileInfo.FullName).Last();
-            if (lastLine != firstLine && lastLine != null)
-            {
-                AlreadySavedPID =
-                    Convert.ToInt32(
-                        Regex.Split(lastLine, ",")[Regex.Split(firstLine, ",").ToList().FindIndex(x => x == "PID")]);
-
-                if (AlreadySavedPID > NumInstances)
-                    throw new Exception("Use extended data set, otherwise you will lose information!");
-            }
+            SetAlreadySavedPID();
 
             TrData = new List<TrSet>[NumInstances,NumDimension];
 
