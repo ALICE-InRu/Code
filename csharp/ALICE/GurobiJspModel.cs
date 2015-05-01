@@ -16,8 +16,8 @@ namespace ALICE
 {
     public class GurobiJspModel
     {
-        public readonly int TrueOptimum;
-        public readonly int[,] TrueOptimumDecVars;
+        //public readonly int TrueOptimum;
+        //public readonly int[,] TrueOptimumDecVars;
         public int SimplexIterations { get; private set; }
         public int Status { get; private set; }
         public string Info { get; private set; }
@@ -38,7 +38,6 @@ namespace ALICE
             _n = prob.NumJobs;
             _m = prob.NumMachines;
             Info = "Starting gurobi optimisation";
-            TrueOptimum = -1;
             _fileName = String.Format("jssp.{0}.log", name);
 
             // Model
@@ -46,7 +45,7 @@ namespace ALICE
             {
                 _env = new GRBEnv(_fileName);
                 if (tmlim_min > 0)
-                    _env.Set(GRB.DoubleParam.TimeLimit, tmlim_min*60);
+                    _env.Set(GRB.DoubleParam.TimeLimit, tmlim_min*60); // time limit is set to seconds!
                 _env.Set(GRB.IntParam.LogToConsole, 0);
 
                 _model = new GRBModel(_env);
@@ -62,7 +61,7 @@ namespace ALICE
             DisjunctiveCondition(prob.Procs);
             Objective(prob.Procs, prob.Sigma);
 
-            TrueOptimumDecVars = Optimise(out TrueOptimum);
+            //TrueOptimumDecVars = Optimise(out TrueOptimum);
             //if (TrueOptimum > 0) // Objective cutoff
             //    _model.GetEnv().Set(GRB.DoubleParam.Cutoff, TrueOptimum + 0.5);
             /* Indicates that you aren't interested in solutions whose objective values 
@@ -103,7 +102,9 @@ namespace ALICE
                     {
                         for (int a = 0; a < _m; a++)
                             vars[j, a] =
-                                (int) _model.GetVarByName(String.Format("x[{0},{1}]", j, a)).Get(GRB.DoubleAttr.X);
+                                (int)
+                                    Math.Round(
+                                        _model.GetVarByName(String.Format("x[{0},{1}]", j, a)).Get(GRB.DoubleAttr.X), 0);
                     }
                     optimum = (int) Math.Round(doubleOptimum, 0);
                     return vars;

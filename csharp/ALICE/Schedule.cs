@@ -393,7 +393,7 @@ namespace ALICE
         {
             int reportedMakespan = -1;
             for (int mac = 0; mac < _prob.NumMachines; mac++)
-                reportedMakespan = Math.Max(Makespan, _macs[mac].Makespan);
+                reportedMakespan = Math.Max(Makespan, _macs[mac].Makespan); 
             if (reportedMakespan != Makespan)
             {
                 error = "Makespan doesn't match end time of machines";
@@ -405,13 +405,13 @@ namespace ALICE
                 for (int job = 0; job < _prob.NumJobs; job++)
                     if (_jobs[job].MacCount != _prob.NumMachines)
                     {
-                        error = "Mac count for job " + job + " doesn't match";
+                        error = String.Format("Mac count for job {0} doesn't match", job);
                         return false;
                     }
                 for (int mac = 0; mac < _prob.NumMachines; mac++)
                     if (_macs[mac].JobCount != _prob.NumJobs)
                     {
-                        error = "Jobcount for mac " + mac + " doesn't match";
+                        error = String.Format("Jobcount for mac {0} doesn't match", mac);
                         return false;
                     }
             }
@@ -437,22 +437,18 @@ namespace ALICE
                 {
                     int macnow = _prob.Sigma[job, mac];
                     int macpre = _prob.Sigma[job, mac - 1];
-                    if (_jobs[job].XTime[macnow] < _jobs[job].XTime[macpre] + _prob.Procs[job, macpre])
-                    {
-                        error = "job starts too early";
-                        return false;
-                    }
+                    if (_jobs[job].XTime[macnow] >= _jobs[job].XTime[macpre] + _prob.Procs[job, macpre]) continue;
+                    error = "job starts too early";
+                    return false;
                 }
 
             // only one job at a time per machine
             for (int mac = 0; mac < _prob.NumMachines; mac++)
                 for (int job = 1; job < _macs[mac].JobCount; job++)
                 {
-                    if (_macs[mac].STime[job] < _macs[mac].ETime[job - 1])
-                    {
-                        error = "machine occupied";
-                        return false;
-                    }
+                    if (_macs[mac].STime[job] >= _macs[mac].ETime[job - 1]) continue;
+                    error = "machine occupied";
+                    return false;
                 }
             error = "";
             return true;
@@ -460,17 +456,14 @@ namespace ALICE
 
         public void SetCompleteSchedule(int[,] times, int ms)
         {
-            if (times == null)
-            {
-                return;
-            }
+            if (times == null) return; 
             Makespan = ms;
 
             for (int j = 0; j < _prob.NumJobs; j++)
             {
                 _jobs[j].MacCount = _prob.NumMachines;
                 for (int a = 0; a < _prob.NumMachines; a++)
-                    times[j, a] = _jobs[j].XTime[a];
+                    _jobs[j].XTime[a] = times[j, a];
             }
 
             for (int m = 0; m < _prob.NumMachines; m++)
