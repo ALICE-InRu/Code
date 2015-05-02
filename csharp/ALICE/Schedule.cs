@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace ALICE
 {
@@ -339,16 +338,16 @@ namespace ALICE
             }
         }
 
-        public void ApplyCDR(LinearModel linModel)
+        public void ApplyCDR(LinearModel model)
         {
             for (int step = Sequence.Count; step < _prob.Dimension; step++)
             {
                 List<double> priority = new List<double>(ReadyJobs.Count);
                 priority.AddRange(from j in ReadyJobs
                     let lookahead = Clone()
-                    select lookahead.Dispatch1(j, linModel.FeatureMode)
+                    select lookahead.Dispatch1(j, model.FeatureMode)
                     into feat
-                    select linModel.PriorityIndex(feat));
+                    select model.PriorityIndex(feat));
                 var job = ReadyJobs[priority.FindIndex(p => Math.Abs(p - priority.Max()) < 0.001)];
                 Dispatch1(job, Features.Mode.None);
             }

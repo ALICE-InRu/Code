@@ -186,7 +186,7 @@ namespace ALICE
                 }
             }
 
-            return new LinearModel(xArray, "CMA-ES");
+            return new LinearModel(xArray, Generation);
         }
 
         private int[] ApplyWeights(double[] x)
@@ -439,7 +439,7 @@ namespace ALICE
             using (var st = new StreamWriter(fs))
             {
                 string header = "Type,NrFeat,Model,Feature,mean";
-                int numSteps = linearModel.Weights.Local[0].Length;
+                int numSteps = linearModel.LocalWeights[0].Length;
                 for (int step = 1; step <= numSteps; step++)
                     header += String.Format(CultureInfo.InvariantCulture, ",Step.{0}", step);
                 st.WriteLine(header);
@@ -457,7 +457,7 @@ namespace ALICE
 
                             for (int step = 0; step < numSteps; step++)
                                 info += String.Format(CultureInfo.InvariantCulture, ",{0:R9}",
-                                    linearModel.Weights.Local[iFeat][step]);
+                                    linearModel.LocalWeights[iFeat][step]);
 
                             st.WriteLine(info);
                             break;
