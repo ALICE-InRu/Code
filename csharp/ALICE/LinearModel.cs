@@ -75,8 +75,9 @@ namespace ALICE
             foreach (var w in loggedWeights.Where(w => w._numFeatures == numFeatures && w._modelID == _modelID))
             {
                 LocalWeights = w.LocalWeights;
-                break;
+                return;
             }
+            throw new Exception(String.Format("Cannot find weights {0} to user requirements from {1}!", Name, file.Name));
         }
 
         public double PriorityIndex(Features phi)
