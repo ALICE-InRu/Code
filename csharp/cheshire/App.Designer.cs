@@ -725,6 +725,7 @@ namespace Chesire
             this.textHeader.Size = new System.Drawing.Size(332, 136);
             this.textHeader.TabIndex = 25;
             this.textHeader.Text = "";
+            this.textHeader.TextChanged += new System.EventHandler(this.textContent_TextChanged);
             // 
             // textContent
             // 

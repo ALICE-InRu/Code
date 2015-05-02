@@ -45,8 +45,9 @@ namespace Chesire
 
         private void textContent_TextChanged(object sender, EventArgs e)
         {
-            textContent.SelectionStart = textContent.Text.Length;
-            textContent.ScrollToCaret();
+            var richTextBox = (RichTextBox) sender;
+            richTextBox.SelectionStart = richTextBox.Text.Length;
+            richTextBox.ScrollToCaret();
         }
 
         private void ckb_SelectedIndexChanged(object sender, EventArgs e)
@@ -94,7 +95,7 @@ namespace Chesire
                 return;
             }
 
-            textHeader.AppendText(String.Format("\n{0}SET configurations: #{1}", sets.GetType(), sets.Length));
+            textHeader.AppendText(String.Format("\n{0} configurations: #{1}", sets.GetType(), sets.Length));
             int iter = 0;
             progressBarOuter.Value = 0;
             foreach (var set in sets)
@@ -106,7 +107,7 @@ namespace Chesire
                 textContent.AppendText(String.Format("\n{0} updated for {1}:{2}", set.FileInfo.Name,
                     set.HeuristicName, set.HeuristicValue));
             }
-            textHeader.AppendText(String.Format("\n{0}SET configurations: #{1} complete!", sets.GetType(), sets.Length));
+            textHeader.AppendText(String.Format("\n{0} configurations: #{1} complete!", sets.GetType(), sets.Length));
         }
 
 
@@ -211,7 +212,7 @@ namespace Chesire
             e.Result = "";
             int iter = 0;
             bkgWorkerOptimise.ReportProgress((int) (100.0*iter/sets.Length),
-                new object[] {0, String.Format("\n{0}SET configurations: #{1}", sets.GetType(), sets.Length)});
+                new object[] {0, String.Format("{0} configurations: #{1}", sets.GetType(), sets.Length)});
 
             foreach (var set in sets)
             {
@@ -256,7 +257,7 @@ namespace Chesire
                     });
             }
             bkgWorkerOptimise.ReportProgress((int) (100.0*iter/sets.Length),
-                new object[] {0, String.Format("\n{0}SET configurations: #{1} complete!", sets.GetType(), sets.Length)});
+                new object[] {0, String.Format("{0} configurations: #{1} complete!", sets.GetType(), sets.Length)});
         }
 
         #endregion
@@ -305,7 +306,7 @@ namespace Chesire
             e.Result = "";
             int iter = 0;
             bkgWorkerTrSet.ReportProgress((int) (100.0*iter/sets.Length),
-                new object[] {0, String.Format("\n{0}SET configurations: #{1}", sets.GetType(), sets.Length)});
+                new object[] {0, String.Format("{0} configurations: #{1}", sets.GetType(), sets.Length)});
 
             foreach (var set in sets)
             {
@@ -351,7 +352,7 @@ namespace Chesire
                     });
             }
             bkgWorkerTrSet.ReportProgress((int) (100.0*iter/sets.Length),
-                new object[] {0, String.Format("\n{0}SET configurations: #{1} complete!", sets.GetType(), sets.Length)});
+                new object[] {0, String.Format("{0} configurations: #{1} complete!", sets.GetType(), sets.Length)});
         }
 
         #endregion
@@ -412,7 +413,7 @@ namespace Chesire
             e.Result = "";
             int iter = 0;
             bkgWorkerRetrace.ReportProgress((int) (100.0*iter/sets.Length),
-                new object[] {0, String.Format("\n{0}SET configurations: #{1}", sets.GetType(), sets.Length)});
+                new object[] {0, String.Format("{0} configurations: #{1}", sets.GetType(), sets.Length)});
 
             foreach (var set in sets)
             {
@@ -422,7 +423,7 @@ namespace Chesire
 
                 for (int pid = 1; pid <= set.AlreadySavedPID; pid++)
                 {
-                    string info = set.Retrace(pid);
+                    string info = set.Apply(pid);
                     bkgWorkerRetrace.ReportProgress((int) (100.0*pid/set.AlreadySavedPID),
                         new object[] {1, info});
 
@@ -442,7 +443,7 @@ namespace Chesire
                     });
             }
             bkgWorkerRetrace.ReportProgress((int) (100.0*iter/sets.Length),
-                new object[] {0, String.Format("\n{0}SET configurations: #{1} complete!", sets.GetType(), sets.Length)});
+                new object[] {0, String.Format("{0} configurations: #{1} complete!", sets.GetType(), sets.Length)});
         }
 
         #endregion
@@ -495,7 +496,7 @@ namespace Chesire
             e.Result = "";
             int iter = 0;
             bkgWorkerPrefSet.ReportProgress((int) (100.0*iter/sets.Length),
-                new object[] {0, String.Format("\n{0}SET configurations: #{1}", sets.GetType(), sets.Length)});
+                new object[] {0, String.Format("{0} configurations: #{1}", sets.GetType(), sets.Length)});
 
             foreach (var set in sets)
             {
@@ -503,7 +504,7 @@ namespace Chesire
 
                 bkgWorkerPrefSet.ReportProgress((int) (100.0*iter/sets.Length),
                     new object[] {0, String.Format("Starting ranking {0}", set.FileInfo.Name)});
-
+                set.Apply();
                 for (int pid = 1; pid <= set.AlreadySavedPID; pid++)
                 {
                     string info = set.Apply(pid);
@@ -522,12 +523,12 @@ namespace Chesire
                     {
                         0,
                         String.Format(
-                            "Finished ranking {0} ({1:0}min)\n\tGrand total of {2} preferences.",
-                            set.FileInfo.Name, (DateTime.Now - start).TotalMinutes, set.NumPreferences)
+                            "Finished ranking {0} ({1:0}min)\n\tGrand total of {2} preferences make {3} pairs.",
+                            set.FileInfo.Name, (DateTime.Now - start).TotalMinutes, set.NumFeatures, set.NumPreferences)
                     });
             }
             bkgWorkerPrefSet.ReportProgress((int) (100.0*iter/sets.Length),
-                new object[] {0, String.Format("\n{0}SET configurations: #{1} complete!", sets.GetType(), sets.Length)});
+                new object[] {0, String.Format("{0} configurations: #{1} complete!", sets.GetType(), sets.Length)});
         }
 
 
@@ -564,7 +565,7 @@ namespace Chesire
                 return;
             }
 
-            textHeader.AppendText(String.Format("\n{0}SET configurations: #{1}", sets.GetType(), sets.Length));
+            textHeader.AppendText(String.Format("\n{0} configurations: #{1}", sets.GetType(), sets.Length));
             int iter = 0;
             progressBarOuter.Value = 0;
             foreach (var bdrData in sets)
@@ -576,7 +577,7 @@ namespace Chesire
                 textContent.AppendText(String.Format("\n{0} updated for {1}:{2}", bdrData.FileInfo.Name,
                     bdrData.HeuristicName, bdrData.HeuristicValue));
             }
-            textHeader.AppendText(String.Format("\n{0}SET configurations: #{1} complete!", sets.GetType(), sets.Length));
+            textHeader.AppendText(String.Format("\n{0} configurations: #{1} complete!", sets.GetType(), sets.Length));
         }
 
         private void startAsyncButtonCMA_click(object sender, EventArgs e)
