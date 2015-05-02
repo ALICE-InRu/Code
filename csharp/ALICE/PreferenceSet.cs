@@ -8,7 +8,7 @@ namespace ALICE
     /// <summary>
     /// Preference set from RawData
     /// </summary>
-    public class PreferenceSet : TrainingSet
+    public class PreferenceSet : RetraceSet
     {
         public int NumPreferences;
 
@@ -31,17 +31,17 @@ namespace ALICE
             public bool Followed;
         }
 
-        public PreferenceSet(string distribution, string dimension, Trajectory track, bool extended, char rank)
-            : base(distribution, dimension, track, extended)
+        public PreferenceSet(string distribution, string dimension, Trajectory track, bool extended, Ranking rank)
+            : base(distribution, dimension, track, extended, Features.Mode.Local)
         {
             FileInfo =
                 new FileInfo(string.Format(
-                    "C://Users//helga//Alice//Code//trainingData//trdat.{0}.diff.{1}.csv",
-                    FileInfo.Name, rank));
+                    "C://Users//helga//Alice//Code//trainingData//{0}.diff.{1}.csv",
+                    FileInfo.Name.Substring(0, FileInfo.Name.Length - FileInfo.Extension.Length), (char) rank));
 
             Columns.Add("Rank", typeof(int));
 
-            var ranking = (Ranking)rank;
+            var ranking = rank;
             switch (ranking)
             {
                 case Ranking.All:
@@ -58,16 +58,28 @@ namespace ALICE
                     break;
             }
 
+            ApplyAll(Retrace,false);
+            NumApplied = 0;
             _diffData = new List<PrefSet>[NumInstances, NumDimension];
         }
 
-        public string CreatePreferencePairs(int pid)
+        public new void Apply()
+        {
+            ApplyAll(Apply, true);
+        }
+
+        public new string Apply(int pid)
+        {
+            NumApplied++;
+            return CreatePreferencePairs(pid);
+        }
+
+        internal string CreatePreferencePairs(int pid)
         {
             int currentNumPreferences = 0;
-            RankPreferences(pid);
             for (var step = 0; step < NumDimension; step++)
             {
-                var prefs = TrData[pid, step].ToList().OrderBy(p => p.Rank).ToList();
+                var prefs = TrData[pid - 1, step].ToList().OrderBy(p => p.Rank).ToList();
                 currentNumPreferences += _rankingFunction(prefs, pid, step);
             }
             NumPreferences += currentNumPreferences;

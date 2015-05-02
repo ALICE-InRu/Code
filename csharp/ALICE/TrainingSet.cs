@@ -30,10 +30,11 @@ namespace ALICE
         private readonly Func<Schedule, List<TrSet>, int> _trajectory;
         internal readonly Trajectory Track;
 
-        public int NumFeatures{ get; private set; }
- 
-        internal Features.Mode FeatureMode = Features.Mode.Local; 
-        
+        public int NumFeatures { get; private set; }
+        private const int TMLIM_STEP = 2; // max 2 min per step/possible dispatch
+
+        internal Features.Mode FeatureMode = Features.Mode.Local;
+
         internal readonly List<TrSet>[,] TrData;
         internal Random Random = new Random();
 
@@ -91,7 +92,7 @@ namespace ALICE
                 case Trajectory.ILFIX:
                 case Trajectory.ILSUP:
                 case Trajectory.ILUNSUP:
-                    int iter; 
+                    int iter;
                     strTrack = GetImitationModel(out Model, out _beta, out iter, extended);
                     if (Track == Trajectory.ILUNSUP)
                         _trajectory = ChooseWeightedJob;
@@ -120,8 +121,8 @@ namespace ALICE
                     break;
             }
             if (extended) strTrack += "EXT";
-            
- 
+
+
             FileInfo =
                 new FileInfo(string.Format(
                     "C://Users//helga//Alice//Code//trainingData//trdat.{0}.{1}.{2}.{3}.csv",
@@ -135,7 +136,7 @@ namespace ALICE
 
             SetAlreadySavedPID();
 
-            TrData = new List<TrSet>[NumInstances,NumDimension];
+            TrData = new List<TrSet>[NumInstances, NumDimension];
         }
 
         private string GetImitationModel(out LinearModel model, out double beta, out int currentIter, bool extended,
@@ -223,6 +224,8 @@ namespace ALICE
                         if (prefs == null)
                         {
                             AlreadySavedPID = pid - 1;
+                            st.Close();
+                            fs.Close();
                             return;
                         }
                         foreach (var pref in prefs)
@@ -232,7 +235,7 @@ namespace ALICE
                             switch (FeatureMode)
                             {
                                 case Features.Mode.Global:
-                                    for (var i = 0; i < (int)Features.Global.Count; i++)
+                                    for (var i = 0; i < (int) Features.Global.Count; i++)
                                         info += string.Format(",{0:0}", pref.Feature.PhiGlobal[i]);
                                     break;
                                 case Features.Mode.Local:
@@ -250,9 +253,19 @@ namespace ALICE
             fs.Close();
         }
 
-        const int TMLIM_STEP = 2; // max 2 min per step/possible dispatch
+        public void Apply()
+        {
+            for (int pid = AlreadySavedPID + 1; pid <= NumInstances; pid++)
+                CollectAndLabel(pid);
+            Write();
+        }
 
-        public string CollectAndLabel(int pid)
+        public string Apply(int pid)
+        {
+            return CollectAndLabel(pid);
+        }
+
+        protected string CollectAndLabel(int pid)
         {
             string name = GetName(pid);
             DataRow instance = Rows.Find(name);
@@ -280,7 +293,7 @@ namespace ALICE
         {
             for (var step = 0; step < NumDimension; step++)
             {
-                var prefs = TrData[pid, step];
+                var prefs = TrData[pid - 1, step];
                 var cmax = prefs.Select(p => p.ResultingOptMakespan).Distinct().OrderBy(x => x).ToList();
                 foreach (var pref in prefs)
                 {

@@ -7,7 +7,7 @@ namespace ALICE
 {
     public class RetraceSet : TrainingSet
     {
-        private int _numRetraced;
+        internal int NumApplied;
 
         public RetraceSet(string distribution, string dimension, Trajectory track, bool extended,
             Features.Mode featureMode)
@@ -37,9 +37,9 @@ namespace ALICE
             int minStep = Convert.ToInt32(content[0][iStep]);
 
             int pid, step;
-            for (pid = 0; pid < AlreadySavedPID; pid++)
+            for (pid = 1; pid <= AlreadySavedPID; pid++)
                 for (step = 0; step < NumDimension; step++)
-                    TrData[pid, step] = new List<TrSet>();
+                    TrData[pid - 1, step] = new List<TrSet>();
 
             foreach (var line in content)
             {
@@ -49,6 +49,7 @@ namespace ALICE
                 step = Convert.ToInt32(line[iStep]);
                 bool followed = Convert.ToInt32(line[iFollowed]) == 1;
                 int resultingOptMakespan = Convert.ToInt32(line[iResultingOptMakespan]);
+                if (line.Length <= iRank) iRank = -1;
                 int rank = iRank >= 0 ? Convert.ToInt32(line[iRank]) : 0;
 
                 Schedule.Dispatch dispatch = new Schedule.Dispatch(line[iDispatch]);
@@ -62,23 +63,33 @@ namespace ALICE
 
         public new void Write()
         {
-            if (_numRetraced == AlreadySavedPID)
+            if (NumApplied == AlreadySavedPID)
                 Write(FileMode.Create);
         }
 
-        public void Retrace()
+        internal void ApplyAll(Func<int, string> applyFunc, bool write)
         {
             for (int pid = 1; pid <= AlreadySavedPID; pid++)
-                Retrace(pid);
-            Write();
+                applyFunc(pid);
+            if (write)
+                Write();
         }
 
-        public string Retrace(int pid)
+        public new void Apply()
+        {
+            ApplyAll(Apply, true);
+        }
+
+        public new string Apply(int pid)
+        {
+            NumApplied++;
+            return Retrace(pid);
+        }
+
+        internal string Retrace(int pid)
         {
             if (pid > AlreadySavedPID)
-                return String.Format("PID {0} exeeds what has already been created. Cannot retrace!", pid);
-
-            _numRetraced++;
+                throw new Exception(String.Format("PID {0} exeeds what has already been created. Cannot retrace!", pid));
 
             if (TrData[pid - 1, 0].Count == 0)
             {
@@ -92,23 +103,22 @@ namespace ALICE
             int currentNumFeatures = 0;
             for (var step = 0; step < NumDimension; step++)
             {
-                var prefs = TrData[pid - 1, step];
-                currentNumFeatures += prefs.Count;
-
-                if (!ValidDispatches(ref prefs, jssp))
+                if (!ValidDispatches(ref TrData[pid - 1, step], jssp))
                     throw new Exception("Retracing gave an invalid dispatch!");
+
+                currentNumFeatures += TrData[pid - 1, step].Count;
 
                 #region update features of possible jobs
 
                 int dispatchedJob;
-                if (prefs.Count > 0)
+                if (TrData[pid - 1, step].Count > 0)
                 {
-                    foreach (var p in prefs)
+                    foreach (var p in TrData[pid - 1, step])
                     {
                         var lookahead = jssp.Clone();
                         p.Feature = lookahead.Dispatch1(p.Dispatch.Job, FeatureMode);
                     }
-                    var followed = prefs.Find(p => p.Followed);
+                    var followed = TrData[pid - 1, step].Find(p => p.Followed);
                     dispatchedJob = followed == null ? jssp.JobChosenBySDR((SDRData.SDR) Track) : followed.Dispatch.Job;
                 }
                 else
