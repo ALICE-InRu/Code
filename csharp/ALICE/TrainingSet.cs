@@ -27,7 +27,7 @@ namespace ALICE
             Count
         }
 
-        private readonly Func<Schedule, List<TrSet>, LinearModel, int> _trajectory;
+        private readonly Func<Schedule, List<TrSet>, int> _trajectory;
         internal readonly Trajectory Track;
 
         public int NumFeatures;
@@ -37,7 +37,7 @@ namespace ALICE
         internal Random Random = new Random();
 
         internal readonly LinearModel Model;
-        
+        private readonly double _beta; // only used in imitation learning 
 
         public class TrSet : PreferenceSet.PrefSet
         {
@@ -77,23 +77,38 @@ namespace ALICE
             : base(distribution, dimension, DataSet.train, extended)
         {
             Track = track;
+
+            string strTrack = track.ToString();
             switch (Track)
             {
                 case Trajectory.ILFIX:
                 case Trajectory.ILSUP:
                 case Trajectory.ILUNSUP:
-                    throw new NotImplementedException();
+                    strTrack = GetImitationModel(out Model, out _beta, extended);
+                    if (Track == Trajectory.ILUNSUP)
+                        _trajectory = ChooseWeightedJob;
+                    else
+                        _trajectory = UseImitationLearning;
+                    break;
                 case Trajectory.CMA:
-                    throw new NotImplementedException();
-                default:
                     Model = null;
+                    _trajectory = ChooseWeightedJob;
+                    throw new NotImplementedException();
+                case Trajectory.OPT:
+                    Model = null;
+                    _trajectory = ChooseOptJob;
+                    break;
+                default: // SDR  
+                    Model = new LinearModel((SDRData.SDR) Track);
+                    _trajectory = ChooseSDRJob;
                     break;
             }
+            if (extended) strTrack += "EXT";
 
             FileInfo =
                 new FileInfo(string.Format(
-                    "C://Users//helga//Alice//Code//trainingData//trdat.{0}.{1}.{2}{3}.{4}.csv",
-                    Distribution, Dimension, track, extended ? "EXT" : "", FeatureMode));
+                    "C://Users//helga//Alice//Code//trainingData//trdat.{0}.{1}.{2}.{3}.csv",
+                    Distribution, Dimension, strTrack, FeatureMode));
 
             Columns.Add("Step", typeof (int));
             Columns.Add("Dispatch", typeof (Schedule.Dispatch));
@@ -104,24 +119,56 @@ namespace ALICE
             SetAlreadySavedPID();
 
             TrData = new List<TrSet>[NumInstances,NumDimension];
+        }
+
+        private string GetImitationModel(out LinearModel model, out double beta, bool extended,
+            string probability = "equal", bool timedependent = false, int numFeatures = 16, int modelID = 1)
+        {
+            const string DIR = @"C:\users\helga\Alice\Code\PREF\weights";
+
+            string pat = String.Format("\\b(exhaust|full)\\.{0}.{1}.{2}.(OPT|IL([0-9]+){3}){4}.{5}.weights.{6}",
+                Distribution, Dimension, (char) PreferenceSet.Ranking.PartialPareto, Track.ToString().Substring(2),
+                extended ? "EXT" : "", probability, timedependent ? "timedependent" : "timeindependent");
+
+            Regex reg = new Regex(pat);
+
+            var files = Directory.GetFiles(DIR, "*.csv")
+                .Where(path => reg.IsMatch(path))
+                .ToList();
+
+            if (files.Count <= 0)
+                throw new Exception(String.Format("Cannot find any weights belonging to {0}. Start with optimal!", Track));
+
+            int[] iters = new int[files.Count];
+            for (int i = 0; i < iters.Length; i++)
+            {
+                Match m = reg.Match(files[i]);
+                if (m.Groups[2].Value == "OPT")
+                    iters[i] = 0;
+                else
+                    iters[i] = Convert.ToInt32(m.Groups[3].Value);
+            }
 
             switch (Track)
             {
-                case Trajectory.CMA:
-                case Trajectory.ILUNSUP:
-                    _trajectory = ChooseWeightedJob;
-                    break;
-                case Trajectory.OPT:
-                    _trajectory = ChooseOptJob;
+                case Trajectory.ILFIX:
+                    beta = 0.5;
                     break;
                 case Trajectory.ILSUP:
-                case Trajectory.ILFIX:
-                    _trajectory = UseImitationLearning;
+                    int currentIter = iters.Max() + 1;
+                    beta = Math.Pow(0.5, currentIter);
                     break;
-                default:
-                    _trajectory = ChooseSDRJob;
+                case Trajectory.ILUNSUP:
+                    beta = 0;
                     break;
             }
+
+            string weightFile = files[Array.FindIndex(iters, x => x == iters.Max())];
+
+            var content = File.ReadAllText(weightFile);
+
+            model = new LinearModel(new FileInfo(weightFile), numFeatures, modelID);
+            throw new NotImplementedException(content);
         }
 
         public void Write()
@@ -210,7 +257,7 @@ namespace ALICE
             for (int step = 0; step < prob.Dimension; step++)
             {
                 TrData[pid - 1, step] = FindFeaturesForAllJobs(jssp, gurobiModel);
-                int dispatchedJob = _trajectory(jssp, TrData[pid - 1, step], Model);
+                int dispatchedJob = _trajectory(jssp, TrData[pid - 1, step]);
                 jssp.Dispatch1(dispatchedJob, Features.Mode.None);
                 gurobiModel.CommitConstraint(jssp.Sequence[step], step);
                 currentNumFeatures += TrData[pid - 1, step].Count;
@@ -235,34 +282,34 @@ namespace ALICE
             return prefs.ToList();
         }
 
-        private int ChooseOptJob(Schedule jssp, List<TrSet> prefs, LinearModel model = null)
+        private int ChooseOptJob(Schedule jssp, List<TrSet> prefs)
         {
             int minMakespan = prefs.Min(p => p.ResultingOptMakespan);
             List<TrSet> optimums = prefs.Where(p => p.ResultingOptMakespan == minMakespan).ToList();
             return optimums.Count == 1 ? optimums[0].Dispatch.Job : optimums[Random.Next(0, optimums.Count)].Dispatch.Job;
         }
 
-        private int ChooseWeightedJob(Schedule jssp, List<TrSet> prefs, LinearModel model)
+        private int ChooseWeightedJob(Schedule jssp, List<TrSet> prefs)
         {
             List<double> priority = new List<double>(jssp.ReadyJobs.Count);
             for (int r = 0; r < jssp.ReadyJobs.Count; r++)
-                priority.Add(model.PriorityIndex(prefs[r].Feature));
+                priority.Add(Model.PriorityIndex(prefs[r].Feature));
             return jssp.ReadyJobs[priority.FindIndex(p => Math.Abs(p - priority.Max()) < 0.001)];
         }
 
-        private int UseImitationLearning(Schedule jssp, List<TrSet> prefs, LinearModel model)
+        private int UseImitationLearning(Schedule jssp, List<TrSet> prefs)
         {
             // pi_i = beta_i*pi_star + (1-beta_i)*pi_i^hat
             // i: ith iteration of imitation learning
             // pi_star is expert policy (i.e. optimal)
             // pi_i^hat: is pref model from prev. iteration
             double pr = Random.NextDouble();
-            return model != null && pr >= model.Beta
-                ? ChooseWeightedJob(jssp, prefs, model)
+            return Model != null && pr >= _beta
+                ? ChooseWeightedJob(jssp, prefs)
                 : ChooseOptJob(jssp, prefs);
         }
 
-        private int ChooseSDRJob(Schedule jssp, List<TrSet> prefs = null, LinearModel mode = null)
+        private int ChooseSDRJob(Schedule jssp, List<TrSet> prefs = null)
         {
             return jssp.JobChosenBySDR((SDRData.SDR) Track);
         }
