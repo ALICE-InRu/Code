@@ -1,4 +1,5 @@
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -73,22 +74,37 @@ namespace ALICE
             }
         }
 
+        private int ResetNumInstances(bool extended)
+        {
+            return Math.Min(NumInstances, NumDimension < 100 ? (extended ? 5000 : 500) : (extended ? 1000 : 300));
+        }
+
         public TrainingSet(string distribution, string dimension, Trajectory track, bool extended)
             : base(distribution, dimension, DataSet.train, extended)
         {
             Track = track;
-
             string strTrack = track.ToString();
+            NumInstances = ResetNumInstances(extended);
+
             switch (Track)
             {
                 case Trajectory.ILFIX:
                 case Trajectory.ILSUP:
                 case Trajectory.ILUNSUP:
-                    strTrack = GetImitationModel(out Model, out _beta, extended);
+                    int iter; 
+                    strTrack = GetImitationModel(out Model, out _beta, out iter, extended);
                     if (Track == Trajectory.ILUNSUP)
                         _trajectory = ChooseWeightedJob;
                     else
                         _trajectory = UseImitationLearning;
+
+                    if (extended)
+                    {
+                        int numTraining = ResetNumInstances(false);
+                        AlreadySavedPID = Math.Max(AlreadySavedPID, numTraining*iter);
+                        NumInstances = Math.Min(Rows.Count, numTraining*(iter + 1));
+                    }
+
                     break;
                 case Trajectory.CMA:
                     Model = null;
@@ -104,7 +120,8 @@ namespace ALICE
                     break;
             }
             if (extended) strTrack += "EXT";
-
+            
+ 
             FileInfo =
                 new FileInfo(string.Format(
                     "C://Users//helga//Alice//Code//trainingData//trdat.{0}.{1}.{2}.{3}.csv",
@@ -121,12 +138,12 @@ namespace ALICE
             TrData = new List<TrSet>[NumInstances,NumDimension];
         }
 
-        private string GetImitationModel(out LinearModel model, out double beta, bool extended,
+        private string GetImitationModel(out LinearModel model, out double beta, out int currentIter, bool extended,
             string probability = "equal", bool timedependent = false, int numFeatures = 16, int modelID = 1)
         {
             const string DIR = @"C:\users\helga\Alice\Code\PREF\weights";
 
-            string pat = String.Format("\\b(exhaust|full)\\.{0}.{1}.{2}.(OPT|IL([0-9]+){3}){4}.{5}.weights.{6}",
+            string pat = String.Format("\\b(exhaust|full)\\.{0}.{1}.{2}.(OPT|IL([0-9]+){3}{4}).{5}.weights.{6}",
                 Distribution, Dimension, (char) PreferenceSet.Ranking.PartialPareto, Track.ToString().Substring(2),
                 extended ? "EXT" : "", probability, timedependent ? "timedependent" : "timeindependent");
 
@@ -149,26 +166,25 @@ namespace ALICE
                     iters[i] = Convert.ToInt32(m.Groups[3].Value);
             }
 
+            currentIter = iters.Max() + 1;
             switch (Track)
             {
                 case Trajectory.ILFIX:
                     beta = 0.5;
                     break;
                 case Trajectory.ILSUP:
-                    int currentIter = iters.Max() + 1;
                     beta = Math.Pow(0.5, currentIter);
                     break;
                 case Trajectory.ILUNSUP:
                     beta = 0;
                     break;
+                default:
+                    throw new Exception(String.Format("{0} is not supported as imitation learning!", Track));
             }
 
             string weightFile = files[Array.FindIndex(iters, x => x == iters.Max())];
-
-            var content = File.ReadAllText(weightFile);
-
             model = new LinearModel(new FileInfo(weightFile), numFeatures, modelID);
-            throw new NotImplementedException(content);
+            return String.Format("IL{0}{1}", currentIter, Track.ToString().Substring(2));
         }
 
         public void Write()

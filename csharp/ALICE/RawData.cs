@@ -82,7 +82,7 @@ namespace ALICE
                 throw new Exception("Use extended data set, otherwise you will lose information!");
         }
 
-        public static int DimString2Num(string dim)
+        internal static int DimString2Num(string dim)
         {
             var jobxmac = Regex.Split(dim, "x");
             var numJobs = Convert.ToInt32(jobxmac[0]);
