@@ -23,11 +23,9 @@ namespace ALICE
 
         private void Read()
         {
-            List<string[]> content = ReadCSV();
-            if (content == null || content.Count <= 1) return;
-
-            List<string> header = content[0].ToList();
-            content.RemoveAt(0);
+            List<string> header;
+            List<string[]> content = CSV.Read(FileInfo, out header);
+            if (content == null || content.Count == 0) return;
 
             int iPID = header.FindIndex(x => x.Equals("PID"));
             int iStep = header.FindIndex(x => x.Equals("Step"));

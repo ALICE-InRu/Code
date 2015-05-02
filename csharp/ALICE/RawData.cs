@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -68,17 +67,16 @@ namespace ALICE
             var lastSplit = Regex.Split(lastLine, ",").ToArray();
 
             int iPID = firstSplit.FindIndex(x => x == "PID");
-            if (iPID > 0)
-            {
-                AlreadySavedPID = Convert.ToInt32(lastSplit[iPID]);
-            }
-            else
+            if (iPID == -1)
             {
                 int iName = firstSplit.FindIndex(x => x == "Name");
                 string[] name = Regex.Split(lastSplit[iName], "\\.").ToArray();
                 AlreadySavedPID = Convert.ToInt32(name[4]);
             }
-
+            else
+            {
+                AlreadySavedPID = Convert.ToInt32(lastSplit[iPID]);
+            }
 
             if (warn && AlreadySavedPID > NumInstances)
                 throw new Exception("Use extended data set, otherwise you will lose information!");
@@ -334,25 +332,5 @@ namespace ALICE
             return ints;
         }
 
-        internal List<string[]> ReadCSV()
-        {
-            if (!FileInfo.Exists) return null;
-            var content = new List<string[]>();
-
-            var fs = new FileStream(FileInfo.FullName, FileMode.Open, FileAccess.Read);
-            using (var st = new StreamReader(fs))
-            {
-                while (st.Peek() != -1) // stops when it reachs the end of the file
-                {
-                    var line = st.ReadLine();
-                    if (line == null) continue;
-                    var row = Regex.Split(line, ",");
-                    content.Add(row);
-                }
-                st.Close();
-            }
-            fs.Close();
-            return content;
-        }
     }
 }

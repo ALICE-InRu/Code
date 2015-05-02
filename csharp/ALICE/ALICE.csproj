@@ -58,6 +58,7 @@
     <Compile Include="CMAESData.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="CSV.cs" />
     <Compile Include="HeuristicData.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -80,7 +81,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Schedule.cs" />
-    <Compile Include="LinearWeight.cs" />
     <Compile Include="SDRData.cs">
       <SubType>Component</SubType>
     </Compile>

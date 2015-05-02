@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -28,17 +29,17 @@ namespace ALICE
 
         internal bool Read(bool all)
         {
-            var contents = ReadCSV();
-            if (contents == null || contents.Count < 2) return false;
-            //string[] header = contents[0]; 
-            contents.RemoveAt(0); // remove header
-            foreach (var content in contents)
+            List<string> header;
+            List<string[]> content = CSV.Read(FileInfo, out header);
+            if (content == null || content.Count == 0) return false;
+
+            foreach (var line in content)
             {
-                var row = Rows.Find(content[0]);
+                var row = Rows.Find(line[0]);
                 if (row == null) continue;
-                if (!all && HeuristicValue != content[1]) continue;
-                row[HeuristicName] = content[1];
-                row["Makespan"] = Convert.ToInt32(content[2]);
+                if (!all && HeuristicValue != line[1]) continue;
+                row[HeuristicName] = line[1];
+                row["Makespan"] = Convert.ToInt32(line[2]);
                 AlreadySavedPID = (int) row["PID"];
             }
             return true;
