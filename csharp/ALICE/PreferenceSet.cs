@@ -133,20 +133,5 @@ namespace ALICE
                 select pi.Difference(pj));
             return _diffData[pid, step].Count;
         }
-
-        private void RankPreferences(int pid)
-        {
-            for (var step = 0; step < NumDimension; step++)
-            {
-                var prefs = TrData[pid, step];
-                var cmax = prefs.Select(p => p.ResultingOptMakespan).Distinct().OrderBy(x => x).ToList();
-                foreach (var pref in prefs)
-                {
-                    var rank = cmax.FindIndex(ms => ms == pref.ResultingOptMakespan);
-                    pref.Rank = rank;
-                }
-            }
-        }
-
     }
 }

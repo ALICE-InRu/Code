@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -78,8 +79,12 @@ namespace ALICE
                 AlreadySavedPID = Convert.ToInt32(lastSplit[iPID]);
             }
 
-            if (warn && AlreadySavedPID > NumInstances)
-                throw new Exception("Use extended data set, otherwise you will lose information!");
+            if (AlreadySavedPID <= NumInstances) return;
+            if (warn)
+                throw new WarningException(
+                    String.Format("Use extended data set, otherwise you will lose information on {0} instances!",
+                        AlreadySavedPID - NumInstances));
+            AlreadySavedPID = NumInstances;
         }
 
         internal static int DimString2Num(string dim)

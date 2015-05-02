@@ -1,5 +1,4 @@
 using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -31,16 +30,17 @@ namespace ALICE
         private readonly Func<Schedule, List<TrSet>, int> _trajectory;
         internal readonly Trajectory Track;
 
-        public int NumFeatures;
+        public int NumFeatures{ get; private set; }
+ 
         internal Features.Mode FeatureMode = Features.Mode.Local; 
         
-        public readonly List<TrSet>[,] TrData;
+        internal readonly List<TrSet>[,] TrData;
         internal Random Random = new Random();
 
         internal readonly LinearModel Model;
         private readonly double _beta; // only used in imitation learning 
 
-        public class TrSet : PreferenceSet.PrefSet
+        internal class TrSet : PreferenceSet.PrefSet
         {
             public Schedule.Dispatch Dispatch;
             public int SimplexIterations;
@@ -215,7 +215,7 @@ namespace ALICE
                     st.WriteLine(header);
                 }
 
-                for (int pid = fileMode == FileMode.Append ? AlreadySavedPID + 1 : 1; pid < NumInstances; pid++)
+                for (int pid = fileMode == FileMode.Append ? AlreadySavedPID + 1 : 1; pid <= NumInstances; pid++)
                 {
                     for (int step = 0; step < NumDimension; step++)
                     {
@@ -245,14 +245,6 @@ namespace ALICE
                         }
                     }
                 }
-
-                foreach (var info in from DataRow row in Rows
-                    let pid = (int)row["PID"]
-                    where pid > AlreadySavedPID
-                    select String.Format("{0},{1}", row["Name"], row["Makespan"]))
-                {
-                    st.WriteLine(info);
-                }
                 st.Close();
             }
             fs.Close();
@@ -260,7 +252,7 @@ namespace ALICE
 
         const int TMLIM_STEP = 2; // max 2 min per step/possible dispatch
 
-        public string CollectTrainingSet(int pid)
+        public string CollectAndLabel(int pid)
         {
             string name = GetName(pid);
             DataRow instance = Rows.Find(name);
@@ -278,9 +270,24 @@ namespace ALICE
                 gurobiModel.CommitConstraint(jssp.Sequence[step], step);
                 currentNumFeatures += TrData[pid - 1, step].Count;
             }
-            gurobiModel.Dispose();
             NumFeatures += currentNumFeatures;
+            gurobiModel.Dispose();
+            RankPreferences(pid);
             return String.Format("{0}:{1} #{2} phi", FileInfo.Name, pid, currentNumFeatures);
+        }
+
+        protected void RankPreferences(int pid)
+        {
+            for (var step = 0; step < NumDimension; step++)
+            {
+                var prefs = TrData[pid, step];
+                var cmax = prefs.Select(p => p.ResultingOptMakespan).Distinct().OrderBy(x => x).ToList();
+                foreach (var pref in prefs)
+                {
+                    var rank = cmax.FindIndex(ms => ms == pref.ResultingOptMakespan);
+                    pref.Rank = rank;
+                }
+            }
         }
 
         private List<TrSet> FindFeaturesForAllJobs(Schedule jssp, GurobiJspModel gurobiModel)

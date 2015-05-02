@@ -33,7 +33,7 @@ namespace ALICE
             int iFollowed = header.FindIndex(x => x.Equals("Followed"));
             int iResultingOptMakespan = header.FindIndex(x => x.Equals("ResultingOptMakespan"));
             int iRank = header.FindIndex(x => x.Equals("Rank"));
-            
+
             int minStep = Convert.ToInt32(content[0][iStep]);
 
             int pid, step;
@@ -49,11 +49,15 @@ namespace ALICE
                 step = Convert.ToInt32(line[iStep]);
                 bool followed = Convert.ToInt32(line[iFollowed]) == 1;
                 int resultingOptMakespan = Convert.ToInt32(line[iResultingOptMakespan]);
-                int rank = Convert.ToInt32(line[iRank]);
+                int rank = iRank >= 0 ? Convert.ToInt32(line[iRank]) : 0;
 
                 Schedule.Dispatch dispatch = new Schedule.Dispatch(line[iDispatch]);
                 TrData[pid - 1, step - minStep].Add(new TrSet(dispatch, followed, resultingOptMakespan, rank));
             }
+
+            if (iRank >= 0) return;
+            for (pid = 1; pid < AlreadySavedPID; pid++)
+                RankPreferences(pid);
         }
 
         public new void Write()
@@ -79,7 +83,7 @@ namespace ALICE
             if (TrData[pid - 1, 0].Count == 0)
             {
                 return FeatureMode == Features.Mode.Local
-                    ? String.Format("{0} - from scratch!", CollectTrainingSet(pid))
+                    ? String.Format("{0} - from scratch!", CollectAndLabel(pid))
                     : String.Format("PID {0} doesn't exist!", pid);
             }
 
@@ -91,7 +95,7 @@ namespace ALICE
                 var prefs = TrData[pid - 1, step];
                 currentNumFeatures += prefs.Count;
 
-                if (!ValidDispatches(prefs, jssp))
+                if (!ValidDispatches(ref prefs, jssp))
                     throw new Exception("Retracing gave an invalid dispatch!");
 
                 #region update features of possible jobs
@@ -121,8 +125,15 @@ namespace ALICE
             return String.Format("{0}:{1} #{2} phi", FileInfo.Name, pid, currentNumFeatures);
         }
 
-        private bool ValidDispatches(List<TrSet> prefs, Schedule jssp)
+        private bool ValidDispatches(ref List<TrSet> prefs, Schedule jssp)
         {
+            if (prefs.Count > jssp.ReadyJobs.Count)
+            {
+                prefs = prefs
+                    .GroupBy(x => x.Dispatch.Name)
+                    .Select(group => group.First()).ToList();
+            }
+
             if (prefs.Count == 0 && jssp.Sequence.Count >= NumDimension - 1) return true; 
 
             if (prefs.FindIndex(p => p.Dispatch.Mac < 0) == -1 &&

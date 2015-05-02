@@ -73,14 +73,14 @@ namespace Chesire
         private void buttonSDRStart_Click(object sender, EventArgs e)
         {
 
-            SDRData[] sdrDatas = (from problem in Problems.CheckedItems.Cast<string>()
+            SDRData[] sdrSets = (from problem in Problems.CheckedItems.Cast<string>()
                 from dim in Dimension.CheckedItems.Cast<string>()
                 from set in Set.CheckedItems.Cast<RawData.DataSet>()
                 from sdr in SDR.CheckedItems.Cast<SDRData.SDR>()
                 select new SDRData(problem, dim, set, Extended.CheckedItems.Count > 0, sdr)).Where(
                     x => x.AlreadySavedPID < x.NumInstances).ToArray();
 
-            if (sdrDatas.Length == 0)
+            if (sdrSets.Length == 0)
             {
                 textContent.AppendText("\nCannot apply SDR:");
                 if (Problems.CheckedItems.Count == 0)
@@ -95,18 +95,19 @@ namespace Chesire
                 return;
             }
 
+            textHeader.AppendText(String.Format("\nSDR configurations: #{0}", sdrSets.Length));
             int iter = 0;
             progressBarOuter.Value = 0;
-            foreach (var sdrData in sdrDatas)
+            foreach (var set in sdrSets)
             {
                 progressBarInner.Value = 0;
-                sdrData.Apply();
+                set.Apply();
                 progressBarInner.Value = 100;
-                progressBarOuter.Value = 100*(++iter/sdrDatas.Length);
-                textContent.AppendText(String.Format("\n{0} updated for {1}:{2}", sdrData.FileInfo.Name,
-                    sdrData.HeuristicName, sdrData.HeuristicValue));
+                progressBarOuter.Value = 100*(++iter/sdrSets.Length);
+                textContent.AppendText(String.Format("\n{0} updated for {1}:{2}", set.FileInfo.Name,
+                    set.HeuristicName, set.HeuristicValue));
             }
-            textHeader.AppendText(String.Format("\nSDR configurations: #{0} ", sdrDatas.Length));
+            textHeader.AppendText(String.Format("\nSDR configurations: #{0} complete!", sdrSets.Length));
         }
 
 
@@ -209,6 +210,7 @@ namespace Chesire
 
             OPTData[] sets = (OPTData[]) e.Argument;
             e.Result = "";
+            textHeader.AppendText(String.Format("\nOPT configurations: #{0}", sets.Length));
             int iter = 0;
             foreach (var set in sets)
             {
@@ -226,14 +228,14 @@ namespace Chesire
 
                     if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE | bkgWorkerOptimise.CancellationPending)
                     {
-                        set.Write();
                         bkgWorkerOptimise.ReportProgress((int) (100.0*iter/sets.Length),
                             new object[]
                             {
                                 0,
-                                String.Format("Auto saving {0} ({1:0}min)", set.FileInfo.Name,
-                                    (DateTime.Now - autoSave).TotalMinutes)
+                                String.Format("Auto saving {0} ({1:0}min {2}PIDS)", set.FileInfo.Name,
+                                    (DateTime.Now - autoSave).TotalMinutes, pid - set.AlreadySavedPID)
                             });
+                        set.Write();
                         autoSave = DateTime.Now;
                     }
 
@@ -252,6 +254,7 @@ namespace Chesire
                             (DateTime.Now - start).TotalMinutes)
                     });
             }
+            textHeader.AppendText(String.Format("\nOPT configurations: #{0} complete!", sets.Length));
         }
 
         #endregion
@@ -296,39 +299,54 @@ namespace Chesire
 
         private void bkgWorkerTrSet_DoWork(object sender, DoWorkEventArgs e)
         {
-            TrainingSet[] trsets = (TrainingSet[]) e.Argument;
-            DateTime start = DateTime.Now;
-            Stopwatch autoSave = new Stopwatch();
-            autoSave.Start();
+            TrainingSet[] sets = (TrainingSet[]) e.Argument;
             e.Result = "";
+            textHeader.AppendText(String.Format("\nTRSET configurations: #{0}", sets.Length));
             int iter = 0;
-            throw new NotImplementedException();
-            foreach (TrainingSet trset in trsets)
+            foreach (var set in sets)
             {
-                bkgWorkerTrSet.ReportProgress((int) (100.0*iter/trsets.Length),
-                    String.Format("Generating training data for {0} ...", trset.FileInfo.Name));
+                DateTime start = DateTime.Now;
+                DateTime autoSave = DateTime.Now;
 
-                for (int pid = trset.AlreadySavedPID + 1; pid < trset.NumInstances; pid++)
+                bkgWorkerTrSet.ReportProgress((int) (100.0*iter/sets.Length),
+                    new object[] {0, String.Format("Starting collecting and labelling {0}", set.FileInfo.Name)});
+
+                for (int pid = set.AlreadySavedPID + 1; pid <= set.NumInstances; pid++)
                 {
-                    string info = trset.CollectTrainingSet(pid); // intense task 
-                    bkgWorkerTrSet.ReportProgress((int) (100.0*pid/trset.NumInstances), info);
-                    if (bkgWorkerTrSet.CancellationPending)
+                    string info = set.CollectAndLabel(pid);
+                    bkgWorkerTrSet.ReportProgress((int) (100.0*pid/set.NumInstances),
+                        new object[] {1, info});
+
+                    if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE | bkgWorkerTrSet.CancellationPending)
                     {
-                        trset.Write();
-                        bkgWorkerTrSet.ReportProgress((int) (100.0*pid/trset.NumInstances),
-                            String.Format("\nDuration: {0:0}min.", (DateTime.Now - start).Minutes));
-                        e.Cancel = true;
-                        return;
+                        bkgWorkerTrSet.ReportProgress((int) (100.0*iter/sets.Length),
+                            new object[]
+                            {
+                                0,
+                                String.Format("Auto saving {0} ({1:0}min {2}PIDS)", set.FileInfo.Name,
+                                    (DateTime.Now - autoSave).TotalMinutes, pid - set.AlreadySavedPID)
+                            });
+                        set.Write();
+                        autoSave = DateTime.Now;
                     }
-                    if (autoSave.ElapsedMilliseconds <= AUTOSAVE) continue;
-                    trset.Write();
-                    autoSave.Restart();
+
+                    if (!bkgWorkerTrSet.CancellationPending) continue;
+                    bkgWorkerTrSet.ReportProgress((int) (100.0*pid/set.NumInstances),
+                        new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
+                    e.Cancel = true;
+                    return;
                 }
-                trset.Write();
-                bkgWorkerTrSet.ReportProgress((int) (100.0*++iter/trsets.Length), e.Result);
-                e.Result = String.Format("{0} total duration: {1:0} s.", trset.FileInfo.Name,
-                    (DateTime.Now - start).TotalMinutes);
+                set.Write();
+                bkgWorkerTrSet.ReportProgress((int) (100.0*++iter/sets.Length),
+                    new object[]
+                    {
+                        0,
+                        String.Format(
+                            "Finished collecting and labelling {0} ({1:0}min)\n\tGrand total of {2} preferences.",
+                            set.FileInfo.Name, (DateTime.Now - start).TotalMinutes, set.NumFeatures)
+                    });
             }
+            textHeader.AppendText(String.Format("\nTRSET configurations: #{0} complete!", sets.Length));
         }
 
         #endregion
@@ -386,13 +404,14 @@ namespace Chesire
 
         private void bkgWorkerRetrace_DoWork(object sender, DoWorkEventArgs e)
         {
-            RetraceSet[] retraceSets = (RetraceSet[]) e.Argument;
+            RetraceSet[] sets = (RetraceSet[]) e.Argument;
             e.Result = "";
+            textHeader.AppendText(String.Format("\nRETRACESET configurations: #{0}", sets.Length));
             int iter = 0;
-            foreach (var set in retraceSets)
+            foreach (var set in sets)
             {
                 DateTime start = DateTime.Now;
-                bkgWorkerRetrace.ReportProgress((int) (100.0*iter/retraceSets.Length),
+                bkgWorkerRetrace.ReportProgress((int) (100.0*iter/sets.Length),
                     new object[] {0, String.Format("Starting retracing {0}", set.FileInfo.Name)});
 
                 for (int pid = 1; pid <= set.AlreadySavedPID; pid++)
@@ -408,7 +427,7 @@ namespace Chesire
                     return;
                 }
                 set.Write();
-                bkgWorkerRetrace.ReportProgress((int) (100.0*++iter/retraceSets.Length),
+                bkgWorkerRetrace.ReportProgress((int) (100.0*++iter/sets.Length),
                     new object[]
                     {
                         0,
@@ -416,6 +435,7 @@ namespace Chesire
                             (DateTime.Now - start).TotalMinutes)
                     });
             }
+            textHeader.AppendText(String.Format("\nRETRACESET configurations: #{0} complete!", sets.Length));
         }
 
         #endregion
@@ -507,6 +527,7 @@ namespace Chesire
                 return;
             }
 
+            textHeader.AppendText(String.Format("\nBDR configurations: #{0}", bdrDatas.Length));
             int iter = 0;
             progressBarOuter.Value = 0;
             foreach (var bdrData in bdrDatas)
@@ -518,7 +539,7 @@ namespace Chesire
                 textContent.AppendText(String.Format("\n{0} updated for {1}:{2}", bdrData.FileInfo.Name,
                     bdrData.HeuristicName, bdrData.HeuristicValue));
             }
-            textHeader.AppendText(String.Format("\nBDR configurations: #{0} ", bdrDatas.Length));
+            textHeader.AppendText(String.Format("\nBDR configurations: #{0} complete!", bdrDatas.Length));
         }
 
         private void startAsyncButtonCMA_click(object sender, EventArgs e)
