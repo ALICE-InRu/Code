@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using ALICE;
@@ -73,14 +72,14 @@ namespace Chesire
         private void buttonSDRStart_Click(object sender, EventArgs e)
         {
 
-            SDRData[] sdrSets = (from problem in Problems.CheckedItems.Cast<string>()
+            SDRData[] sets = (from set in Set.CheckedItems.Cast<RawData.DataSet>()
                 from dim in Dimension.CheckedItems.Cast<string>()
-                from set in Set.CheckedItems.Cast<RawData.DataSet>()
+                from problem in Problems.CheckedItems.Cast<string>()
                 from sdr in SDR.CheckedItems.Cast<SDRData.SDR>()
                 select new SDRData(problem, dim, set, Extended.CheckedItems.Count > 0, sdr)).Where(
                     x => x.AlreadySavedPID < x.NumInstances).ToArray();
 
-            if (sdrSets.Length == 0)
+            if (sets.Length == 0)
             {
                 textContent.AppendText("\nCannot apply SDR:");
                 if (Problems.CheckedItems.Count == 0)
@@ -95,19 +94,19 @@ namespace Chesire
                 return;
             }
 
-            textHeader.AppendText(String.Format("\nSDR configurations: #{0}", sdrSets.Length));
+            textHeader.AppendText(String.Format("\n{0}SET configurations: #{1}", sets.GetType(), sets.Length));
             int iter = 0;
             progressBarOuter.Value = 0;
-            foreach (var set in sdrSets)
+            foreach (var set in sets)
             {
                 progressBarInner.Value = 0;
                 set.Apply();
                 progressBarInner.Value = 100;
-                progressBarOuter.Value = 100*(++iter/sdrSets.Length);
+                progressBarOuter.Value = 100*(++iter/sets.Length);
                 textContent.AppendText(String.Format("\n{0} updated for {1}:{2}", set.FileInfo.Name,
                     set.HeuristicName, set.HeuristicValue));
             }
-            textHeader.AppendText(String.Format("\nSDR configurations: #{0} complete!", sdrSets.Length));
+            textHeader.AppendText(String.Format("\n{0}SET configurations: #{1} complete!", sets.GetType(), sets.Length));
         }
 
 
@@ -161,14 +160,14 @@ namespace Chesire
 
         private void startAsyncButtonOptimize_Click(object sender, EventArgs e)
         {
-            OPTData[] optSets = (from dim in Dimension.CheckedItems.Cast<string>()
+            OPTData[] sets = (from set in Set.CheckedItems.Cast<RawData.DataSet>()
+                from dim in Dimension.CheckedItems.Cast<string>()
                 from problem in Problems.CheckedItems.Cast<string>()
-                from set in Set.CheckedItems.Cast<RawData.DataSet>()
                 select new OPTData(problem, dim, set, Extended.CheckedItems.Count > 0, Convert.ToInt32(TimeLimit.Value)))
                 .Where(
                     x => x.AlreadySavedPID < x.NumInstances).ToArray();
 
-            if (optSets.Length == 0)
+            if (sets.Length == 0)
             {
                 textContent.AppendText("\nCannot optimise set:");
                 if (Problems.CheckedItems.Count == 0)
@@ -186,7 +185,7 @@ namespace Chesire
                 /* wait */
             }
 
-            bkgWorkerOptimise.RunWorkerAsync(optSets);
+            bkgWorkerOptimise.RunWorkerAsync(sets);
             cancelAsyncButtonOptimize.Visible = true;
         }
 
@@ -210,8 +209,10 @@ namespace Chesire
 
             OPTData[] sets = (OPTData[]) e.Argument;
             e.Result = "";
-            textHeader.AppendText(String.Format("\nOPT configurations: #{0}", sets.Length));
             int iter = 0;
+            bkgWorkerOptimise.ReportProgress((int) (100.0*iter/sets.Length),
+                new object[] {0, String.Format("\n{0}SET configurations: #{1}", sets.GetType(), sets.Length)});
+
             foreach (var set in sets)
             {
                 DateTime start = DateTime.Now;
@@ -254,7 +255,8 @@ namespace Chesire
                             (DateTime.Now - start).TotalMinutes)
                     });
             }
-            textHeader.AppendText(String.Format("\nOPT configurations: #{0} complete!", sets.Length));
+            bkgWorkerOptimise.ReportProgress((int) (100.0*iter/sets.Length),
+                new object[] {0, String.Format("\n{0}SET configurations: #{1} complete!", sets.GetType(), sets.Length)});
         }
 
         #endregion
@@ -263,13 +265,13 @@ namespace Chesire
 
         private void startAsyncButtonTrSet_Click(object sender, EventArgs e)
         {
-            TrainingSet[] trSets = (from problem in Problems.CheckedItems.Cast<string>()
+            TrainingSet[] sets = (from track in Tracks.CheckedItems.Cast<TrainingSet.Trajectory>()
                 from dim in Dimension.CheckedItems.Cast<string>()
-                from track in Tracks.CheckedItems.Cast<TrainingSet.Trajectory>()
+                from problem in Problems.CheckedItems.Cast<string>()
                 select new TrainingSet(problem, dim, track, Extended.CheckedItems.Count > 0)).Where(
                     x => x.AlreadySavedPID < x.NumInstances).ToArray();
 
-            if (trSets.Length == 0)
+            if (sets.Length == 0)
             {
                 textContent.AppendText("\nCannot collect training set:");
                 if (Problems.CheckedItems.Count == 0)
@@ -278,7 +280,7 @@ namespace Chesire
                     textContent.AppendText("\n\tPlease choose at least one problem dimension.");
                 if (Tracks.CheckedItems.Count == 0)
                     textContent.AppendText("\n\tPlease choose at least one training trajectory.");
-                textContent.AppendText("\n");              
+                textContent.AppendText("\n");
                 return;
             }
 
@@ -286,7 +288,7 @@ namespace Chesire
             {
                 /* wait */
             }
-            bkgWorkerTrSet.RunWorkerAsync(trSets);
+            bkgWorkerTrSet.RunWorkerAsync(sets);
             cancelAsyncButtonTrSet.Visible = true;
         }
 
@@ -301,8 +303,10 @@ namespace Chesire
         {
             TrainingSet[] sets = (TrainingSet[]) e.Argument;
             e.Result = "";
-            textHeader.AppendText(String.Format("\nTRSET configurations: #{0}", sets.Length));
             int iter = 0;
+            bkgWorkerTrSet.ReportProgress((int) (100.0*iter/sets.Length),
+                new object[] {0, String.Format("\n{0}SET configurations: #{1}", sets.GetType(), sets.Length)});
+
             foreach (var set in sets)
             {
                 DateTime start = DateTime.Now;
@@ -313,7 +317,7 @@ namespace Chesire
 
                 for (int pid = set.AlreadySavedPID + 1; pid <= set.NumInstances; pid++)
                 {
-                    string info = set.CollectAndLabel(pid);
+                    string info = set.Apply(pid);
                     bkgWorkerTrSet.ReportProgress((int) (100.0*pid/set.NumInstances),
                         new object[] {1, info});
 
@@ -346,7 +350,8 @@ namespace Chesire
                             set.FileInfo.Name, (DateTime.Now - start).TotalMinutes, set.NumFeatures)
                     });
             }
-            textHeader.AppendText(String.Format("\nTRSET configurations: #{0} complete!", sets.Length));
+            bkgWorkerTrSet.ReportProgress((int) (100.0*iter/sets.Length),
+                new object[] {0, String.Format("\n{0}SET configurations: #{1} complete!", sets.GetType(), sets.Length)});
         }
 
         #endregion
@@ -355,26 +360,25 @@ namespace Chesire
 
         private void startAsyncButtonRetrace_Click(object sender, EventArgs e)
         {
-
             var featureMode = PhiGlobal.Checked
                 ? Features.Mode.Global
                 : PhiLocal.Checked ? Features.Mode.Local : Features.Mode.None;
 
             if (featureMode == Features.Mode.None)
             {
-                textContent.AppendText("\nCannot optimise set:");
+                textContent.AppendText("\nCannot retrace set:");
                 textContent.AppendText("\n\tPlease choose a feature mode.");
             }
 
-            RetraceSet[] retraceSets = (from problem in Problems.CheckedItems.Cast<string>()
+            RetraceSet[] sets = (from problem in Problems.CheckedItems.Cast<string>()
                 from dim in Dimension.CheckedItems.Cast<string>()
                 from track in Tracks.CheckedItems.Cast<TrainingSet.Trajectory>()
                 select new RetraceSet(problem, dim, track, Extended.CheckedItems.Count > 0, featureMode))
                 .Where(x => x.AlreadySavedPID > 0).ToArray();
 
-            if (retraceSets.Length == 0)
+            if (sets.Length == 0)
             {
-                textContent.AppendText("\nCannot optimise set:");
+                textContent.AppendText("\nCannot retrace set:");
                 if (Problems.CheckedItems.Count == 0)
                     textContent.AppendText("\n\tPlease choose at least one problem distribution.");
                 if (Dimension.CheckedItems.Count == 0)
@@ -384,13 +388,13 @@ namespace Chesire
                 textContent.AppendText("\n");
                 return;
             }
-            
+
             while (bkgWorkerRetrace.IsBusy)
             {
                 /* wait */
             }
-            
-            bkgWorkerRetrace.RunWorkerAsync(retraceSets);
+
+            bkgWorkerRetrace.RunWorkerAsync(sets);
             cancelAsyncButtonRetrace.Visible = true;
         }
 
@@ -406,8 +410,10 @@ namespace Chesire
         {
             RetraceSet[] sets = (RetraceSet[]) e.Argument;
             e.Result = "";
-            textHeader.AppendText(String.Format("\nRETRACESET configurations: #{0}", sets.Length));
             int iter = 0;
+            bkgWorkerRetrace.ReportProgress((int) (100.0*iter/sets.Length),
+                new object[] {0, String.Format("\n{0}SET configurations: #{1}", sets.GetType(), sets.Length)});
+
             foreach (var set in sets)
             {
                 DateTime start = DateTime.Now;
@@ -419,7 +425,7 @@ namespace Chesire
                     string info = set.Retrace(pid);
                     bkgWorkerRetrace.ReportProgress((int) (100.0*pid/set.AlreadySavedPID),
                         new object[] {1, info});
-                 
+
                     if (!bkgWorkerRetrace.CancellationPending) continue;
                     bkgWorkerRetrace.ReportProgress((int) (100.0*pid/set.AlreadySavedPID),
                         new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
@@ -435,7 +441,8 @@ namespace Chesire
                             (DateTime.Now - start).TotalMinutes)
                     });
             }
-            textHeader.AppendText(String.Format("\nRETRACESET configurations: #{0} complete!", sets.Length));
+            bkgWorkerRetrace.ReportProgress((int) (100.0*iter/sets.Length),
+                new object[] {0, String.Format("\n{0}SET configurations: #{1} complete!", sets.GetType(), sets.Length)});
         }
 
         #endregion
@@ -444,14 +451,34 @@ namespace Chesire
 
         private void startAsyncButtonPrefSet_Click(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
-            PreferenceSet prefSet = new PreferenceSet("j.rnd", "6x5", TrainingSet.Trajectory.OPT, false, 'p');
+            PreferenceSet[] sets = (from rank in Ranks.CheckedItems.Cast<PreferenceSet.Ranking>()
+                from track in Tracks.CheckedItems.Cast<TrainingSet.Trajectory>()
+                from problem in Problems.CheckedItems.Cast<string>()
+                from dim in Dimension.CheckedItems.Cast<string>()
+                select new PreferenceSet(problem, dim, track, Extended.CheckedItems.Count > 0, rank)).Where(
+                    x => x.AlreadySavedPID >= x.NumInstances).ToArray();
+
+            if (sets.Length == 0)
+            {
+                textContent.AppendText("\nCannot collect training set:");
+                if (Problems.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one problem distribution.");
+                if (Dimension.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one problem dimension.");
+                if (Tracks.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one training trajectory.");
+                if (Ranks.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one ranking scheme.");
+                textContent.AppendText("\n");
+                return;
+            }
+
             while (bkgWorkerPrefSet.IsBusy)
             {
                 /* wait */
             }
 
-            bkgWorkerPrefSet.RunWorkerAsync(prefSet);
+            bkgWorkerPrefSet.RunWorkerAsync(sets);
             cancelAsyncButtonRankTrData.Visible = true;
         }
 
@@ -464,33 +491,43 @@ namespace Chesire
 
         private void bkgWorkerPrefSet_DoWork(object sender, DoWorkEventArgs e)
         {
-            throw new NotImplementedException();
-
-            PreferenceSet[] prefs = (PreferenceSet[]) e.Argument;
-            DateTime start = DateTime.Now;
+            PreferenceSet[] sets = (PreferenceSet[]) e.Argument;
             e.Result = "";
             int iter = 0;
-            foreach (PreferenceSet pref in prefs)
-            {
-                bkgWorkerPrefSet.ReportProgress(0, String.Format("\n{0}", pref.FileInfo.Name));
+            bkgWorkerPrefSet.ReportProgress((int) (100.0*iter/sets.Length),
+                new object[] {0, String.Format("\n{0}SET configurations: #{1}", sets.GetType(), sets.Length)});
 
-                for (int pid = 0; pid < pref.NumInstances; pid++)
+            foreach (var set in sets)
+            {
+                DateTime start = DateTime.Now;
+
+                bkgWorkerPrefSet.ReportProgress((int) (100.0*iter/sets.Length),
+                    new object[] {0, String.Format("Starting ranking {0}", set.FileInfo.Name)});
+
+                for (int pid = 1; pid <= set.AlreadySavedPID; pid++)
                 {
-                    string info = pref.CreatePreferencePairs(pid); //do some intense task here.
-                    bkgWorkerPrefSet.ReportProgress((int) (100.0*pid/pref.NumInstances), info);
+                    string info = set.Apply(pid);
+                    bkgWorkerPrefSet.ReportProgress((int) (100.0*pid/set.AlreadySavedPID),
+                        new object[] {1, info});
 
                     if (!bkgWorkerPrefSet.CancellationPending) continue;
-                    TimeSpan duration = DateTime.Now - start;
-                    info = "Duration: " +
-                           duration.TotalSeconds.ToString(CultureInfo.InvariantCulture)
-                               .Replace(',', '.') +
-                           " s.";
-                    bkgWorkerPrefSet.ReportProgress((int) (100.0*iter/prefs.Length), info);
+                    bkgWorkerPrefSet.ReportProgress((int) (100.0*pid/set.NumInstances),
+                        new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
                     e.Cancel = true;
                     return;
                 }
-                bkgWorkerPrefSet.ReportProgress((int) (100.0*++iter/prefs.Length), e.Result);
+                set.Write();
+                bkgWorkerPrefSet.ReportProgress((int) (100.0*++iter/sets.Length),
+                    new object[]
+                    {
+                        0,
+                        String.Format(
+                            "Finished ranking {0} ({1:0}min)\n\tGrand total of {2} preferences.",
+                            set.FileInfo.Name, (DateTime.Now - start).TotalMinutes, set.NumPreferences)
+                    });
             }
+            bkgWorkerPrefSet.ReportProgress((int) (100.0*iter/sets.Length),
+                new object[] {0, String.Format("\n{0}SET configurations: #{1} complete!", sets.GetType(), sets.Length)});
         }
 
 
@@ -500,9 +537,9 @@ namespace Chesire
 
         private void buttonSimpleBDR_Click(object sender, EventArgs e)
         {
-            BDRData[] bdrDatas = (from problem in Problems.CheckedItems.Cast<string>()
+            BDRData[] sets = (from set in Set.CheckedItems.Cast<RawData.DataSet>()
                 from dim in Dimension.CheckedItems.Cast<string>()
-                from set in Set.CheckedItems.Cast<RawData.DataSet>()
+                from problem in Problems.CheckedItems.Cast<string>()
                 from sdr1 in SDR1.CheckedItems.Cast<SDRData.SDR>()
                 from sdr2 in SDR2.CheckedItems.Cast<SDRData.SDR>()
                 select
@@ -510,7 +547,7 @@ namespace Chesire
                         Convert.ToInt32(splitBDR.Value))).Where(
                             x => x.AlreadySavedPID < x.NumInstances).ToArray();
 
-            if (bdrDatas.Length == 0)
+            if (sets.Length == 0)
             {
                 textContent.AppendText("\nCannot apply BDR:");
                 if (Problems.CheckedItems.Count == 0)
@@ -527,19 +564,19 @@ namespace Chesire
                 return;
             }
 
-            textHeader.AppendText(String.Format("\nBDR configurations: #{0}", bdrDatas.Length));
+            textHeader.AppendText(String.Format("\n{0}SET configurations: #{1}", sets.GetType(), sets.Length));
             int iter = 0;
             progressBarOuter.Value = 0;
-            foreach (var bdrData in bdrDatas)
+            foreach (var bdrData in sets)
             {
                 progressBarInner.Value = 0;
                 bdrData.Apply();
                 progressBarInner.Value = 100;
-                progressBarOuter.Value = 100 * (++iter / bdrDatas.Length);
+                progressBarOuter.Value = 100*(++iter/sets.Length);
                 textContent.AppendText(String.Format("\n{0} updated for {1}:{2}", bdrData.FileInfo.Name,
                     bdrData.HeuristicName, bdrData.HeuristicValue));
             }
-            textHeader.AppendText(String.Format("\nBDR configurations: #{0} complete!", bdrDatas.Length));
+            textHeader.AppendText(String.Format("\n{0}SET configurations: #{1} complete!", sets.GetType(), sets.Length));
         }
 
         private void startAsyncButtonCMA_click(object sender, EventArgs e)
@@ -567,7 +604,7 @@ namespace Chesire
         private void bkgWorkerCMAES_DoWork(object sender, DoWorkEventArgs e)
         {
             throw new NotImplementedException();
-            CMAESData[] cmaesDatas = (CMAESData[])e.Argument;
+            CMAESData[] cmaesDatas = (CMAESData[]) e.Argument;
             int iData = 0;
             foreach (var cmaes in cmaesDatas)
             {
