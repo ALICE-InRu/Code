@@ -160,8 +160,8 @@ namespace Chesire
 
         private void startAsyncButtonOptimize_Click(object sender, EventArgs e)
         {
-            OPTData[] optSets = (from problem in Problems.CheckedItems.Cast<string>()
-                from dim in Dimension.CheckedItems.Cast<string>()
+            OPTData[] optSets = (from dim in Dimension.CheckedItems.Cast<string>()
+                from problem in Problems.CheckedItems.Cast<string>()
                 from set in Set.CheckedItems.Cast<RawData.DataSet>()
                 select new OPTData(problem, dim, set, Extended.CheckedItems.Count > 0, Convert.ToInt32(TimeLimit.Value)))
                 .Where(
@@ -224,7 +224,7 @@ namespace Chesire
                     bkgWorkerOptimise.ReportProgress((int) (100.0*pid/set.NumInstances),
                         new object[] {1, info});
 
-                    if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE)
+                    if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE | bkgWorkerOptimise.CancellationPending)
                     {
                         set.Write();
                         bkgWorkerOptimise.ReportProgress((int) (100.0*iter/sets.Length),
