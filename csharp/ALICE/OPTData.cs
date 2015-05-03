@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -12,10 +13,9 @@ namespace ALICE
     {
         public readonly int TimeLimit; // in minutes
 
-        public OPTData(string distribution, string dimension, DataSet set, bool extended, int timeLimit_min = -1)
+        internal OPTData(string distribution, string dimension, DataSet set, bool extended, bool readAll)
             : base(distribution, dimension, set, extended)
         {
-            TimeLimit = timeLimit_min;
             FileInfo =
                 new FileInfo(string.Format("C://Users//helga//Alice//Code//OPT//{0}.{1}.{2}.csv",
                     Distribution, Dimension, Set));
@@ -26,6 +26,15 @@ namespace ALICE
             Columns.Add("Optimum", typeof (int));
             Columns.Add("Solution", typeof (int[,]));
             Columns.Add("Simplex", typeof (int));
+ 
+            if (readAll)
+                Read();
+        }
+
+        public OPTData(string distribution, string dimension, DataSet set, bool extended, int timeLimit_min)
+            : this(distribution, dimension, set, extended, false)
+        {
+            TimeLimit = timeLimit_min;
         }
 
         public void Optimise()
@@ -61,9 +70,10 @@ namespace ALICE
             return String.Format("{0}:{1} {2}{3}", FileInfo.Name, pid, opt, (solved ? "" : "*"));
         }
 
-        public void AddOptMakespan(string name, int makespan, bool solved, int[,] xTimeJob, int simplexIterations)
+        private void AddOptMakespan(string name, int makespan, bool solved, int[,] xTimeJob, int simplexIterations)
         {
             var row = Rows.Find(name);
+            if (row == null) return;
             row.SetField("Solved", solved ? "opt" : "bks");
             row.SetField("Optimum", makespan);
             row.SetField("Solution", xTimeJob);
@@ -78,6 +88,17 @@ namespace ALICE
                 opts[i] = (int) Rows[i]["Optimum"];
             }
             return opts;
+        }
+
+        public void Read()
+        {
+            List<string> header;
+            List<string[]> content = CSV.Read(FileInfo, out header);
+
+            foreach (var line in content)
+            {
+                AddOptMakespan(line[0], Convert.ToInt32(line[1]), line[2] == "opt", null, 0);
+            }
         }
 
         public void Write()

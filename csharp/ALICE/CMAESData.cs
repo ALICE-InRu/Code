@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace ALICE
 {
@@ -12,7 +13,6 @@ namespace ALICE
     {
         private const int NUM_FEATURES = (int) Features.Local.Count;
         private readonly int N; // number of objective variables (here: N = problem dimension * NumFeatures)
-
         
         private readonly int[] _optMakespans;
 
@@ -52,8 +52,6 @@ namespace ALICE
 
         private double[] xmean, xold;
 
-        public string Step { get; private set; }
-
         private class Offspring
         {
             public double[] Variable;
@@ -68,19 +66,29 @@ namespace ALICE
             public int Generation;
         }
 
-        public CMAESData(string distribution, string dimension, string strObjFun, bool dependentModel)
-            : base(distribution, dimension, DataSet.train, false)
+        public enum ObjectiveFunction
         {
+            MinimumMakespan,
+            MinimumRho
+        }
+
+        public CMAESData(string distribution, string dimension, ObjectiveFunction objFun, bool dependentModel)
+            : base(distribution, dimension, DataSet.train, false, objFun == ObjectiveFunction.MinimumRho)
+        {
+            AlreadySavedPID = Generation;
+
             FileInfo =
-                new FileInfo(String.Format("full.{0}.{1}.{2}.weights.{3}.csv", Distribution, Dimension, strObjFun,
+                new FileInfo(String.Format("C://Users//helga//Alice//Code//CMAES//full.{0}.{1}.{2}.weights.{3}.csv", Distribution, Dimension, objFun,
                     dependentModel ? "timedependent" : "timeindependent"));
+
             FileInfoResults =
-                new FileInfo(String.Format(@"results\output.{0}.{1}.{2}.weights.{3}.csv", Distribution, Dimension,
-                    strObjFun, dependentModel ? "timedependent" : "timeindependent"));
+                new FileInfo(
+                    String.Format("C://Users//helga//Alice//Code//CMAES//results//output.{0}.{1}.{2}.weights.{3}.csv",
+                        Distribution, Dimension, objFun, dependentModel ? "timedependent" : "timeindependent"));
 
             if (FileInfo.Exists)
             {
-                Step = String.Format("Optimistation already completed, see results in {0}", FileInfo.Name);
+                //throw new WarningException(String.Format("Optimistation already completed, see results in {0}", FileInfo.Name));
                 OptimistationComplete = true;
                 return;
             }
@@ -88,18 +96,21 @@ namespace ALICE
             if (FileInfoResults.Exists)
             {
                 // need to read last run here - until then, start from scratch
-                // _alreadyAutoSavedGeneration = Generation;
-                throw new NotImplementedException();
-                // FileInfoResults.Delete();
+                // AlreadySavedPID=Generation
+                // throw new NotImplementedException();
+                FileInfoResults.Delete();
             }
-            
+
             //Get the method information using the method info class
-            if (strObjFun.ToLower().Contains("makespan"))
-                _objFun = MinimumMakespan;
-            else
+            switch (objFun)
             {
-                _optMakespans = OptimumArray();
-                _objFun = MinimumRho;
+                case ObjectiveFunction.MinimumMakespan:
+                    _objFun = MinimumMakespan;
+                    break;
+                case ObjectiveFunction.MinimumRho:
+                    _optMakespans = OptimumArray();
+                    _objFun = MinimumRho;
+                    break;
             }
 
             N = NUM_FEATURES;
@@ -194,11 +205,11 @@ namespace ALICE
             LinearModel linear = ConvertToLinearModel(x);
 
             int[] makespans = new int[NumInstances];
-            for (int pid = 0; pid < NumInstances; pid++)
+            for (int pid = 1; pid <= NumInstances; pid++)
             {
                 Schedule jssp = GetEmptySchedule(GetName(pid));
                 jssp.ApplyCDR(linear);
-                makespans[pid] = jssp.Makespan;
+                makespans[pid - 1] = jssp.Makespan;
             }
             return makespans;
         }
@@ -221,8 +232,30 @@ namespace ALICE
             return rho.Average();
         }
 
+        public double Minimum
+        {
+            get { return _population[0].Fitness; }
+        }
+
+        public double[] DecVals
+        {
+            get { return _population[0].Variable; }
+        }
+
+        public new void Optimise()
+        {
+            Optimise(false);
+            Write();
+        }
+
+        public new string Optimise(int generation)
+        {
+            Optimise(true);
+            return String.Format(CultureInfo.InvariantCulture, "{0}:{1} z*={2:F2}", FileInfo.Name, Generation, Minimum);
+        }
+
         // finds optimal weights for linear (local) model w.r.t. minimum either makespan or rho values
-        public double[] Optimize(out double minimum, bool tryOnce = false)
+        private void Optimise(bool tryOnce)
         {
             #region -------------------- Generation Loop --------------------------------
 
@@ -232,8 +265,6 @@ namespace ALICE
                 GenerationLoop();
 
                 #region save temporal solution
-
-                Step = String.Format(CultureInfo.InvariantCulture, "#{0}: z*={1:F2}", Generation, _population[0].Fitness);
 
                 _output.Add(new SummaryCMA
                 {
@@ -249,9 +280,8 @@ namespace ALICE
                 if (_population[0].Fitness <= _stopFitness || D.Max() > 1e7*D.Min())
                     break;
 
-                if (!tryOnce) continue;
-                minimum = _population[0].Fitness;
-                return null;
+                if (tryOnce)
+                    return;
             }
 
             #endregion
@@ -259,11 +289,6 @@ namespace ALICE
             OptimistationComplete = true;
 
             #region ------------- Final Message and Plotting Figures --------------------
-
-            // Notice that xmean is expected to be even better.
-            var xmin = _population[0].Variable;
-            minimum = _population[0].Fitness;
-            Step = String.Format("#{0} evals have {1} fitness", CountEval, minimum);
 
             //figure(1); hold off; semilogy(abs(out.dat)); hold on;  % abs for negative fitness
             //semilogy(out.dat(:,1) - min(out.dat(:,1)), 'k-');  % difference to best ever fitness, zero is not displayed
@@ -273,7 +298,6 @@ namespace ALICE
 
             #endregion
 
-            return xmin;
         }
 
         private void GenerationLoop()
@@ -385,23 +409,18 @@ namespace ALICE
             #endregion
         }
 
-        public void WriteFinalResultsCSV()
+        public new void Write()
         {
-            WriteResultsCSV();
+            WriteFileInfoResults(_output.Where(x => x.Generation > AlreadySavedPID).ToList(), N, NUM_FEATURES);
+            AlreadySavedPID = Generation;
+         
+            if (!OptimistationComplete) return;
             SummaryCMA best = _output.FindLast(x => Math.Abs(x.Fitness - _output.Min(y => y.Fitness)) < 1e-8);
             LinearModel bestWeights = ConvertToLinearModel(best.DistributionMeanVector);
-
-            WriteCMAFinalResults(bestWeights);
+            WriteFileInfo(bestWeights);
         }
 
-        public void WriteResultsCSV()
-        {
-            WriteCMAResults(_output.Where(x => x.Generation > AlreadySavedPID).ToList(), N, NUM_FEATURES);
-
-            AlreadySavedPID = Generation;
-        }
-
-        public void WriteCMAResults(List<SummaryCMA> output, int numDecsVariables, int numFeatures)
+        private void WriteFileInfoResults(List<SummaryCMA> output, int numDecsVariables, int numFeatures)
         {
             var fs = new FileStream(FileInfoResults.FullName, FileMode.Append, FileAccess.Write);
             using (var st = new StreamWriter(fs))
@@ -433,7 +452,7 @@ namespace ALICE
             fs.Close();
         }
 
-        public void WriteCMAFinalResults(LinearModel linearModel)
+        private void WriteFileInfo(LinearModel linearModel)
         {
             var fs = new FileStream(FileInfo.FullName, FileMode.Create, FileAccess.Write);
             using (var st = new StreamWriter(fs))
