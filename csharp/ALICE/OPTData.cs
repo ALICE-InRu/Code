@@ -91,12 +91,16 @@ namespace ALICE
                     st.WriteLine(HEADER);
                 }
 
-                foreach (var info in from DataRow row in Rows
-                    let pid = (int) row["PID"]
-                    where pid > AlreadySavedPID
-                    select String.Format("{0},{1},{2}", row["Name"], row["Optimum"], row["Solved"]))
+                foreach (
+                    DataRow row in
+                        from DataRow row in Rows let pid = (int) row["PID"] where pid > AlreadySavedPID select row)
                 {
-                    st.WriteLine(info);
+                    if (row["Optimum"].ToString() == "")
+                    {
+                        AlreadySavedPID = (int) row["PID"] - 1;
+                        break;
+                    }
+                    st.WriteLine("{0},{1},{2}", row["Name"], row["Optimum"], row["Solved"]);
                 }
                 st.Close();
             }
