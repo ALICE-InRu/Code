@@ -12,8 +12,8 @@ namespace ALICE
     {
         public int NumPreferences;
 
-        private readonly List<PrefSet>[,] _diffData;
-        private readonly Func<List<TrSet>, int, int, int> _rankingFunction;
+        private readonly List<Preference>[,] _diffData;
+        private readonly Func<List<Preference>, int, int, int> _rankingFunction;
 
         public enum Ranking
         {
@@ -23,14 +23,6 @@ namespace ALICE
             All = 'a'
         };
 
-        public class PrefSet
-        {
-            public Features Feature;
-            public int ResultingOptMakespan;
-            public int Rank;
-            public bool Followed;
-        }
-
         public PreferenceSet(string distribution, string dimension, Trajectory track, bool extended, Ranking rank)
             : base(distribution, dimension, track, extended, Features.Mode.Local)
         {
@@ -39,7 +31,7 @@ namespace ALICE
                     "C://Users//helga//Alice//Code//trainingData//{0}.diff.{1}.csv",
                     FileInfo.Name.Substring(0, FileInfo.Name.Length - FileInfo.Extension.Length), (char) rank));
 
-            Columns.Add("Rank", typeof(int));
+            Columns.Add("Rank", typeof (int));
 
             var ranking = rank;
             switch (ranking)
@@ -58,14 +50,22 @@ namespace ALICE
                     break;
             }
 
-            ApplyAll(Retrace,false);
-            NumApplied = 0;
-            _diffData = new List<PrefSet>[NumInstances, NumDimension];
+            ApplyAll(Retrace, null);
+            _diffData = new List<Preference>[NumInstances, NumDimension];
+            for (int pid = 1; pid <= AlreadySavedPID; pid++)
+                for (int step = 0; step < NumDimension; step++)
+                    _diffData[pid - 1, step] = new List<Preference>();
+        }
+
+        public new void Write()
+        {
+            if (NumApplied == AlreadySavedPID)
+                Write(FileMode.Create, _diffData);
         }
 
         public new void Apply()
         {
-            ApplyAll(Apply, true);
+            ApplyAll(Apply, _diffData);
         }
 
         public new string Apply(int pid)
@@ -79,14 +79,14 @@ namespace ALICE
             int currentNumPreferences = 0;
             for (var step = 0; step < NumDimension; step++)
             {
-                var prefs = TrData[pid - 1, step].ToList().OrderBy(p => p.Rank).ToList();
+                var prefs = Preferences[pid - 1, step].ToList().OrderBy(p => p.Rank).ToList();
                 currentNumPreferences += _rankingFunction(prefs, pid, step);
             }
             NumPreferences += currentNumPreferences;
             return String.Format("{0}:{1} #{2} pref", FileInfo.Name, pid, currentNumPreferences);
         }
 
-        private int BasicRanking(List<TrSet> prefs, int pid, int step)
+        private int BasicRanking(List<Preference> prefs, int pid, int step)
         {
             for (var opt = 0; opt < prefs.Count; opt++)
             {
@@ -98,23 +98,23 @@ namespace ALICE
                 for (var sub = opt + 1; sub < prefs.Count; sub++)
                 {
                     if (prefs[opt].Rank == prefs[sub].Rank) continue;
-                    _diffData[pid, step].Add(prefs[opt].Difference(prefs[sub]));
-                    _diffData[pid, step].Add(prefs[sub].Difference(prefs[opt]));
+                    _diffData[pid - 1, step].Add(prefs[opt].Difference(prefs[sub]));
+                    _diffData[pid - 1, step].Add(prefs[sub].Difference(prefs[opt]));
                 }
             }
-            return _diffData[pid, step].Count;
+            return _diffData[pid - 1, step].Count;
         }
 
-        private int FullParetoRanking(List<TrSet> prefs, int pid, int step)
+        private int FullParetoRanking(List<Preference> prefs, int pid, int step)
         {
-            _diffData[pid, step].AddRange(from pi in prefs
+            _diffData[pid - 1, step].AddRange(from pi in prefs
                 from pj in prefs
                 where /* subsequent ranking */ Math.Abs(pi.Rank - pj.Rank) == 1
                 select pi.Difference(pj));
-            return _diffData[pid, step].Count;
+            return _diffData[pid - 1, step].Count;
         }
 
-        private int PartialParetoRanking(List<TrSet> prefs, int pid, int step)
+        private int PartialParetoRanking(List<Preference> prefs, int pid, int step)
         {
             // subsequent ranking
             // partial, yet sufficient, pareto ranking
@@ -126,24 +126,24 @@ namespace ALICE
                         if (!inTrainingSet[i] | !inTrainingSet[j])
                         {
                             var ijDiff = prefs[i].Difference(prefs[j]);
-                            _diffData[pid, step].Add(ijDiff);
+                            _diffData[pid - 1, step].Add(ijDiff);
 
                             var jiDiff = prefs[j].Difference(prefs[i]);
-                            _diffData[pid, step].Add(jiDiff);
+                            _diffData[pid - 1, step].Add(jiDiff);
 
                             inTrainingSet[i] = true;
                             inTrainingSet[j] = true;
                         }
-            return _diffData[pid, step].Count;
+            return _diffData[pid - 1, step].Count;
         }
 
-        private int AllRankings(List<TrSet> prefs, int pid, int step)
+        private int AllRankings(List<Preference> prefs, int pid, int step)
         {
-            _diffData[pid, step].AddRange(from pi in prefs
+            _diffData[pid - 1, step].AddRange(from pi in prefs
                 from pj in prefs
                 where /* full ranking */ pi.Rank != pj.Rank
                 select pi.Difference(pj));
-            return _diffData[pid, step].Count;
+            return _diffData[pid - 1, step].Count;
         }
     }
 }

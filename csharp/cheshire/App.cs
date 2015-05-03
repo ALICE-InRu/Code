@@ -72,7 +72,6 @@ namespace Chesire
 
         private void buttonSDRStart_Click(object sender, EventArgs e)
         {
-
             SDRData[] sets = (from set in Set.CheckedItems.Cast<RawData.DataSet>()
                 from dim in Dimension.CheckedItems.Cast<string>()
                 from problem in Problems.CheckedItems.Cast<string>()
@@ -505,19 +504,6 @@ namespace Chesire
                 bkgWorkerPrefSet.ReportProgress((int) (100.0*iter/sets.Length),
                     new object[] {0, String.Format("Starting ranking {0}", set.FileInfo.Name)});
                 set.Apply();
-                for (int pid = 1; pid <= set.AlreadySavedPID; pid++)
-                {
-                    string info = set.Apply(pid);
-                    bkgWorkerPrefSet.ReportProgress((int) (100.0*pid/set.AlreadySavedPID),
-                        new object[] {1, info});
-
-                    if (!bkgWorkerPrefSet.CancellationPending) continue;
-                    bkgWorkerPrefSet.ReportProgress((int) (100.0*pid/set.NumInstances),
-                        new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
-                    e.Cancel = true;
-                    return;
-                }
-                set.Write();
                 bkgWorkerPrefSet.ReportProgress((int) (100.0*++iter/sets.Length),
                     new object[]
                     {

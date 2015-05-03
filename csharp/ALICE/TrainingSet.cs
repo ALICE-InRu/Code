@@ -27,32 +27,37 @@ namespace ALICE
             Count
         }
 
-        private readonly Func<Schedule, List<TrSet>, int> _trajectory;
+        private readonly Func<Schedule, List<Preference>, int> _trajectory;
         internal readonly Trajectory Track;
 
-        public int NumFeatures { get; private set; }
+        public int NumFeatures { get; internal set; }
         private const int TMLIM_STEP = 2; // max 2 min per step/possible dispatch
 
         internal Features.Mode FeatureMode = Features.Mode.Local;
 
-        internal readonly List<TrSet>[,] TrData;
+        internal readonly List<Preference>[,] Preferences;
         internal Random Random = new Random();
 
         internal readonly LinearModel Model;
         private readonly double _beta; // only used in imitation learning 
 
-        internal class TrSet : PreferenceSet.PrefSet
+        internal class Preference 
         {
+            public Features Feature;
+            public int ResultingOptMakespan;
+            public int Rank;
+            public bool Followed;
+
             public Schedule.Dispatch Dispatch;
             public int SimplexIterations;
 
-            public TrSet(Schedule.Dispatch dispatch, Features features)
+            public Preference(Schedule.Dispatch dispatch, Features features)
             {
                 Dispatch = dispatch;
                 Feature = features;
             }
 
-            public TrSet(Schedule.Dispatch dispatch, bool followed, int resultingOptMakespan, int rank)
+            public Preference(Schedule.Dispatch dispatch, bool followed, int resultingOptMakespan, int rank)
             {
                 Dispatch = dispatch;
                 Followed = followed;
@@ -60,17 +65,14 @@ namespace ALICE
                 Rank = rank;
             }
 
-            public PreferenceSet.PrefSet Difference(TrSet other)
+            public Preference Difference(Preference other)
             {
-                var diff = new PreferenceSet.PrefSet
+                var diff = new Preference(null, Feature.Difference(other.Feature))
                 {
                     Rank = Rank - other.Rank,
                     ResultingOptMakespan = ResultingOptMakespan - other.ResultingOptMakespan,
-                    Feature = Feature.Difference(other.Feature),
                     Followed = Followed | other.Followed
-                    //Rho = Rho - other.Rho
                 };
-                //(this.Rank == other.Rank ? 0 : (this.Rank < other.Rank) ? 1 : -1);
                 return diff;
             }
         }
@@ -136,7 +138,7 @@ namespace ALICE
 
             SetAlreadySavedPID();
 
-            TrData = new List<TrSet>[NumInstances, NumDimension];
+            Preferences = new List<Preference>[NumInstances, NumDimension];
         }
 
         private string GetImitationModel(out LinearModel model, out double beta, out int currentIter, bool extended,
@@ -190,17 +192,19 @@ namespace ALICE
 
         public void Write()
         {
-            Write(FileMode.Append);
+            Write(FileMode.Append, Preferences);
         }
 
-        internal void Write(FileMode fileMode)
+        internal void Write(FileMode fileMode, List<Preference>[,] data)
         {
+            bool dispatch = data == Preferences; 
+
             var fs = new FileStream(FileInfo.FullName, fileMode, FileAccess.Write);
             using (var st = new StreamWriter(fs))
             {
                 if (fs.Length == 0) // header is missing 
                 {
-                    var header = "PID,Step,Dispatch,Followed,ResultingOptMakespan";
+                    var header = String.Format("PID,Step{0},Followed,ResultingOptMakespan,Rank", dispatch ? ",Dispatch" : "");
                     switch (FeatureMode)
                     {
                         case Features.Mode.Global:
@@ -212,7 +216,6 @@ namespace ALICE
                                 header += string.Format(",phi.{0}", (Features.Local) i);
                             break;
                     }
-                    header += ",Rank";
                     st.WriteLine(header);
                 }
 
@@ -220,7 +223,7 @@ namespace ALICE
                 {
                     for (int step = 0; step < NumDimension; step++)
                     {
-                        var prefs = TrData[pid - 1, step];
+                        var prefs = data[pid - 1, step];
                         if (prefs == null)
                         {
                             AlreadySavedPID = pid - 1;
@@ -230,8 +233,9 @@ namespace ALICE
                         }
                         foreach (var pref in prefs)
                         {
-                            string info = String.Format("{0},{1},{2},{3},{4}", pid, step, pref.Dispatch.Name,
-                                pref.Followed ? 1 : 0, pref.ResultingOptMakespan);
+                            string info = String.Format("{0},{1}{2},{3},{4},{5}", pid, step,
+                                dispatch ? String.Format(",{0}", pref.Dispatch.Name) : "",
+                                pref.Followed ? 1 : 0, pref.ResultingOptMakespan, pref.Rank);
                             switch (FeatureMode)
                             {
                                 case Features.Mode.Global:
@@ -243,7 +247,6 @@ namespace ALICE
                                         info += string.Format(",{0:0}", pref.Feature.PhiLocal[i]);
                                     break;
                             }
-                            info += String.Format(",{0}", pref.Rank);
                             st.WriteLine(info);
                         }
                     }
@@ -277,11 +280,12 @@ namespace ALICE
             int currentNumFeatures = 0;
             for (int step = 0; step < prob.Dimension; step++)
             {
-                TrData[pid - 1, step] = FindFeaturesForAllJobs(jssp, gurobiModel);
-                int dispatchedJob = _trajectory(jssp, TrData[pid - 1, step]);
+                Preferences[pid - 1, step] = FindFeaturesForAllJobs(jssp, gurobiModel);
+                int dispatchedJob = _trajectory(jssp, Preferences[pid - 1, step]);
                 jssp.Dispatch1(dispatchedJob, Features.Mode.None);
                 gurobiModel.CommitConstraint(jssp.Sequence[step], step);
-                currentNumFeatures += TrData[pid - 1, step].Count;
+                Preferences[pid - 1, step].Find(x => x.Dispatch.Job == dispatchedJob).Followed = true;
+                currentNumFeatures += Preferences[pid - 1, step].Count;
             }
             NumFeatures += currentNumFeatures;
             gurobiModel.Dispose();
@@ -293,7 +297,7 @@ namespace ALICE
         {
             for (var step = 0; step < NumDimension; step++)
             {
-                var prefs = TrData[pid - 1, step];
+                var prefs = Preferences[pid - 1, step];
                 var cmax = prefs.Select(p => p.ResultingOptMakespan).Distinct().OrderBy(x => x).ToList();
                 foreach (var pref in prefs)
                 {
@@ -303,14 +307,14 @@ namespace ALICE
             }
         }
 
-        private List<TrSet> FindFeaturesForAllJobs(Schedule jssp, GurobiJspModel gurobiModel)
+        private List<Preference> FindFeaturesForAllJobs(Schedule jssp, GurobiJspModel gurobiModel)
         {
-            TrSet[] prefs = new TrSet[jssp.ReadyJobs.Count];
+            Preference[] prefs = new Preference[jssp.ReadyJobs.Count];
             for (int r = 0; r < jssp.ReadyJobs.Count; r++)
             {
                 Schedule lookahead = jssp.Clone();
                 Features phi = lookahead.Dispatch1(jssp.ReadyJobs[r], FeatureMode); // commit the lookahead
-                prefs[r] = new TrSet(lookahead.Sequence[lookahead.Sequence.Count - 1], phi);
+                prefs[r] = new Preference(lookahead.Sequence[lookahead.Sequence.Count - 1], phi);
                 // need to optimize to label featuers correctly -- this is computationally intensive
                 gurobiModel.Lookahead(prefs[r].Dispatch, out prefs[r].ResultingOptMakespan);
                 prefs[r].SimplexIterations = gurobiModel.SimplexIterations;
@@ -318,14 +322,14 @@ namespace ALICE
             return prefs.ToList();
         }
 
-        private int ChooseOptJob(Schedule jssp, List<TrSet> prefs)
+        private int ChooseOptJob(Schedule jssp, List<Preference> prefs)
         {
             int minMakespan = prefs.Min(p => p.ResultingOptMakespan);
-            List<TrSet> optimums = prefs.Where(p => p.ResultingOptMakespan == minMakespan).ToList();
+            List<Preference> optimums = prefs.Where(p => p.ResultingOptMakespan == minMakespan).ToList();
             return optimums.Count == 1 ? optimums[0].Dispatch.Job : optimums[Random.Next(0, optimums.Count)].Dispatch.Job;
         }
 
-        private int ChooseWeightedJob(Schedule jssp, List<TrSet> prefs)
+        private int ChooseWeightedJob(Schedule jssp, List<Preference> prefs)
         {
             List<double> priority = new List<double>(jssp.ReadyJobs.Count);
             for (int r = 0; r < jssp.ReadyJobs.Count; r++)
@@ -333,7 +337,7 @@ namespace ALICE
             return jssp.ReadyJobs[priority.FindIndex(p => Math.Abs(p - priority.Max()) < 0.001)];
         }
 
-        private int UseImitationLearning(Schedule jssp, List<TrSet> prefs)
+        private int UseImitationLearning(Schedule jssp, List<Preference> prefs)
         {
             // pi_i = beta_i*pi_star + (1-beta_i)*pi_i^hat
             // i: ith iteration of imitation learning
@@ -345,7 +349,7 @@ namespace ALICE
                 : ChooseOptJob(jssp, prefs);
         }
 
-        private int ChooseSDRJob(Schedule jssp, List<TrSet> prefs = null)
+        private int ChooseSDRJob(Schedule jssp, List<Preference> prefs = null)
         {
             return jssp.JobChosenBySDR((SDRData.SDR) Track);
         }

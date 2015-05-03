@@ -39,7 +39,7 @@ namespace ALICE
             int pid, step;
             for (pid = 1; pid <= AlreadySavedPID; pid++)
                 for (step = 0; step < NumDimension; step++)
-                    TrData[pid - 1, step] = new List<TrSet>();
+                    Preferences[pid - 1, step] = new List<Preference>();
 
             foreach (var line in content)
             {
@@ -53,7 +53,7 @@ namespace ALICE
                 int rank = iRank >= 0 ? Convert.ToInt32(line[iRank]) : 0;
 
                 Schedule.Dispatch dispatch = new Schedule.Dispatch(line[iDispatch]);
-                TrData[pid - 1, step - minStep].Add(new TrSet(dispatch, followed, resultingOptMakespan, rank));
+                Preferences[pid - 1, step - minStep].Add(new Preference(dispatch, followed, resultingOptMakespan, rank));
             }
 
             if (iRank >= 0) return;
@@ -64,36 +64,41 @@ namespace ALICE
         public new void Write()
         {
             if (NumApplied == AlreadySavedPID)
-                Write(FileMode.Create);
+                Write(FileMode.Create, Preferences);
         }
 
-        internal void ApplyAll(Func<int, string> applyFunc, bool write)
+        internal void ApplyAll(Func<int, string> applyFunc, List<Preference>[,] writeData)
         {
             for (int pid = 1; pid <= AlreadySavedPID; pid++)
                 applyFunc(pid);
-            if (write)
-                Write();
+            if (writeData != null)
+                Write(FileMode.Create, writeData);
         }
 
         public new void Apply()
         {
-            ApplyAll(Apply, true);
+            ApplyAll(Apply, Preferences);
         }
 
         public new string Apply(int pid)
         {
             NumApplied++;
-            return Retrace(pid);
+            return Retrace(pid, FeatureMode == Features.Mode.Local);
         }
 
         internal string Retrace(int pid)
         {
+            return Retrace(pid, false);
+        }
+
+        private string Retrace(int pid, bool canCollectAndLabel)
+        {
             if (pid > AlreadySavedPID)
                 throw new Exception(String.Format("PID {0} exeeds what has already been created. Cannot retrace!", pid));
 
-            if (TrData[pid - 1, 0].Count == 0)
+            if (Preferences[pid - 1, 0].Count == 0)
             {
-                return FeatureMode == Features.Mode.Local
+                return canCollectAndLabel
                     ? String.Format("{0} - from scratch!", CollectAndLabel(pid))
                     : String.Format("PID {0} doesn't exist!", pid);
             }
@@ -103,22 +108,24 @@ namespace ALICE
             int currentNumFeatures = 0;
             for (var step = 0; step < NumDimension; step++)
             {
-                if (!ValidDispatches(ref TrData[pid - 1, step], jssp))
-                    throw new Exception("Retracing gave an invalid dispatch!");
+                if (!ValidDispatches(ref Preferences[pid - 1, step], jssp))
+                    return canCollectAndLabel
+                        ? String.Format("{0} - from scratch!", CollectAndLabel(pid))
+                        : String.Format("PID {0} gave an invalid dispatch!", pid);
 
-                currentNumFeatures += TrData[pid - 1, step].Count;
+                currentNumFeatures += Preferences[pid - 1, step].Count;
 
                 #region update features of possible jobs
 
                 int dispatchedJob;
-                if (TrData[pid - 1, step].Count > 0)
+                if (Preferences[pid - 1, step].Count > 0)
                 {
-                    foreach (var p in TrData[pid - 1, step])
+                    foreach (var p in Preferences[pid - 1, step])
                     {
                         var lookahead = jssp.Clone();
                         p.Feature = lookahead.Dispatch1(p.Dispatch.Job, FeatureMode);
                     }
-                    var followed = TrData[pid - 1, step].Find(p => p.Followed);
+                    var followed = Preferences[pid - 1, step].Find(p => p.Followed);
                     dispatchedJob = followed == null ? jssp.JobChosenBySDR((SDRData.SDR) Track) : followed.Dispatch.Job;
                 }
                 else
@@ -132,10 +139,11 @@ namespace ALICE
 
                 jssp.Dispatch1(dispatchedJob, Features.Mode.None);
             }
+            NumFeatures += currentNumFeatures;
             return String.Format("{0}:{1} #{2} phi", FileInfo.Name, pid, currentNumFeatures);
         }
 
-        private bool ValidDispatches(ref List<TrSet> prefs, Schedule jssp)
+        private bool ValidDispatches(ref List<Preference> prefs, Schedule jssp)
         {
             if (prefs.Count > jssp.ReadyJobs.Count)
             {
@@ -144,13 +152,19 @@ namespace ALICE
                     .Select(group => group.First()).ToList();
             }
 
-            if (prefs.Count == 0 && jssp.Sequence.Count >= NumDimension - 1) return true; 
+            if (prefs.Count == 0 && jssp.Sequence.Count >= NumDimension - 1)
+                return true;
+            
+            if (prefs.Count != jssp.ReadyJobs.Count)
+                return false;
 
-            if (prefs.FindIndex(p => p.Dispatch.Mac < 0) == -1 &&
-                prefs.Count(p => p.Followed) == 1)
+            if (prefs.Any(p => p.Dispatch.Mac < 0))
+                return false;
+
+            if (prefs.Count(p => p.Followed) == 1)
                 return true;
 
-            foreach (TrSet pref in prefs)
+            foreach (Preference pref in prefs)
             {
                 jssp.FindDispatch(pref.Dispatch.Job, out pref.Dispatch);
             }
