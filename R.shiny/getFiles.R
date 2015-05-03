@@ -11,25 +11,18 @@ get.files <- function(dir, files, addFileNameColumn=F){
 
 get.files.OPT <- function(){
   opt=get.files('../OPT', list.files('../OPT'))
-  colnames(opt)[grep('Makespan',colnames(opt))]='Optimum'
-  opt=subset(opt,Solved=='opt')
-  opt$Problem = factorProblem(opt)
-  opt$Dimension = factorDimension(opt)
-  opt$Set=factorSet(opt$Set)
-  return(opt[,names(opt) %in%
-               c('Name','Problem','Dimension','PID','Set','Optimum') ])
+  opt=subset(opt,!is.na(Optimum))
+  opt=factorFromName(opt)
+  return(opt)
 }
 
 get.files.SDR <- function(){
   sdr=get.files('../SDR', list.files('../SDR'))
-  sdr$Problem = factorProblem(sdr)
-  sdr$Dimension = factorDimension(sdr)
+  sdr=factorFromName(sdr)
   sdr$SDR=factorSDR(sdr$SDR)
   sdr$Rho=factorRho(sdr)
-  sdr$Set=factorSet(sdr$Set)
-  sdr=subset(sdr,!is.na(Rho))
-  return(sdr[,names(sdr) %in%
-             c('Name','Problem','Dimension','PID','Set','Makespan','Rho','SDR') ])
+  sdr=subset(sdr,!is.na(Rho) & !is.na(SDR))
+  return(sdr)
 }
 
 Ntrain10x10=300

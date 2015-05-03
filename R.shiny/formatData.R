@@ -4,6 +4,16 @@ getAttribute<-function(str,regexpr.m,id,asStr=T){
   return(as.numeric(str))
 }
 
+factorFromName <- function(x){
+  m=regexpr("(?<Problem>[j|f].[a-z_1]+).(?<Dimension>[0-9]+x[0-9]+).(?<Set>train|test).(?<PID>[0-9]+)", x$Name, perl = T)
+  x$Problem=getAttribute(x$Name,m,1)
+  x$Problem = factorProblem(x)
+  x$Dimension=getAttribute(x$Name,m,2)
+  x$Dimension = factorDimension(x)
+  x$Set=factorSet(getAttribute(x$Name,m,3))
+  return(x)
+}
+
 factorProblem <- function(x, simple=T){
   if('Shop' %in% names(x) & 'Distribution' %in% names(x) ) {
     x$Problem=interaction(x$Shop,x$Distribution)
