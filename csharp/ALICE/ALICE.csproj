@@ -34,8 +34,9 @@
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="alglibnet2">
-      <HintPath>..\..\..\..\..\Toolbox\alglib-3.9.0\csharp\alglibnet2.dll</HintPath>
+    <Reference Include="alglibnet2, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Toolbox\alglib-3.9.0\csharp\alglibnet2.dll</HintPath>
     </Reference>
     <Reference Include="Gurobi60.NET">
       <HintPath>..\..\..\..\..\Toolbox\gurobi603\win64\bin\Gurobi60.NET.dll</HintPath>

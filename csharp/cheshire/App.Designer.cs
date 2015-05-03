@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using ALICE;
 
-namespace Chesire
+namespace Cheshire
 {
     partial class App
     {
@@ -33,7 +33,6 @@ namespace Chesire
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.bkgWorkerPrefSet = new System.ComponentModel.BackgroundWorker();
             this.bkgWorkerOptimise = new System.ComponentModel.BackgroundWorker();
             this.bkgWorkerTrSet = new System.ComponentModel.BackgroundWorker();
@@ -45,7 +44,6 @@ namespace Chesire
             this.Extended = new System.Windows.Forms.CheckedListBox();
             this.groupBoxProblem = new System.Windows.Forms.GroupBox();
             this.Problems = new System.Windows.Forms.CheckedListBox();
-            this.ORLIB = new System.Windows.Forms.CheckedListBox();
             this.groupBoxDim = new System.Windows.Forms.GroupBox();
             this.Dimension = new System.Windows.Forms.CheckedListBox();
             this.progressBarInner = new System.Windows.Forms.ProgressBar();
@@ -57,11 +55,11 @@ namespace Chesire
             this.groupBoxBDR = new System.Windows.Forms.GroupBox();
             this.applyBDR = new System.Windows.Forms.Button();
             this.splitBDR = new System.Windows.Forms.NumericUpDown();
-            this.label7 = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
+            this.labelSplitBDR = new System.Windows.Forms.Label();
+            this.lblSDR1 = new System.Windows.Forms.Label();
             this.SDR2 = new System.Windows.Forms.CheckedListBox();
             this.SDR1 = new System.Windows.Forms.CheckedListBox();
-            this.label6 = new System.Windows.Forms.Label();
+            this.lblSDR2 = new System.Windows.Forms.Label();
             this.groupBoxPREF = new System.Windows.Forms.GroupBox();
             this.groupBoxTracks = new System.Windows.Forms.GroupBox();
             this.cancelAsyncButtonTrSet = new System.Windows.Forms.Button();
@@ -77,21 +75,29 @@ namespace Chesire
             this.PhiLocal = new System.Windows.Forms.RadioButton();
             this.PhiGlobal = new System.Windows.Forms.RadioButton();
             this.groupBoxDependent = new System.Windows.Forms.GroupBox();
-            this.radioButtonCMAIndependent = new System.Windows.Forms.RadioButton();
-            this.radioButtonCMADependent = new System.Windows.Forms.RadioButton();
+            this.IndependentModel = new System.Windows.Forms.RadioButton();
+            this.DependentModel = new System.Windows.Forms.RadioButton();
             this.groupBoxSDR = new System.Windows.Forms.GroupBox();
             this.applySDR = new System.Windows.Forms.Button();
             this.SDR = new System.Windows.Forms.CheckedListBox();
             this.groupBoxOpt = new System.Windows.Forms.GroupBox();
-            this.labelTmLimit = new System.Windows.Forms.Label();
-            this.cancelAsyncButtonOptimize = new System.Windows.Forms.Button();
             this.TimeLimit = new System.Windows.Forms.NumericUpDown();
+            this.lblTimeLimit = new System.Windows.Forms.Label();
+            this.cancelAsyncButtonOptimize = new System.Windows.Forms.Button();
             this.startAsyncButtonOptimize = new System.Windows.Forms.Button();
             this.progressBarOuter = new System.Windows.Forms.ProgressBar();
             this.splitContainerForm = new System.Windows.Forms.SplitContainer();
+            this.groupApply = new System.Windows.Forms.GroupBox();
+            this.groupBoxDimensionApply = new System.Windows.Forms.GroupBox();
+            this.DimensionApply = new System.Windows.Forms.CheckedListBox();
+            this.ORLIBApply = new System.Windows.Forms.CheckedListBox();
+            this.groupBoxProblemApply = new System.Windows.Forms.GroupBox();
+            this.ProblemApply = new System.Windows.Forms.CheckedListBox();
+            this.cancelAsyncButtonApply = new System.Windows.Forms.Button();
+            this.startAsyncButtonApply = new System.Windows.Forms.Button();
             this.textHeader = new System.Windows.Forms.RichTextBox();
             this.textContent = new System.Windows.Forms.RichTextBox();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.bkgApply = new System.ComponentModel.BackgroundWorker();
             this.groupBoxData.SuspendLayout();
             this.groupBoxSet.SuspendLayout();
             this.groupBoxProblem.SuspendLayout();
@@ -111,6 +117,9 @@ namespace Chesire
             this.splitContainerForm.Panel1.SuspendLayout();
             this.splitContainerForm.Panel2.SuspendLayout();
             this.splitContainerForm.SuspendLayout();
+            this.groupApply.SuspendLayout();
+            this.groupBoxDimensionApply.SuspendLayout();
+            this.groupBoxProblemApply.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBoxData
@@ -120,7 +129,7 @@ namespace Chesire
             this.groupBoxData.Controls.Add(this.groupBoxDim);
             this.groupBoxData.Location = new System.Drawing.Point(10, 10);
             this.groupBoxData.Name = "groupBoxData";
-            this.groupBoxData.Size = new System.Drawing.Size(130, 404);
+            this.groupBoxData.Size = new System.Drawing.Size(130, 377);
             this.groupBoxData.TabIndex = 51;
             this.groupBoxData.TabStop = false;
             this.groupBoxData.Text = "Problem instances";
@@ -129,7 +138,7 @@ namespace Chesire
             // 
             this.groupBoxSet.Controls.Add(this.Set);
             this.groupBoxSet.Controls.Add(this.Extended);
-            this.groupBoxSet.Location = new System.Drawing.Point(6, 320);
+            this.groupBoxSet.Location = new System.Drawing.Point(6, 287);
             this.groupBoxSet.Name = "groupBoxSet";
             this.groupBoxSet.Size = new System.Drawing.Size(119, 80);
             this.groupBoxSet.TabIndex = 52;
@@ -139,23 +148,23 @@ namespace Chesire
             // Set
             // 
             this.Set.FormattingEnabled = true;
-            this.Set.Items.AddRange(new object[]
-            {
-                RawData.DataSet.train,
-                RawData.DataSet.test
-            });
             this.Set.Location = new System.Drawing.Point(5, 15);
             this.Set.Name = "Set";
             this.Set.Size = new System.Drawing.Size(110, 34);
             this.Set.TabIndex = 49;
             this.Set.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
+            this.Set.Items.AddRange(new object[]
+            {
+                RawData.DataSet.train,
+                RawData.DataSet.test
+            });
             // 
             // Extended
             // 
             this.Extended.FormattingEnabled = true;
             this.Extended.Items.AddRange(new object[]
             {
-                "Extended"
+                "extended"
             });
             this.Extended.Location = new System.Drawing.Point(5, 55);
             this.Extended.Name = "Extended";
@@ -166,10 +175,9 @@ namespace Chesire
             // groupBoxProblem
             // 
             this.groupBoxProblem.Controls.Add(this.Problems);
-            this.groupBoxProblem.Controls.Add(this.ORLIB);
             this.groupBoxProblem.Location = new System.Drawing.Point(5, 15);
             this.groupBoxProblem.Name = "groupBoxProblem";
-            this.groupBoxProblem.Size = new System.Drawing.Size(120, 204);
+            this.groupBoxProblem.Size = new System.Drawing.Size(120, 160);
             this.groupBoxProblem.TabIndex = 1;
             this.groupBoxProblem.TabStop = false;
             this.groupBoxProblem.Text = "Distribution";
@@ -195,24 +203,10 @@ namespace Chesire
             this.Problems.TabIndex = 22;
             this.Problems.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
             // 
-            // ORLIB
-            // 
-            this.ORLIB.FormattingEnabled = true;
-            this.ORLIB.Items.AddRange(new object[]
-            {
-                "ORLIB fsp",
-                "ORLIB jsp"
-            });
-            this.ORLIB.Location = new System.Drawing.Point(5, 160);
-            this.ORLIB.Name = "ORLIB";
-            this.ORLIB.Size = new System.Drawing.Size(110, 34);
-            this.ORLIB.TabIndex = 48;
-            this.ORLIB.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
-            // 
             // groupBoxDim
             // 
             this.groupBoxDim.Controls.Add(this.Dimension);
-            this.groupBoxDim.Location = new System.Drawing.Point(5, 220);
+            this.groupBoxDim.Location = new System.Drawing.Point(5, 180);
             this.groupBoxDim.Name = "groupBoxDim";
             this.groupBoxDim.Size = new System.Drawing.Size(120, 100);
             this.groupBoxDim.TabIndex = 1;
@@ -238,9 +232,9 @@ namespace Chesire
             // 
             // progressBarInner
             // 
-            this.progressBarInner.Location = new System.Drawing.Point(12, 519);
+            this.progressBarInner.Location = new System.Drawing.Point(12, 621);
             this.progressBarInner.Name = "progressBarInner";
-            this.progressBarInner.Size = new System.Drawing.Size(332, 25);
+            this.progressBarInner.Size = new System.Drawing.Size(412, 25);
             this.progressBarInner.TabIndex = 0;
             // 
             // groupBoxCMAObjFun
@@ -249,16 +243,16 @@ namespace Chesire
             this.groupBoxCMAObjFun.Controls.Add(this.startAsyncButtonCMA);
             this.groupBoxCMAObjFun.Controls.Add(this.CMAwrtMakespan);
             this.groupBoxCMAObjFun.Controls.Add(this.CMAwrtRho);
-            this.groupBoxCMAObjFun.Location = new System.Drawing.Point(260, 460);
+            this.groupBoxCMAObjFun.Location = new System.Drawing.Point(10, 470);
             this.groupBoxCMAObjFun.Name = "groupBoxCMAObjFun";
-            this.groupBoxCMAObjFun.Size = new System.Drawing.Size(161, 84);
+            this.groupBoxCMAObjFun.Size = new System.Drawing.Size(130, 84);
             this.groupBoxCMAObjFun.TabIndex = 23;
             this.groupBoxCMAObjFun.TabStop = false;
             this.groupBoxCMAObjFun.Text = "CMA-ES optimisation";
             // 
             // cancelAsyncButtonCMA
             // 
-            this.cancelAsyncButtonCMA.Location = new System.Drawing.Point(80, 53);
+            this.cancelAsyncButtonCMA.Location = new System.Drawing.Point(65, 53);
             this.cancelAsyncButtonCMA.Name = "cancelAsyncButtonCMA";
             this.cancelAsyncButtonCMA.Size = new System.Drawing.Size(60, 25);
             this.cancelAsyncButtonCMA.TabIndex = 56;
@@ -268,7 +262,7 @@ namespace Chesire
             // 
             // startAsyncButtonCMA
             // 
-            this.startAsyncButtonCMA.Location = new System.Drawing.Point(15, 53);
+            this.startAsyncButtonCMA.Location = new System.Drawing.Point(5, 53);
             this.startAsyncButtonCMA.Name = "startAsyncButtonCMA";
             this.startAsyncButtonCMA.Size = new System.Drawing.Size(60, 25);
             this.startAsyncButtonCMA.TabIndex = 55;
@@ -302,11 +296,11 @@ namespace Chesire
             // 
             this.groupBoxBDR.Controls.Add(this.applyBDR);
             this.groupBoxBDR.Controls.Add(this.splitBDR);
-            this.groupBoxBDR.Controls.Add(this.label7);
-            this.groupBoxBDR.Controls.Add(this.label8);
+            this.groupBoxBDR.Controls.Add(this.labelSplitBDR);
+            this.groupBoxBDR.Controls.Add(this.lblSDR1);
             this.groupBoxBDR.Controls.Add(this.SDR2);
             this.groupBoxBDR.Controls.Add(this.SDR1);
-            this.groupBoxBDR.Controls.Add(this.label6);
+            this.groupBoxBDR.Controls.Add(this.lblSDR2);
             this.groupBoxBDR.Location = new System.Drawing.Point(145, 147);
             this.groupBoxBDR.Name = "groupBoxBDR";
             this.groupBoxBDR.Size = new System.Drawing.Size(110, 240);
@@ -331,67 +325,69 @@ namespace Chesire
             this.splitBDR.Size = new System.Drawing.Size(40, 20);
             this.splitBDR.TabIndex = 49;
             this.splitBDR.Value = 40;
-            this.splitBDR.Maximum = 100;
             this.splitBDR.Minimum = 0;
+            this.splitBDR.Maximum = 100;
             // 
-            // label7
+            // lblSplitBDR
             // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(2, 17);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(65, 13);
-            this.label7.TabIndex = 51;
-            this.label7.Text = "Split (%):";
+            this.labelSplitBDR.AutoSize = true;
+            this.labelSplitBDR.Location = new System.Drawing.Point(2, 17);
+            this.labelSplitBDR.Name = "labelSplitBDR";
+            this.labelSplitBDR.Size = new System.Drawing.Size(47, 13);
+            this.labelSplitBDR.TabIndex = 51;
+            this.labelSplitBDR.Text = "Split (%):";
             // 
-            // label8
+            // lblSDR1
             // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(2, 38);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(78, 13);
-            this.label8.TabIndex = 53;
-            this.label8.Text = "SDR (first half):";
+            this.lblSDR1.AutoSize = true;
+            this.lblSDR1.Location = new System.Drawing.Point(2, 38);
+            this.lblSDR1.Name = "lblSDR1";
+            this.lblSDR1.Size = new System.Drawing.Size(78, 13);
+            this.lblSDR1.TabIndex = 53;
+            this.lblSDR1.Text = "SDR (first half):";
             // 
             // SDR2
             // 
             this.SDR2.FormattingEnabled = true;
-            this.SDR2.Items.AddRange(new object[]
-            {
-                SDRData.SDR.SPT,
-                SDRData.SDR.LPT,
-                SDRData.SDR.LWR,
-                SDRData.SDR.MWR
-            });
             this.SDR2.Location = new System.Drawing.Point(5, 140);
             this.SDR2.Name = "SDR2";
             this.SDR2.Size = new System.Drawing.Size(100, 64);
             this.SDR2.TabIndex = 47;
             this.SDR2.SelectedIndexChanged += new System.EventHandler(this.ckb_ClickAllowOnly1);
-            // 
-            // SDR1
-            // 
-            this.SDR1.FormattingEnabled = true;
-            this.SDR1.Items.AddRange(new object[]
+            this.SDR2.Items.AddRange(new object[]
             {
                 SDRData.SDR.SPT,
                 SDRData.SDR.LPT,
                 SDRData.SDR.LWR,
-                SDRData.SDR.MWR
+                SDRData.SDR.MWR,
+                SDRData.SDR.RND
             });
+            // 
+            // SDR1
+            // 
+            this.SDR1.FormattingEnabled = true;
             this.SDR1.Location = new System.Drawing.Point(5, 55);
             this.SDR1.Name = "SDR1";
             this.SDR1.Size = new System.Drawing.Size(100, 64);
             this.SDR1.TabIndex = 52;
             this.SDR1.SelectedIndexChanged += new System.EventHandler(this.ckb_ClickAllowOnly1);
+            this.SDR1.Items.AddRange(new object[]
+            {
+                SDRData.SDR.SPT,
+                SDRData.SDR.LPT,
+                SDRData.SDR.LWR,
+                SDRData.SDR.MWR,
+                SDRData.SDR.RND
+            });
             // 
-            // label6
+            // lblSDR2
             // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(5, 125);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(97, 13);
-            this.label6.TabIndex = 48;
-            this.label6.Text = "SDR (second half):";
+            this.lblSDR2.AutoSize = true;
+            this.lblSDR2.Location = new System.Drawing.Point(5, 125);
+            this.lblSDR2.Name = "lblSDR2";
+            this.lblSDR2.Size = new System.Drawing.Size(97, 13);
+            this.lblSDR2.TabIndex = 48;
+            this.lblSDR2.Text = "SDR (second half):";
             // 
             // groupBoxPREF
             // 
@@ -412,14 +408,14 @@ namespace Chesire
             this.groupBoxTracks.Controls.Add(this.Tracks);
             this.groupBoxTracks.Location = new System.Drawing.Point(5, 15);
             this.groupBoxTracks.Name = "groupBoxTracks";
-            this.groupBoxTracks.Size = new System.Drawing.Size(150, 205);
+            this.groupBoxTracks.Size = new System.Drawing.Size(135, 205);
             this.groupBoxTracks.TabIndex = 1;
             this.groupBoxTracks.TabStop = false;
             this.groupBoxTracks.Text = "Trajectories";
             // 
             // cancelAsyncButtonTrSet
             // 
-            this.cancelAsyncButtonTrSet.Location = new System.Drawing.Point(75, 175);
+            this.cancelAsyncButtonTrSet.Location = new System.Drawing.Point(72, 174);
             this.cancelAsyncButtonTrSet.Name = "cancelAsyncButtonTrSet";
             this.cancelAsyncButtonTrSet.Size = new System.Drawing.Size(60, 25);
             this.cancelAsyncButtonTrSet.TabIndex = 2;
@@ -429,7 +425,7 @@ namespace Chesire
             // 
             // startAsyncButtonGenTrData
             // 
-            this.startAsyncButtonGenTrData.Location = new System.Drawing.Point(10, 175);
+            this.startAsyncButtonGenTrData.Location = new System.Drawing.Point(7, 174);
             this.startAsyncButtonGenTrData.Name = "startAsyncButtonGenTrData";
             this.startAsyncButtonGenTrData.Size = new System.Drawing.Size(60, 25);
             this.startAsyncButtonGenTrData.TabIndex = 1;
@@ -440,24 +436,23 @@ namespace Chesire
             // Tracks
             // 
             this.Tracks.FormattingEnabled = true;
-            this.Tracks.Items.AddRange(new object[]
-            {
-                TrainingSet.Trajectory.OPT,
-                TrainingSet.Trajectory.MWR,
-                TrainingSet.Trajectory.LWR,
-                TrainingSet.Trajectory.SPT,
-                TrainingSet.Trajectory.LPT,
-                TrainingSet.Trajectory.RND,
-                TrainingSet.Trajectory.CMA,
-                TrainingSet.Trajectory.ILSUP,
-                TrainingSet.Trajectory.ILUNSUP,
-                TrainingSet.Trajectory.ILFIX
-            });
             this.Tracks.Location = new System.Drawing.Point(5, 15);
             this.Tracks.Name = "Tracks";
             this.Tracks.Size = new System.Drawing.Size(125, 154);
             this.Tracks.TabIndex = 23;
             this.Tracks.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
+            this.Tracks.Items.AddRange(new object[]
+            {
+                TrainingSet.Trajectory.SPT,
+                TrainingSet.Trajectory.LPT,
+                TrainingSet.Trajectory.LWR,
+                TrainingSet.Trajectory.MWR,
+                TrainingSet.Trajectory.RND,
+                TrainingSet.Trajectory.CMA,
+                TrainingSet.Trajectory.ILUNSUP,
+                TrainingSet.Trajectory.ILSUP,
+                TrainingSet.Trajectory.ILFIX
+            });
             // 
             // groupBoxRanks
             // 
@@ -466,7 +461,7 @@ namespace Chesire
             this.groupBoxRanks.Controls.Add(this.startAsyncButtonRankTrData);
             this.groupBoxRanks.Location = new System.Drawing.Point(5, 320);
             this.groupBoxRanks.Name = "groupBoxRanks";
-            this.groupBoxRanks.Size = new System.Drawing.Size(150, 115);
+            this.groupBoxRanks.Size = new System.Drawing.Size(135, 115);
             this.groupBoxRanks.TabIndex = 3;
             this.groupBoxRanks.TabStop = false;
             this.groupBoxRanks.Text = "Preference set";
@@ -474,22 +469,22 @@ namespace Chesire
             // Ranks
             // 
             this.Ranks.FormattingEnabled = true;
-            this.Ranks.Items.AddRange(new object[]
-            {
-                PreferenceSet.Ranking.Basic,
-                PreferenceSet.Ranking.FullPareto,
-                PreferenceSet.Ranking.PartialPareto,
-                PreferenceSet.Ranking.All
-            });
             this.Ranks.Location = new System.Drawing.Point(5, 15);
             this.Ranks.Name = "Ranks";
-            this.Ranks.Size = new System.Drawing.Size(140, 64);
+            this.Ranks.Size = new System.Drawing.Size(125, 64);
             this.Ranks.TabIndex = 24;
             this.Ranks.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
+            this.Ranks.Items.AddRange(new object[]
+            {
+                PreferenceSet.Ranking.All,
+                PreferenceSet.Ranking.Basic,
+                PreferenceSet.Ranking.FullPareto,
+                PreferenceSet.Ranking.PartialPareto
+            });
             // 
             // cancelAsyncButtonRankTrData
             // 
-            this.cancelAsyncButtonRankTrData.Location = new System.Drawing.Point(75, 85);
+            this.cancelAsyncButtonRankTrData.Location = new System.Drawing.Point(72, 85);
             this.cancelAsyncButtonRankTrData.Name = "cancelAsyncButtonRankTrData";
             this.cancelAsyncButtonRankTrData.Size = new System.Drawing.Size(60, 25);
             this.cancelAsyncButtonRankTrData.TabIndex = 55;
@@ -499,7 +494,7 @@ namespace Chesire
             // 
             // startAsyncButtonRankTrData
             // 
-            this.startAsyncButtonRankTrData.Location = new System.Drawing.Point(10, 85);
+            this.startAsyncButtonRankTrData.Location = new System.Drawing.Point(7, 85);
             this.startAsyncButtonRankTrData.Name = "startAsyncButtonRankTrData";
             this.startAsyncButtonRankTrData.Size = new System.Drawing.Size(60, 25);
             this.startAsyncButtonRankTrData.TabIndex = 56;
@@ -515,14 +510,14 @@ namespace Chesire
             this.groupBoxRetrace.Controls.Add(this.PhiGlobal);
             this.groupBoxRetrace.Location = new System.Drawing.Point(5, 224);
             this.groupBoxRetrace.Name = "groupBoxRetrace";
-            this.groupBoxRetrace.Size = new System.Drawing.Size(150, 90);
+            this.groupBoxRetrace.Size = new System.Drawing.Size(135, 90);
             this.groupBoxRetrace.TabIndex = 2;
             this.groupBoxRetrace.TabStop = false;
             this.groupBoxRetrace.Text = "Retrace";
             // 
             // cancelAsyncButtonRetrace
             // 
-            this.cancelAsyncButtonRetrace.Location = new System.Drawing.Point(75, 60);
+            this.cancelAsyncButtonRetrace.Location = new System.Drawing.Point(72, 59);
             this.cancelAsyncButtonRetrace.Name = "cancelAsyncButtonRetrace";
             this.cancelAsyncButtonRetrace.Size = new System.Drawing.Size(60, 25);
             this.cancelAsyncButtonRetrace.TabIndex = 56;
@@ -532,7 +527,7 @@ namespace Chesire
             // 
             // startAsyncButtonRetrace
             // 
-            this.startAsyncButtonRetrace.Location = new System.Drawing.Point(10, 60);
+            this.startAsyncButtonRetrace.Location = new System.Drawing.Point(7, 59);
             this.startAsyncButtonRetrace.Name = "startAsyncButtonRetrace";
             this.startAsyncButtonRetrace.Size = new System.Drawing.Size(60, 25);
             this.startAsyncButtonRetrace.TabIndex = 55;
@@ -545,10 +540,10 @@ namespace Chesire
             this.PhiLocal.AutoSize = true;
             this.PhiLocal.Location = new System.Drawing.Point(5, 15);
             this.PhiLocal.Name = "PhiLocal";
-            this.PhiLocal.Size = new System.Drawing.Size(92, 17);
+            this.PhiLocal.Size = new System.Drawing.Size(45, 17);
             this.PhiLocal.TabIndex = 30;
             this.PhiLocal.TabStop = true;
-            this.PhiLocal.Text = String.Format("{0} features", Features.Mode.Local);
+            this.PhiLocal.Text = Features.Mode.Local.ToString();
             this.PhiLocal.UseVisualStyleBackColor = true;
             // 
             // PhiGlobal
@@ -556,16 +551,16 @@ namespace Chesire
             this.PhiGlobal.AutoSize = true;
             this.PhiGlobal.Location = new System.Drawing.Point(5, 35);
             this.PhiGlobal.Name = "PhiGlobal";
-            this.PhiGlobal.Size = new System.Drawing.Size(96, 17);
+            this.PhiGlobal.Size = new System.Drawing.Size(45, 17);
             this.PhiGlobal.TabIndex = 32;
             this.PhiGlobal.TabStop = true;
-            this.PhiGlobal.Text = String.Format("{0} features", Features.Mode.Global);
+            this.PhiGlobal.Text = Features.Mode.Global.ToString();
             this.PhiGlobal.UseVisualStyleBackColor = true;
             // 
             // groupBoxDependent
             // 
-            this.groupBoxDependent.Controls.Add(this.radioButtonCMAIndependent);
-            this.groupBoxDependent.Controls.Add(this.radioButtonCMADependent);
+            this.groupBoxDependent.Controls.Add(this.IndependentModel);
+            this.groupBoxDependent.Controls.Add(this.DependentModel);
             this.groupBoxDependent.Location = new System.Drawing.Point(145, 392);
             this.groupBoxDependent.Name = "groupBoxDependent";
             this.groupBoxDependent.Size = new System.Drawing.Size(110, 62);
@@ -573,27 +568,27 @@ namespace Chesire
             this.groupBoxDependent.TabStop = false;
             this.groupBoxDependent.Text = "Model step";
             // 
-            // radioButtonCMAIndependent
+            // IndependentModel
             // 
-            this.radioButtonCMAIndependent.AutoSize = true;
-            this.radioButtonCMAIndependent.Checked = true;
-            this.radioButtonCMAIndependent.Location = new System.Drawing.Point(5, 15);
-            this.radioButtonCMAIndependent.Name = "radioButtonCMAIndependent";
-            this.radioButtonCMAIndependent.Size = new System.Drawing.Size(85, 17);
-            this.radioButtonCMAIndependent.TabIndex = 37;
-            this.radioButtonCMAIndependent.TabStop = true;
-            this.radioButtonCMAIndependent.Text = "Independent";
-            this.radioButtonCMAIndependent.UseVisualStyleBackColor = true;
+            this.IndependentModel.AutoSize = true;
+            this.IndependentModel.Checked = true;
+            this.IndependentModel.Location = new System.Drawing.Point(5, 15);
+            this.IndependentModel.Name = "IndependentModel";
+            this.IndependentModel.Size = new System.Drawing.Size(85, 17);
+            this.IndependentModel.TabIndex = 37;
+            this.IndependentModel.TabStop = true;
+            this.IndependentModel.Text = "Independent";
+            this.IndependentModel.UseVisualStyleBackColor = true;
             // 
-            // radioButtonCMADependent
+            // DependentModel
             // 
-            this.radioButtonCMADependent.AutoSize = true;
-            this.radioButtonCMADependent.Location = new System.Drawing.Point(5, 35);
-            this.radioButtonCMADependent.Name = "radioButtonCMADependent";
-            this.radioButtonCMADependent.Size = new System.Drawing.Size(78, 17);
-            this.radioButtonCMADependent.TabIndex = 38;
-            this.radioButtonCMADependent.Text = "Dependent";
-            this.radioButtonCMADependent.UseVisualStyleBackColor = true;
+            this.DependentModel.AutoSize = true;
+            this.DependentModel.Location = new System.Drawing.Point(5, 35);
+            this.DependentModel.Name = "DependentModel";
+            this.DependentModel.Size = new System.Drawing.Size(78, 17);
+            this.DependentModel.TabIndex = 38;
+            this.DependentModel.Text = "Dependent";
+            this.DependentModel.UseVisualStyleBackColor = true;
             // 
             // groupBoxSDR
             // 
@@ -619,6 +614,11 @@ namespace Chesire
             // SDR
             // 
             this.SDR.FormattingEnabled = true;
+            this.SDR.Location = new System.Drawing.Point(5, 15);
+            this.SDR.Name = "SDR";
+            this.SDR.Size = new System.Drawing.Size(100, 79);
+            this.SDR.TabIndex = 24;
+            this.SDR.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
             this.SDR.Items.AddRange(new object[]
             {
                 SDRData.SDR.SPT,
@@ -627,37 +627,42 @@ namespace Chesire
                 SDRData.SDR.MWR,
                 SDRData.SDR.RND
             });
-            this.SDR.Location = new System.Drawing.Point(5, 15);
-            this.SDR.Name = "SDR";
-            this.SDR.Size = new System.Drawing.Size(100, 79);
-            this.SDR.TabIndex = 24;
-            this.SDR.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
             // 
             // groupBoxOpt
             // 
-            this.groupBoxOpt.Controls.Add(this.labelTmLimit);
-            this.groupBoxOpt.Controls.Add(this.cancelAsyncButtonOptimize);
             this.groupBoxOpt.Controls.Add(this.TimeLimit);
+            this.groupBoxOpt.Controls.Add(this.lblTimeLimit);
+            this.groupBoxOpt.Controls.Add(this.cancelAsyncButtonOptimize);
             this.groupBoxOpt.Controls.Add(this.startAsyncButtonOptimize);
-            this.groupBoxOpt.Location = new System.Drawing.Point(10, 419);
+            this.groupBoxOpt.Location = new System.Drawing.Point(10, 392);
             this.groupBoxOpt.Name = "groupBoxOpt";
-            this.groupBoxOpt.Size = new System.Drawing.Size(130, 84);
+            this.groupBoxOpt.Size = new System.Drawing.Size(130, 73);
             this.groupBoxOpt.TabIndex = 24;
             this.groupBoxOpt.TabStop = false;
             this.groupBoxOpt.Text = "Optimisation";
             // 
-            // labelTmLimit
+            // TimeLimit
             // 
-            this.labelTmLimit.AutoSize = true;
-            this.labelTmLimit.Location = new System.Drawing.Point(5, 15);
-            this.labelTmLimit.Name = "labelTmLimit";
-            this.labelTmLimit.Size = new System.Drawing.Size(114, 13);
-            this.labelTmLimit.TabIndex = 35;
-            this.labelTmLimit.Text = "Time limit (min):";
+            this.TimeLimit.Location = new System.Drawing.Point(80, 13);
+            this.TimeLimit.Maximum = 120;
+            this.TimeLimit.Minimum = 0;
+            this.TimeLimit.Name = "TimeLimit";
+            this.TimeLimit.Size = new System.Drawing.Size(44, 20);
+            this.TimeLimit.TabIndex = 34;
+            this.TimeLimit.Value = AUTOSAVE;
+            // 
+            // lblTimeLimit
+            // 
+            this.lblTimeLimit.AutoSize = true;
+            this.lblTimeLimit.Location = new System.Drawing.Point(5, 15);
+            this.lblTimeLimit.Name = "lblTimeLimit";
+            this.lblTimeLimit.Size = new System.Drawing.Size(78, 13);
+            this.lblTimeLimit.TabIndex = 35;
+            this.lblTimeLimit.Text = "Time limit (min):";
             // 
             // cancelAsyncButtonOptimize
             // 
-            this.cancelAsyncButtonOptimize.Location = new System.Drawing.Point(65, 55);
+            this.cancelAsyncButtonOptimize.Location = new System.Drawing.Point(65, 38);
             this.cancelAsyncButtonOptimize.Name = "cancelAsyncButtonOptimize";
             this.cancelAsyncButtonOptimize.Size = new System.Drawing.Size(60, 25);
             this.cancelAsyncButtonOptimize.TabIndex = 50;
@@ -665,19 +670,9 @@ namespace Chesire
             this.cancelAsyncButtonOptimize.UseVisualStyleBackColor = true;
             this.cancelAsyncButtonOptimize.Click += new System.EventHandler(this.cancelAsyncButtonOptimize_Click);
             // 
-            // TimeLimit
-            // 
-            this.TimeLimit.Location = new System.Drawing.Point(80, 31);
-            this.TimeLimit.Maximum = 60;
-            this.TimeLimit.Minimum = 10;
-            this.TimeLimit.Name = "TimeLimit";
-            this.TimeLimit.Size = new System.Drawing.Size(44, 20);
-            this.TimeLimit.TabIndex = 34;
-            this.TimeLimit.Value = AUTOSAVE;
-            // 
             // startAsyncButtonOptimize
             // 
-            this.startAsyncButtonOptimize.Location = new System.Drawing.Point(5, 55);
+            this.startAsyncButtonOptimize.Location = new System.Drawing.Point(5, 38);
             this.startAsyncButtonOptimize.Name = "startAsyncButtonOptimize";
             this.startAsyncButtonOptimize.Size = new System.Drawing.Size(60, 25);
             this.startAsyncButtonOptimize.TabIndex = 46;
@@ -687,9 +682,9 @@ namespace Chesire
             // 
             // progressBarOuter
             // 
-            this.progressBarOuter.Location = new System.Drawing.Point(12, 154);
+            this.progressBarOuter.Location = new System.Drawing.Point(12, 194);
             this.progressBarOuter.Name = "progressBarOuter";
-            this.progressBarOuter.Size = new System.Drawing.Size(332, 25);
+            this.progressBarOuter.Size = new System.Drawing.Size(412, 25);
             this.progressBarOuter.TabIndex = 22;
             // 
             // splitContainerForm
@@ -700,6 +695,7 @@ namespace Chesire
             // 
             // splitContainerForm.Panel1
             // 
+            this.splitContainerForm.Panel1.Controls.Add(this.groupApply);
             this.splitContainerForm.Panel1.Controls.Add(this.groupBoxBDR);
             this.splitContainerForm.Panel1.Controls.Add(this.groupBoxDependent);
             this.splitContainerForm.Panel1.Controls.Add(this.groupBoxCMAObjFun);
@@ -714,24 +710,130 @@ namespace Chesire
             this.splitContainerForm.Panel2.Controls.Add(this.textContent);
             this.splitContainerForm.Panel2.Controls.Add(this.progressBarInner);
             this.splitContainerForm.Panel2.Controls.Add(this.progressBarOuter);
-            this.splitContainerForm.Size = new System.Drawing.Size(790, 556);
-            this.splitContainerForm.SplitterDistance = 430;
+            this.splitContainerForm.Size = new System.Drawing.Size(866, 660);
+            this.splitContainerForm.SplitterDistance = 426;
             this.splitContainerForm.TabIndex = 0;
+            // 
+            // groupApply
+            // 
+            this.groupApply.Controls.Add(this.groupBoxDimensionApply);
+            this.groupApply.Controls.Add(this.ORLIBApply);
+            this.groupApply.Controls.Add(this.groupBoxProblemApply);
+            this.groupApply.Controls.Add(this.cancelAsyncButtonApply);
+            this.groupApply.Controls.Add(this.startAsyncButtonApply);
+            this.groupApply.Location = new System.Drawing.Point(146, 470);
+            this.groupApply.Name = "groupApply";
+            this.groupApply.Size = new System.Drawing.Size(254, 190);
+            this.groupApply.TabIndex = 39;
+            this.groupApply.TabStop = false;
+            this.groupApply.Text = "Apply";
+            this.groupApply.Click += new System.EventHandler(this.cancelAsyncButtonApply_Click);
+            // 
+            // groupBoxDimensionApply
+            // 
+            this.groupBoxDimensionApply.Controls.Add(this.DimensionApply);
+            this.groupBoxDimensionApply.Location = new System.Drawing.Point(126, 15);
+            this.groupBoxDimensionApply.Name = "groupBoxDimensionApply";
+            this.groupBoxDimensionApply.Size = new System.Drawing.Size(120, 100);
+            this.groupBoxDimensionApply.TabIndex = 49;
+            this.groupBoxDimensionApply.TabStop = false;
+            this.groupBoxDimensionApply.Text = "Dimension";
+            // 
+            // DimensionApply
+            // 
+            this.DimensionApply.FormattingEnabled = true;
+            this.DimensionApply.Items.AddRange(new object[]
+            {
+                "6x5",
+                "8x8",
+                "10x10",
+                "12x12",
+                "14x14"
+            });
+            this.DimensionApply.Location = new System.Drawing.Point(5, 15);
+            this.DimensionApply.Name = "DimensionApply";
+            this.DimensionApply.Size = new System.Drawing.Size(110, 79);
+            this.DimensionApply.TabIndex = 48;
+            this.DimensionApply.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
+            // 
+            // ORLIBApply
+            // 
+            this.ORLIBApply.FormattingEnabled = true;
+            this.ORLIBApply.Items.AddRange(new object[]
+            {
+                "FSP ORLIB",
+                "JSP ORLIB"
+            });
+            this.ORLIBApply.Location = new System.Drawing.Point(131, 118);
+            this.ORLIBApply.Name = "ORLIBApply";
+            this.ORLIBApply.Size = new System.Drawing.Size(110, 34);
+            this.ORLIBApply.TabIndex = 48;
+            this.ORLIBApply.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
+            // 
+            // groupBoxProblemApply
+            // 
+            this.groupBoxProblemApply.Controls.Add(this.ProblemApply);
+            this.groupBoxProblemApply.Location = new System.Drawing.Point(5, 15);
+            this.groupBoxProblemApply.Name = "groupBoxProblemApply";
+            this.groupBoxProblemApply.Size = new System.Drawing.Size(120, 160);
+            this.groupBoxProblemApply.TabIndex = 49;
+            this.groupBoxProblemApply.TabStop = false;
+            this.groupBoxProblemApply.Text = "Distribution";
+            // 
+            // ProblemApply
+            // 
+            this.ProblemApply.FormattingEnabled = true;
+            this.ProblemApply.Items.AddRange(new object[]
+            {
+                "j.rnd",
+                "j.rndn",
+                "f.rnd",
+                "f.rndn",
+                "f.jc",
+                "f.mc",
+                "f.mxc",
+                "j.rnd_p1mdoubled",
+                "j.rnd_pj1doubled"
+            });
+            this.ProblemApply.Location = new System.Drawing.Point(5, 15);
+            this.ProblemApply.Name = "ProblemApply";
+            this.ProblemApply.Size = new System.Drawing.Size(110, 139);
+            this.ProblemApply.TabIndex = 22;
+            this.ProblemApply.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
+            // 
+            // cancelAsyncButtonApply
+            // 
+            this.cancelAsyncButtonApply.Location = new System.Drawing.Point(191, 159);
+            this.cancelAsyncButtonApply.Name = "cancelAsyncButtonApply";
+            this.cancelAsyncButtonApply.Size = new System.Drawing.Size(60, 25);
+            this.cancelAsyncButtonApply.TabIndex = 52;
+            this.cancelAsyncButtonApply.Text = "Cancel";
+            this.cancelAsyncButtonApply.UseVisualStyleBackColor = true;
+            // 
+            // startAsyncButtonApply
+            // 
+            this.startAsyncButtonApply.Location = new System.Drawing.Point(126, 159);
+            this.startAsyncButtonApply.Name = "startAsyncButtonApply";
+            this.startAsyncButtonApply.Size = new System.Drawing.Size(60, 25);
+            this.startAsyncButtonApply.TabIndex = 51;
+            this.startAsyncButtonApply.Text = "Apply";
+            this.startAsyncButtonApply.UseVisualStyleBackColor = true;
+            this.startAsyncButtonApply.Click += new System.EventHandler(this.startAsyncButtonApply_Click);
             // 
             // textHeader
             // 
             this.textHeader.Location = new System.Drawing.Point(12, 10);
             this.textHeader.Name = "textHeader";
-            this.textHeader.Size = new System.Drawing.Size(332, 136);
+            this.textHeader.Size = new System.Drawing.Size(412, 172);
             this.textHeader.TabIndex = 25;
             this.textHeader.Text = "";
             this.textHeader.TextChanged += new System.EventHandler(this.textContent_TextChanged);
             // 
             // textContent
             // 
-            this.textContent.Location = new System.Drawing.Point(12, 189);
+            this.textContent.Location = new System.Drawing.Point(12, 230);
             this.textContent.Name = "textContent";
-            this.textContent.Size = new System.Drawing.Size(332, 318);
+            this.textContent.Size = new System.Drawing.Size(412, 385);
             this.textContent.TabIndex = 24;
             this.textContent.Text = "";
             this.textContent.TextChanged += new System.EventHandler(this.textContent_TextChanged);
@@ -740,7 +842,7 @@ namespace Chesire
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(790, 556);
+            this.ClientSize = new System.Drawing.Size(866, 660);
             this.Controls.Add(this.splitContainerForm);
             this.Name = "App";
             this.Text = "JSP PREF SIMULATION";
@@ -769,6 +871,9 @@ namespace Chesire
             this.splitContainerForm.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize) (this.splitContainerForm)).EndInit();
             this.splitContainerForm.ResumeLayout(false);
+            this.groupApply.ResumeLayout(false);
+            this.groupBoxDimensionApply.ResumeLayout(false);
+            this.groupBoxProblemApply.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -841,7 +946,7 @@ namespace Chesire
         private CheckedListBox Extended;
         private ProgressBar progressBarInner;
         private GroupBox groupBoxOpt;
-        private Label labelTmLimit;
+        private Label lblTimeLimit;
         private Button cancelAsyncButtonOptimize;
         private NumericUpDown TimeLimit;
         private Button startAsyncButtonOptimize;
@@ -857,8 +962,8 @@ namespace Chesire
         private GroupBox groupBoxRanks;
         private CheckedListBox Ranks;
         private GroupBox groupBoxDependent;
-        private RadioButton radioButtonCMAIndependent;
-        private RadioButton radioButtonCMADependent;
+        private RadioButton IndependentModel;
+        private RadioButton DependentModel;
         private Button cancelAsyncButtonRankTrData;
         private Button startAsyncButtonRankTrData;
         private GroupBox groupBoxRetrace;
@@ -871,21 +976,28 @@ namespace Chesire
         private GroupBox groupBoxBDR;
         private Button applyBDR;
         private NumericUpDown splitBDR;
-        private Label label7;
-        private Label label8;
+        private Label labelSplitBDR;
+        private Label lblSDR1;
         private CheckedListBox SDR2;
         private CheckedListBox SDR1;
-        private Label label6;
+        private Label lblSDR2;
         private Button cancelAsyncButtonCMA;
         private Button startAsyncButtonCMA;
         private RadioButton CMAwrtMakespan;
         private RadioButton CMAwrtRho;
-        private CheckedListBox ORLIB;
         private GroupBox groupBoxDim;
         private CheckedListBox Dimension;
         private SplitContainer splitContainerForm;
         private RichTextBox textHeader;
         private RichTextBox textContent;
-        private Timer timer1;
+        private GroupBox groupApply;
+        private GroupBox groupBoxDimensionApply;
+        private CheckedListBox DimensionApply;
+        private CheckedListBox ORLIBApply;
+        private GroupBox groupBoxProblemApply;
+        private CheckedListBox ProblemApply;
+        private Button cancelAsyncButtonApply;
+        private Button startAsyncButtonApply;
+        private BackgroundWorker bkgApply;
     }
 }
