@@ -1,8 +1,10 @@
+require(readr)
+
 get.files <- function(dir, files, addFileNameColumn=F){
   dat=NULL
   print(files)
   for(file in files){
-    tmp=read.csv(paste(dir,file,sep='/'))
+    tmp=read_csv(paste(dir,file,sep='/'))
     if(addFileNameColumn) {tmp$File=file}
     dat=rbind(dat,tmp)
   }
@@ -11,6 +13,7 @@ get.files <- function(dir, files, addFileNameColumn=F){
 
 get.files.OPT <- function(){
   opt=get.files('../OPT', list.files('../OPT'))
+  rownames(opt)=opt$Name
   opt=subset(opt,!is.na(Optimum))
   opt=factorFromName(opt)
   return(opt)
@@ -20,6 +23,7 @@ get.files.SDR <- function(){
   sdr=get.files('../SDR', list.files('../SDR'))
   sdr=factorFromName(sdr)
   sdr$SDR=factorSDR(sdr$SDR)
+  sdr=subset(sdr, !is.na(SDR))
   sdr$Rho=factorRho(sdr)
   sdr=subset(sdr,!is.na(Rho) & !is.na(SDR))
   return(sdr)
@@ -49,7 +53,7 @@ get.files.TRDAT <- function(problems,dim,tracks,rank='p',useDiff=F,Global=F){
       file=list.files('../trainingData/', paste('^trdat',problem,dim,track,fileEnd,sep='.'),
                       full.names = T)
       if(length(file)>0){
-        dat=read.csv(file)
+        dat=read_csv(file)
         ix=grep('phi',names(dat))
         names(dat)[ix]=factorFeature(names(dat)[ix],phis = T)
         dat=dat[,grep('PID|Dispatch|Step|phi|Followed|ResultingOptMakespan',names(dat))]
@@ -95,7 +99,7 @@ get.CDR <- function(files,NrFeat,Model,sets='train'){
 
     fname=paste('../PREF/CDR',file,paste(paste0('F',NrFeat),paste0('Model',Model),'on',problem,dim,set,'csv',sep='.'),sep='/')
     if(!file.exists(fname)){return(NULL)}
-    dat=read.csv(fname)
+    dat=read_csv(fname)
     dat$Problem=problem
     dat$NrFeat=NrFeat
     dat$Model=Model
@@ -130,7 +134,7 @@ get.CDR <- function(files,NrFeat,Model,sets='train'){
 get.prefWeights <- function(file,timedependent,asMatrix=F){
   m=regexpr("(?<Problem>[jf].[a-z0-9]+).(?<Dimension>[0-9]+x[0-9]+).",file,perl=T)
   problem=getAttribute(file,m,1)
-  weights=read.csv(paste0('../PREF/weights/',file))
+  weights=read_csv(paste0('../PREF/weights/',file))
   weights=subset(weights,Type=='Weight')
   if(!timedependent){ weights=weights[,c(1:4,6)] } else { weights$mean=NULL };
   if(asMatrix){
