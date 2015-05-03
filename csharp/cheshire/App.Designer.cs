@@ -443,6 +443,7 @@ namespace Cheshire
             this.Tracks.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
             this.Tracks.Items.AddRange(new object[]
             {
+                TrainingSet.Trajectory.OPT,
                 TrainingSet.Trajectory.SPT,
                 TrainingSet.Trajectory.LPT,
                 TrainingSet.Trajectory.LWR,
