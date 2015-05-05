@@ -27,7 +27,7 @@ namespace ALICE
 
         public int AlreadySavedPID;
 
-        public RawData(string distribution, string dimension, DataSet set, bool extended)
+        public RawData(string distribution, string dimension, DataSet set, bool extended, DirectoryInfo data)
         {
             Distribution = distribution;
             Dimension = dimension;
@@ -35,8 +35,8 @@ namespace ALICE
             Set = set;
 
             FileInfo =
-                new FileInfo(String.Format("C://Users//helga//Alice//Code//rawData//{0}.{1}.{2}.txt",
-                    Distribution, Dimension, Set));
+                new FileInfo(String.Format("{0}//Raw//{1}.{2}.{3}.txt",
+                    data.FullName, Distribution, Dimension, Set));
 
             if (!FileInfo.Exists)
             {

@@ -10,33 +10,39 @@ namespace ALICE
     {
         public enum SDR
         {
-            MWR,
-            LWR,
             SPT,
             LPT,
-            Count,
-            RND
+            MWR,
+            LWR,
+            RND // must be last 
+        }
+
+        public static int SDRCount
+        {
+            get { return Enum.GetNames(typeof (SDR)).Length - 1; }
         }
 
         private readonly SDR _sdr;
 
-        public SDRData(string distribution, string dimension, DataSet set, bool extended, SDR sdr)
-            : base(distribution, dimension, set, extended, "SDR", sdr.ToString())
+        public SDRData(string distribution, string dimension, DataSet set, bool extended, SDR sdr, DirectoryInfo data)
+            : base(distribution, dimension, set, extended, "SDR", sdr.ToString(), data)
         {
             _sdr = sdr;
             FileInfo =
-                new FileInfo(string.Format("C://Users//helga//Alice//Code//{3}//{0}.{1}.{2}.csv", Distribution,
-                    Dimension, Set, "SDR"));
+                new FileInfo(string.Format("{0}//{1}//{2}.{3}.{4}.csv", data.FullName, "SDR",
+                    Distribution, Dimension, Set));
+
             Read(false);
         }
 
         protected SDRData(string distribution, string dimension, DataSet set, bool extended, string heuristicName,
-            string heuristicValue)
-            : base(distribution, dimension, set, extended, heuristicName, heuristicValue)
+            string heuristicValue, DirectoryInfo data)
+            : base(distribution, dimension, set, extended, heuristicName, heuristicValue, data)
         {
             FileInfo =
-                new FileInfo(string.Format("C://Users//helga//Alice//Code//{3}//{0}.{1}.{2}.csv", Distribution,
-                    Dimension, Set, heuristicName));
+                new FileInfo(string.Format("{0}//{1}//{2}.{3}.{4}.csv", data.FullName, HeuristicName,
+                    Distribution, Dimension, Set));
+
             Read(false);
         }
 

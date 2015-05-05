@@ -23,12 +23,12 @@ namespace ALICE
             All = 'a'
         };
 
-        public PreferenceSet(string distribution, string dimension, Trajectory track, bool extended, Ranking rank)
-            : base(distribution, dimension, track, extended, Features.Mode.Local)
+        public PreferenceSet(string distribution, string dimension, Trajectory track, bool extended, Ranking rank, DirectoryInfo data)
+            : base(distribution, dimension, track, extended, Features.Mode.Local, data)
         {
             FileInfo =
                 new FileInfo(string.Format(
-                    "C://Users//helga//Alice//Code//trainingData//{0}.diff.{1}.csv",
+                    "{0}//Training//{1}.diff.{2}.csv", data.FullName,
                     FileInfo.Name.Substring(0, FileInfo.Name.Length - FileInfo.Extension.Length), (char) rank));
 
             Columns.Add("Rank", typeof (int));

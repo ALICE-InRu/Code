@@ -4,14 +4,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace ALICE
 {
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     public class CMAESData : OPTData
     {
-        private const int NUM_FEATURES = (int) Features.Local.Count;
+        private static readonly int NUM_FEATURES = Features.LocalCount;
         private readonly int N; // number of objective variables (here: N = problem dimension * NumFeatures)
         
         private readonly int[] _optMakespans;
@@ -72,19 +71,19 @@ namespace ALICE
             MinimumRho
         }
 
-        public CMAESData(string distribution, string dimension, ObjectiveFunction objFun, bool dependentModel)
-            : base(distribution, dimension, DataSet.train, false, objFun == ObjectiveFunction.MinimumRho)
+        public CMAESData(string distribution, string dimension, ObjectiveFunction objFun, bool dependentModel, DirectoryInfo data)
+            : base(distribution, dimension, DataSet.train, false, objFun == ObjectiveFunction.MinimumRho, data)
         {
             AlreadySavedPID = Generation;
 
             FileInfo =
-                new FileInfo(String.Format("C://Users//helga//Alice//Code//CMAES//full.{0}.{1}.{2}.weights.{3}.csv", Distribution, Dimension, objFun,
-                    dependentModel ? "timedependent" : "timeindependent"));
+                new FileInfo(String.Format("{0}//CMAES//full.{1}.{2}.{3}.weights.{4}.csv", data.FullName, Distribution,
+                    Dimension, objFun, dependentModel ? "timedependent" : "timeindependent"));
 
             FileInfoResults =
                 new FileInfo(
-                    String.Format("C://Users//helga//Alice//Code//CMAES//results//output.{0}.{1}.{2}.weights.{3}.csv",
-                        Distribution, Dimension, objFun, dependentModel ? "timedependent" : "timeindependent"));
+                    String.Format("{0}//CMAES//results//output.{1}.{2}.{3}.weights.{4}.csv", data.FullName, Distribution,
+                        Dimension, objFun, dependentModel ? "timedependent" : "timeindependent"));
 
             if (FileInfo.Exists)
             {
@@ -177,16 +176,16 @@ namespace ALICE
 
         private LinearModel ConvertToLinearModel(double[] x)
         {
-            double[][] xArray = new double[(int) Features.Local.Count][];
+            double[][] xArray = new double[Features.LocalCount][];
 
             if (N == NUM_FEATURES)
             {
-                for (var iFeat = 0; iFeat < (int) Features.Local.Count; iFeat++)
+                for (var iFeat = 0; iFeat < Features.LocalCount; iFeat++)
                     xArray[iFeat] = new[] {x[iFeat]};
             }
             else
             {
-                for (var iFeat = 0; iFeat < (int) Features.Local.Count; iFeat++)
+                for (var iFeat = 0; iFeat < Features.LocalCount; iFeat++)
                     xArray[iFeat] = new double[NumDimension];
 
                 for (int i = 0; i < N; i++)
@@ -463,7 +462,7 @@ namespace ALICE
                     header += String.Format(CultureInfo.InvariantCulture, ",Step.{0}", step);
                 st.WriteLine(header);
 
-                for (int iFeat = 0; iFeat < (int) Features.Local.Count; iFeat++)
+                for (int iFeat = 0; iFeat < Features.LocalCount; iFeat++)
                 {
                     Features.Local feat = (Features.Local) iFeat;
                     switch (feat)

@@ -8,12 +8,12 @@ namespace ALICE
     public class CDRData : HeuristicData
     {
         public CDRData(string distribution, string dimension, DataSet set, bool extended,
-            string model, int nrFeat, int nrModel)
-            : base(distribution, dimension, set, extended, "CDR", string.Format("{0}.{1}", nrFeat, nrModel))
+            string model, int nrFeat, int nrModel, DirectoryInfo data)
+            : base(distribution, dimension, set, extended, "CDR", string.Format("{0}.{1}", nrFeat, nrModel), data)
         {
             FileInfo =
                 new FileInfo(string.Format(
-                    "C://Users//helga//Alice//Code//PREF//CDR//{0}//F{1}.Model{2}.on.{3}.{4}.{5}.csv",
+                    "{0}//PREF//CDR//{1}//F{2}.Model{3}.on.{4}.{5}.{6}.csv", data.FullName,
                     model, nrFeat, nrModel,
                     Distribution, Dimension, Set));
         }

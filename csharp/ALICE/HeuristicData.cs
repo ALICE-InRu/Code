@@ -12,7 +12,7 @@ namespace ALICE
         public readonly string HeuristicName;
 
         public HeuristicData(string distribution, string dimension, DataSet set, bool extended, string heuristicName,
-            string heuristicValue) : base(distribution, dimension, set, extended)
+            string heuristicValue, DirectoryInfo data) : base(distribution, dimension, set, extended, data)
         {
             HeuristicName = heuristicName;
             HeuristicValue = heuristicValue;

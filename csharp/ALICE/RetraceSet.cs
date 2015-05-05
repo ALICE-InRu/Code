@@ -10,8 +10,8 @@ namespace ALICE
         internal int NumApplied;
 
         public RetraceSet(string distribution, string dimension, Trajectory track, bool extended,
-            Features.Mode featureMode)
-            : base(distribution, dimension, track, extended)
+            Features.Mode featureMode, DirectoryInfo data)
+            : base(distribution, dimension, track, extended, data)
         {
             Read();
             FeatureMode = featureMode;

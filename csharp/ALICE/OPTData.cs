@@ -13,11 +13,11 @@ namespace ALICE
     {
         public readonly int TimeLimit; // in minutes
 
-        internal OPTData(string distribution, string dimension, DataSet set, bool extended, bool readAll)
-            : base(distribution, dimension, set, extended)
+        internal OPTData(string distribution, string dimension, DataSet set, bool extended, bool readAll, DirectoryInfo data)
+            : base(distribution, dimension, set, extended, data)
         {
             FileInfo =
-                new FileInfo(string.Format("C://Users//helga//Alice//Code//OPT//{0}.{1}.{2}.csv",
+                new FileInfo(string.Format("{0}//OPT//{1}.{2}.{3}.csv", data.FullName,
                     Distribution, Dimension, Set));
 
             SetAlreadySavedPID(false);
@@ -31,8 +31,8 @@ namespace ALICE
                 Read();
         }
 
-        public OPTData(string distribution, string dimension, DataSet set, bool extended, int timeLimit_min)
-            : this(distribution, dimension, set, extended, false)
+        public OPTData(string distribution, string dimension, DataSet set, bool extended, int timeLimit_min, DirectoryInfo data)
+            : this(distribution, dimension, set, extended, false, data)
         {
             TimeLimit = timeLimit_min;
         }

@@ -23,8 +23,7 @@ namespace ALICE
             RND,
             ILUNSUP,
             ILSUP,
-            ILFIX,
-            Count
+            ILFIX
         }
 
         private readonly Func<Schedule, List<Preference>, int> _trajectory;
@@ -82,8 +81,8 @@ namespace ALICE
             return Math.Min(NumInstances, NumDimension < 100 ? (extended ? 5000 : 500) : (extended ? 1000 : 300));
         }
 
-        public TrainingSet(string distribution, string dimension, Trajectory track, bool extended)
-            : base(distribution, dimension, DataSet.train, extended)
+        public TrainingSet(string distribution, string dimension, Trajectory track, bool extended, DirectoryInfo data)
+            : base(distribution, dimension, DataSet.train, extended, data)
         {
             Track = track;
             string strTrack = track.ToString();
@@ -127,7 +126,7 @@ namespace ALICE
 
             FileInfo =
                 new FileInfo(string.Format(
-                    "C://Users//helga//Alice//Code//trainingData//trdat.{0}.{1}.{2}.{3}.csv",
+                    "{0}//Training//trdat.{1}.{2}.{3}.{4}.csv", data.FullName,
                     Distribution, Dimension, strTrack, FeatureMode));
 
             Columns.Add("Step", typeof (int));
@@ -144,7 +143,7 @@ namespace ALICE
         private string GetImitationModel(out LinearModel model, out double beta, out int currentIter, bool extended,
             string probability = "equal", bool timedependent = false, int numFeatures = 16, int modelID = 1)
         {
-            const string DIR = @"C:\users\helga\Alice\Code\PREF\weights";
+            DirectoryInfo dir = new DirectoryInfo(String.Format("{0}//..//PREF//weights", FileInfo.DirectoryName));
 
             string pat = String.Format("\\b(exhaust|full)\\.{0}.{1}.{2}.(OPT|IL([0-9]+){3}{4}).{5}.weights.{6}",
                 Distribution, Dimension, (char) PreferenceSet.Ranking.PartialPareto, Track.ToString().Substring(2),
@@ -152,9 +151,7 @@ namespace ALICE
 
             Regex reg = new Regex(pat);
 
-            var files = Directory.GetFiles(DIR, "*.csv")
-                .Where(path => reg.IsMatch(path))
-                .ToList();
+            var files = dir.GetFiles("*.csv").Where(path => reg.IsMatch(path.ToString())).ToList();
 
             if (files.Count <= 0)
                 throw new Exception(String.Format("Cannot find any weights belonging to {0}. Start with optimal!", Track));
@@ -162,7 +159,7 @@ namespace ALICE
             int[] iters = new int[files.Count];
             for (int i = 0; i < iters.Length; i++)
             {
-                Match m = reg.Match(files[i]);
+                Match m = reg.Match(files[i].Name);
                 if (m.Groups[2].Value == "OPT")
                     iters[i] = 0;
                 else
@@ -185,8 +182,8 @@ namespace ALICE
                     throw new Exception(String.Format("{0} is not supported as imitation learning!", Track));
             }
 
-            string weightFile = files[Array.FindIndex(iters, x => x == iters.Max())];
-            model = new LinearModel(new FileInfo(weightFile), numFeatures, modelID);
+            FileInfo weightFile = files[Array.FindIndex(iters, x => x == iters.Max())];
+            model = new LinearModel(weightFile, numFeatures, modelID);
             return String.Format("IL{0}{1}", currentIter, Track.ToString().Substring(2));
         }
 
@@ -208,11 +205,11 @@ namespace ALICE
                     switch (FeatureMode)
                     {
                         case Features.Mode.Global:
-                            for (var i = 0; i < (int) Features.Global.Count; i++)
+                            for (var i = 0; i < (int) Features.GlobalCount; i++)
                                 header += string.Format(",phi.{0}", (Features.Global) i);
                             break;
                         case Features.Mode.Local:
-                            for (var i = 0; i < (int) Features.Local.Count; i++)
+                            for (var i = 0; i < (int) Features.LocalCount; i++)
                                 header += string.Format(",phi.{0}", (Features.Local) i);
                             break;
                     }
@@ -239,11 +236,11 @@ namespace ALICE
                             switch (FeatureMode)
                             {
                                 case Features.Mode.Global:
-                                    for (var i = 0; i < (int) Features.Global.Count; i++)
+                                    for (var i = 0; i < (int) Features.GlobalCount; i++)
                                         info += string.Format(",{0:0}", pref.Feature.PhiGlobal[i]);
                                     break;
                                 case Features.Mode.Local:
-                                    for (var i = 0; i < (int) Features.Local.Count; i++)
+                                    for (var i = 0; i < (int) Features.LocalCount; i++)
                                         info += string.Format(",{0:0}", pref.Feature.PhiLocal[i]);
                                     break;
                             }

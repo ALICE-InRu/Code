@@ -53,11 +53,15 @@ namespace ALICE
 
             wrmMac, // work remaining for mac
             wrmJob, // work remaining for job
-            wrmTotal, // work remaining for total
+            wrmTotal // work remaining for total
 
             #endregion
 
-            Count
+        }
+
+        public static int LocalCount
+        {
+            get { return Enum.GetNames(typeof (Local)).Length; }
         }
 
         public enum Global
@@ -75,30 +79,35 @@ namespace ALICE
             // ReSharper disable once InconsistentNaming
             RNDmax,
             // ReSharper disable once InconsistentNaming
-            RNDmin,
+            RNDmin
 
             #endregion
 
-            Count
         }
+
+        public static int GlobalCount
+        {
+            get { return Enum.GetNames(typeof (Global)).Length; }
+        }
+
 
         // ReSharper disable once InconsistentNaming
         private int[] RND = new int[100];
-        public int[] PhiLocal = new int[(int)Local.Count];
-        public double[] PhiGlobal = new double[(int)Global.Count];
-        public bool[] Equiv = new bool[(int)SDRData.SDR.Count];
+        public int[] PhiLocal = new int[LocalCount];
+        public double[] PhiGlobal = new double[GlobalCount];
+        public bool[] Equiv = new bool[SDRData.SDRCount];
 
         public Features Difference(Features other)
         {
             Features diff = new Features();
 
-            for (int i = 0; i < (int)Local.Count; i++)
+            for (int i = 0; i < LocalCount; i++)
                 diff.PhiLocal[i] = PhiLocal[i] - other.PhiLocal[i];
 
-            for (int i = 0; i < (int)Global.Count; i++)
+            for (int i = 0; i < GlobalCount; i++)
                 diff.PhiGlobal[i] = PhiGlobal[i] - other.PhiGlobal[i];
 
-            for (int i = 0; i < (int)SDRData.SDR.Count; i++)
+            for (int i = 0; i < SDRData.SDRCount; i++)
                 diff.Equiv[i] = Equiv[i] == other.Equiv[i];
 
             diff.RND = null;
@@ -161,7 +170,7 @@ namespace ALICE
         {
             Schedule lookahead;
 
-            for (int i = 0; i < (int)SDRData.SDR.Count; i++)
+            for (int i = 0; i < SDRData.SDRCount; i++)
             {
                 SDRData.SDR sdr = (SDRData.SDR)i;
                 lookahead = current.Clone();
@@ -184,7 +193,7 @@ namespace ALICE
 
         public void GetEquivPhi(int job, Schedule current)
         {
-            for (int i = 0; i < (int)SDRData.SDR.Count; i++)
+            for (int i = 0; i < SDRData.SDRCount; i++)
                 Equiv[i] = job == current.JobChosenBySDR((SDRData.SDR)i);
         }
 

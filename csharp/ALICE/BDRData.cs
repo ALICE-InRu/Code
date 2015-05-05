@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 namespace ALICE
 {
@@ -12,8 +13,8 @@ namespace ALICE
         private readonly int _split;
 
         public BDRData(string distribution, string dimension, DataSet set, bool extended, SDR sdr1, SDR sdr2,
-            int split)
-            : base(distribution, dimension, set, extended, "BDR", String.Format("{0}.{1}.{2}", sdr1, sdr2, split))
+            int split, DirectoryInfo data)
+            : base(distribution, dimension, set, extended, "BDR", String.Format("{0}.{1}.{2}", sdr1, sdr2, split), data)
         {
             _sdr1 = sdr1;
             _sdr2 = sdr2;

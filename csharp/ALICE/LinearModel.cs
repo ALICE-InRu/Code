@@ -14,8 +14,8 @@ namespace ALICE
         private readonly int _modelID;
         public readonly Features.Mode FeatureMode;
 
-        public double[][] LocalWeights = new double[(int) Features.Local.Count][];
-        public readonly double[][] GlobalWeights = new double[(int) Features.Global.Count][];
+        public double[][] LocalWeights = new double[Features.LocalCount][];
+        public readonly double[][] GlobalWeights = new double[Features.GlobalCount][];
         public readonly bool TimeIndependent;
 
         protected LinearModel(Features.Mode featureMode, int numFeatures, int modelID, bool timeIndependent)
@@ -33,11 +33,11 @@ namespace ALICE
             switch (featureMode)
             {
                 case Features.Mode.Global:
-                    for (int i = 0; i < (int) Features.Global.Count; i++)
+                    for (int i = 0; i < Features.GlobalCount; i++)
                         GlobalWeights[i] = new double[timeDependentSteps];
                     break;
                 case Features.Mode.Local:
-                    for (int i = 0; i < (int) Features.Local.Count; i++)
+                    for (int i = 0; i < Features.LocalCount; i++)
                         LocalWeights[i] = new double[timeDependentSteps];
                     break;
             }
@@ -87,11 +87,11 @@ namespace ALICE
             switch (FeatureMode)
             {
                 case Features.Mode.Local:
-                    for (var i = 0; i < (int) Features.Local.Count; i++)
+                    for (var i = 0; i < Features.LocalCount; i++)
                         index += LocalWeights[i][step]*phi.PhiLocal[i];
                     break;
                 case Features.Mode.Global:
-                    for (var i = 0; i < (int) Features.Global.Count; i++)
+                    for (var i = 0; i < Features.GlobalCount; i++)
                         index += GlobalWeights[i][step]*phi.PhiGlobal[i];
                     break;
             }
@@ -99,7 +99,7 @@ namespace ALICE
         }
 
         public LinearModel(double[][] localWeights, int generation)
-            : this(Features.Mode.Local, localWeights[0].Length, (int) Features.Local.Count, generation)
+            : this(Features.Mode.Local, localWeights[0].Length, Features.LocalCount, generation)
         {
             LocalWeights = localWeights;
         }
@@ -119,8 +119,8 @@ namespace ALICE
             const int FEATURE = 3;
             const int VALUE = 5;
 
-            var strLocalFeature = new string[(int) Features.Local.Count];
-            for (var i = 0; i < (int) Features.Local.Count; i++)
+            var strLocalFeature = new string[Features.LocalCount];
+            for (var i = 0; i < Features.LocalCount; i++)
                 strLocalFeature[i] = String.Format("phi.{0}", (Features.Local) i);
 
             var models = new List<LinearModel>();
@@ -152,7 +152,7 @@ namespace ALICE
                 if (TimeIndependent) // robust model 
                 {
                     var value = Convert.ToDouble(line[VALUE], CultureInfo.InvariantCulture);
-                    for (var i = 0; i < (int) Features.Local.Count; i++)
+                    for (var i = 0; i < Features.LocalCount; i++)
                     {
                         if (String.Compare(local, strLocalFeature[i], StringComparison.InvariantCultureIgnoreCase) != 0)
                             continue;
@@ -163,7 +163,7 @@ namespace ALICE
                 }
                 else
                 {
-                    for (var i = 0; i < (int) Features.Local.Count; i++)
+                    for (var i = 0; i < Features.LocalCount; i++)
                     {
                         if (String.Compare(local, strLocalFeature[i], StringComparison.InvariantCultureIgnoreCase) != 0)
                             continue;
