@@ -19,7 +19,7 @@ namespace Cheshire
         {
             InitializeComponent();
             InitializeBackgroundWorker();
-            Icon ico = new Icon(String.Format(@"C:\users\helga\alice\Code\csharp\cheshire\Resources\chesirecat.ico"));
+            Icon ico = new Icon(String.Format(@"C:\users\helga\alice\Code\csharp\cheshire\Resources\cheshirecat.ico"));
             Icon = ico;
 
             TimeLimit.Value = AUTOSAVE;
@@ -706,11 +706,37 @@ namespace Cheshire
 
         private void cancelAsyncButtonApply_Click(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            bkgWorkerApply.CancelAsync();
+            textHeader.AppendText("\nCancelling application of models...");
+            cancelAsyncButtonApply.Visible = false;
         }
 
         private void startAsyncButtonApply_Click(object sender, EventArgs e)
         {
+            bool dependentModel = DependentModel.Checked && !IndependentModel.Checked;
+            
+            CMAESData.ObjectiveFunction objFun = CMAwrtMakespan.Checked
+                ? CMAESData.ObjectiveFunction.MinimumMakespan
+                : CMAESData.ObjectiveFunction.MinimumRho;
+
+            LinearModel[] cmaLinearModel = (from dim in Dimension.CheckedItems.Cast<string>()
+                from problem in Problems.CheckedItems.Cast<string>()
+                select new LinearModel(problem, dim, objFun, dependentModel, DataDir.FullName)).ToArray();
+
+            string probability = "equal";
+            int numFeatures = 16;
+            int modelID = 1; 
+            int iter = -1;
+
+            LinearModel[] prefLinearModel = (from dim in Dimension.CheckedItems.Cast<string>()
+                from problem in Problems.CheckedItems.Cast<string>()
+                from track in Tracks.CheckedItems.Cast<string>()
+                from rank in Ranks.CheckedItems.Cast<string>()
+                select new LinearModel(problem, dim, 
+                    (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
+                    Extended.CheckedItems.Count > 0,
+                    (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank), dependentModel, DataDir, iter, probability, numFeatures, modelID)).ToArray();
+            
             throw new NotImplementedException();
         }
     }

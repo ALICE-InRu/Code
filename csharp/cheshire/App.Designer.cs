@@ -1,7 +1,5 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows.Forms;
-using ALICE;
 
 namespace Cheshire
 {
@@ -97,7 +95,7 @@ namespace Cheshire
             this.startAsyncButtonApply = new System.Windows.Forms.Button();
             this.textHeader = new System.Windows.Forms.RichTextBox();
             this.textContent = new System.Windows.Forms.RichTextBox();
-            this.bkgApply = new System.ComponentModel.BackgroundWorker();
+            this.bkgWorkerApply = new System.ComponentModel.BackgroundWorker();
             this.groupBoxData.SuspendLayout();
             this.groupBoxSet.SuspendLayout();
             this.groupBoxProblem.SuspendLayout();
@@ -942,6 +940,6 @@ namespace Cheshire
         private CheckedListBox ProblemApply;
         private Button cancelAsyncButtonApply;
         private Button startAsyncButtonApply;
-        private BackgroundWorker bkgApply;
+        private BackgroundWorker bkgWorkerApply;
     }
 }

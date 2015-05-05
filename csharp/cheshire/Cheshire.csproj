@@ -9,7 +9,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Cheshire</RootNamespace>
-    <AssemblyName>Cheshire</AssemblyName>
+    <AssemblyName>ALICE application</AssemblyName>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
@@ -69,10 +69,14 @@
     <CodeAnalysisFailOnMissingRules>false</CodeAnalysisFailOnMissingRules>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>chesirecat.ico</ApplicationIcon>
+    <ApplicationIcon>cheshirecat.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>Cheshire.Program</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup>
+    <NoWin32Manifest>true</NoWin32Manifest>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="alglibnet2">
@@ -131,19 +135,15 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Include="trainingData\cmdLiblinear.R" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="cheshirecat.ico" />
     <Content Include="chesirecat.ico" />
     <Content Include="lp\fssp-post.mod" />
     <Content Include="lp\fssp-pre.mod" />
     <Content Include="lp\jssp-post.mod" />
     <Content Include="lp\jssp-pre.mod" />
-    <Content Include="rawData\flowshop1.txt" />
-    <Content Include="rawData\flowshop2.txt" />
-    <Content Include="rawData\jobshop1.txt" />
-    <Content Include="rawData\jobshop2.txt" />
-    <None Include="Resources\chesirecat.ico" />
+    <Content Include="Resources\cheshirecat.ico" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ALICE\ALICE.csproj">

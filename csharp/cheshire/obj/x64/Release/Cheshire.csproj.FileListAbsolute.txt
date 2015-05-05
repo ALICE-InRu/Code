@@ -1,13 +1,12 @@
-C:\Users\helga\alice\Code\csharp\cheshire\obj\x64\Release\Cheshire.csproj.GenerateResource.Cache
+C:\Users\helga\alice\Code\csharp\cheshire\bin\x64\Release\ALICE application.exe
+C:\Users\helga\alice\Code\csharp\cheshire\bin\x64\Release\ALICE application.pdb
+C:\Users\helga\alice\Code\csharp\cheshire\bin\x64\Release\alglibnet2.dll
 C:\Users\helga\alice\Code\csharp\cheshire\bin\x64\Release\ALICE.dll
 C:\Users\helga\alice\Code\csharp\cheshire\bin\x64\Release\Gurobi60.NET.dll
 C:\Users\helga\alice\Code\csharp\cheshire\bin\x64\Release\ALICE.pdb
 C:\Users\helga\alice\Code\csharp\cheshire\bin\x64\Release\Gurobi60.NET.xml
-C:\Users\helga\alice\Code\csharp\cheshire\obj\x64\Release\Cheshire.csprojResolveAssemblyReference.cache
-C:\Users\helga\alice\Code\csharp\cheshire\bin\x64\Release\alglibnet2.dll
 C:\Users\helga\alice\Code\csharp\cheshire\obj\x64\Release\Cheshire.App.resources
 C:\Users\helga\alice\Code\csharp\cheshire\obj\x64\Release\Cheshire.Properties.Resources.resources
-C:\Users\helga\alice\Code\csharp\cheshire\obj\x64\Release\Cheshire.exe
-C:\Users\helga\alice\Code\csharp\cheshire\obj\x64\Release\Cheshire.pdb
-C:\Users\helga\alice\Code\csharp\cheshire\bin\x64\Release\Cheshire.exe
-C:\Users\helga\alice\Code\csharp\cheshire\bin\x64\Release\Cheshire.pdb
+C:\Users\helga\alice\Code\csharp\cheshire\obj\x64\Release\Cheshire.csproj.GenerateResource.Cache
+C:\Users\helga\alice\Code\csharp\cheshire\obj\x64\Release\ALICE application.exe
+C:\Users\helga\alice\Code\csharp\cheshire\obj\x64\Release\ALICE application.pdb
