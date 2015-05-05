@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
-using Cheshire;
 
-namespace Chesire
+namespace Cheshire
 {
     internal static class Program
     {

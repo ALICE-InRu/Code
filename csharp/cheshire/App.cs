@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using ALICE;
@@ -10,13 +12,23 @@ namespace Cheshire
     public partial class App : Form
     {
         private const int AUTOSAVE = 30; // minutes
+        private static readonly DirectoryInfo DataDir = new DirectoryInfo(@"C:\users\helga\alice\Data");
 
+        [SuppressMessage("ReSharper", "CoVariantArrayConversion")]
         public App()
         {
             InitializeComponent();
             InitializeBackgroundWorker();
             Icon ico = new Icon(String.Format(@"C:\users\helga\alice\Code\csharp\cheshire\Resources\chesirecat.ico"));
             Icon = ico;
+
+            TimeLimit.Value = AUTOSAVE;
+            Tracks.Items.AddRange(Enum.GetNames(typeof(TrainingSet.Trajectory)));
+            Ranks.Items.AddRange(Enum.GetNames(typeof(PreferenceSet.Ranking)));
+            Set.Items.AddRange(Enum.GetNames(typeof(RawData.DataSet)));
+            SDR.Items.AddRange(Enum.GetNames(typeof (SDRData.SDR)));
+            SDR1.Items.AddRange(Enum.GetNames(typeof(SDRData.SDR)));
+            SDR2.Items.AddRange(Enum.GetNames(typeof(SDRData.SDR)));
         }
 
         private void App_Load(object sender, EventArgs e)
@@ -73,11 +85,14 @@ namespace Cheshire
 
         private void buttonSDRStart_Click(object sender, EventArgs e)
         {
-            SDRData[] sets = (from set in Set.CheckedItems.Cast<RawData.DataSet>()
+            SDRData[] sets = (from set in Set.CheckedItems.Cast<string>()
                 from dim in Dimension.CheckedItems.Cast<string>()
                 from problem in Problems.CheckedItems.Cast<string>()
-                from sdr in SDR.CheckedItems.Cast<SDRData.SDR>()
-                select new SDRData(problem, dim, set, Extended.CheckedItems.Count > 0, sdr)).ToArray();
+                from sdr in SDR.CheckedItems.Cast<string>()
+                select
+                    new SDRData(problem, dim, (RawData.DataSet) Enum.Parse(typeof (RawData.DataSet), set),
+                        Extended.CheckedItems.Count > 0, (SDRData.SDR) Enum.Parse(typeof (SDRData.SDR), sdr), DataDir))
+                .ToArray();
 
             if (sets.Length == 0)
             {
@@ -163,10 +178,13 @@ namespace Cheshire
 
         private void startAsyncButtonOptimize_Click(object sender, EventArgs e)
         {
-            OPTData[] sets = (from set in Set.CheckedItems.Cast<RawData.DataSet>()
+            OPTData[] sets = (from set in Set.CheckedItems.Cast<string>()
                 from dim in Dimension.CheckedItems.Cast<string>()
                 from problem in Problems.CheckedItems.Cast<string>()
-                select new OPTData(problem, dim, set, Extended.CheckedItems.Count > 0, Convert.ToInt32(TimeLimit.Value))).ToArray();
+                select
+                    new OPTData(problem, dim, (RawData.DataSet) Enum.Parse(typeof (RawData.DataSet), set),
+                        Extended.CheckedItems.Count > 0, Convert.ToInt32(TimeLimit.Value),
+                        DataDir)).ToArray();
 
             if (sets.Length == 0)
             {
@@ -268,10 +286,13 @@ namespace Cheshire
 
         private void startAsyncButtonTrSet_Click(object sender, EventArgs e)
         {
-            TrainingSet[] sets = (from track in Tracks.CheckedItems.Cast<TrainingSet.Trajectory>()
+            TrainingSet[] sets = (from track in Tracks.CheckedItems.Cast<string>()
                 from dim in Dimension.CheckedItems.Cast<string>()
                 from problem in Problems.CheckedItems.Cast<string>()
-                select new TrainingSet(problem, dim, track, Extended.CheckedItems.Count > 0)).ToArray();
+                select
+                    new TrainingSet(problem, dim,
+                        (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
+                        Extended.CheckedItems.Count > 0, DataDir)).ToArray();
 
             if (sets.Length == 0)
             {
@@ -376,8 +397,11 @@ namespace Cheshire
 
             RetraceSet[] sets = (from problem in Problems.CheckedItems.Cast<string>()
                 from dim in Dimension.CheckedItems.Cast<string>()
-                from track in Tracks.CheckedItems.Cast<TrainingSet.Trajectory>()
-                select new RetraceSet(problem, dim, track, Extended.CheckedItems.Count > 0, featureMode)).ToArray();
+                from track in Tracks.CheckedItems.Cast<string>()
+                select
+                    new RetraceSet(problem, dim,
+                        (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
+                        Extended.CheckedItems.Count > 0, featureMode, DataDir)).ToArray();
  
             if (sets.Length == 0)
             {
@@ -456,11 +480,15 @@ namespace Cheshire
 
         private void startAsyncButtonPrefSet_Click(object sender, EventArgs e)
         {
-            PreferenceSet[] sets = (from rank in Ranks.CheckedItems.Cast<PreferenceSet.Ranking>()
-                from track in Tracks.CheckedItems.Cast<TrainingSet.Trajectory>()
+            PreferenceSet[] sets = (from rank in Ranks.CheckedItems.Cast<string>()
+                from track in Tracks.CheckedItems.Cast<string>()
                 from problem in Problems.CheckedItems.Cast<string>()
                 from dim in Dimension.CheckedItems.Cast<string>()
-                select new PreferenceSet(problem, dim, track, Extended.CheckedItems.Count > 0, rank)).ToArray();
+                select
+                    new PreferenceSet(problem, dim,
+                        (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
+                        Extended.CheckedItems.Count > 0,
+                        (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank), DataDir)).ToArray();
 
             if (sets.Length == 0)
             {
@@ -536,14 +564,17 @@ namespace Cheshire
 
         private void buttonSimpleBDR_Click(object sender, EventArgs e)
         {
-            BDRData[] sets = (from set in Set.CheckedItems.Cast<RawData.DataSet>()
+            BDRData[] sets = (from set in Set.CheckedItems.Cast<string>()
                 from dim in Dimension.CheckedItems.Cast<string>()
                 from problem in Problems.CheckedItems.Cast<string>()
-                from sdr1 in SDR1.CheckedItems.Cast<SDRData.SDR>()
-                from sdr2 in SDR2.CheckedItems.Cast<SDRData.SDR>()
+                from sdr1 in SDR1.CheckedItems.Cast<string>()
+                from sdr2 in SDR2.CheckedItems.Cast<string>()
                 select
-                    new BDRData(problem, dim, set, Extended.CheckedItems.Count > 0, sdr1, sdr2,
-                        Convert.ToInt32(splitBDR.Value))).ToArray();
+                    new BDRData(problem, dim, (RawData.DataSet) Enum.Parse(typeof (RawData.DataSet), set),
+                        Extended.CheckedItems.Count > 0,
+                        (SDRData.SDR) Enum.Parse(typeof (SDRData.SDR), sdr1),
+                        (SDRData.SDR) Enum.Parse(typeof (SDRData.SDR), sdr2),
+                        Convert.ToInt32(splitBDR.Value), DataDir)).ToArray();
 
             if (sets.Length == 0)
             {
@@ -588,7 +619,7 @@ namespace Cheshire
 
             CMAESData[] sets = (from dim in Dimension.CheckedItems.Cast<string>()
                 from problem in Problems.CheckedItems.Cast<string>()
-                select new CMAESData(problem, dim, objFun, dependentModel)).ToArray();
+                select new CMAESData(problem, dim, objFun, dependentModel, DataDir)).ToArray();
 
             if (sets.Length == 0)
             {

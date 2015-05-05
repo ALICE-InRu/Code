@@ -104,7 +104,7 @@ namespace Cheshire
             this.groupBoxDim.SuspendLayout();
             this.groupBoxCMAObjFun.SuspendLayout();
             this.groupBoxBDR.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize) (this.splitBDR)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.splitBDR)).BeginInit();
             this.groupBoxPREF.SuspendLayout();
             this.groupBoxTracks.SuspendLayout();
             this.groupBoxRanks.SuspendLayout();
@@ -112,8 +112,8 @@ namespace Cheshire
             this.groupBoxDependent.SuspendLayout();
             this.groupBoxSDR.SuspendLayout();
             this.groupBoxOpt.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize) (this.TimeLimit)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize) (this.splitContainerForm)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.TimeLimit)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerForm)).BeginInit();
             this.splitContainerForm.Panel1.SuspendLayout();
             this.splitContainerForm.Panel2.SuspendLayout();
             this.splitContainerForm.SuspendLayout();
@@ -129,7 +129,7 @@ namespace Cheshire
             this.groupBoxData.Controls.Add(this.groupBoxDim);
             this.groupBoxData.Location = new System.Drawing.Point(10, 10);
             this.groupBoxData.Name = "groupBoxData";
-            this.groupBoxData.Size = new System.Drawing.Size(130, 377);
+            this.groupBoxData.Size = new System.Drawing.Size(130, 372);
             this.groupBoxData.TabIndex = 51;
             this.groupBoxData.TabStop = false;
             this.groupBoxData.Text = "Problem instances";
@@ -138,7 +138,7 @@ namespace Cheshire
             // 
             this.groupBoxSet.Controls.Add(this.Set);
             this.groupBoxSet.Controls.Add(this.Extended);
-            this.groupBoxSet.Location = new System.Drawing.Point(6, 287);
+            this.groupBoxSet.Location = new System.Drawing.Point(6, 280);
             this.groupBoxSet.Name = "groupBoxSet";
             this.groupBoxSet.Size = new System.Drawing.Size(119, 80);
             this.groupBoxSet.TabIndex = 52;
@@ -153,19 +153,12 @@ namespace Cheshire
             this.Set.Size = new System.Drawing.Size(110, 34);
             this.Set.TabIndex = 49;
             this.Set.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
-            this.Set.Items.AddRange(new object[]
-            {
-                RawData.DataSet.train,
-                RawData.DataSet.test
-            });
             // 
             // Extended
             // 
             this.Extended.FormattingEnabled = true;
-            this.Extended.Items.AddRange(new object[]
-            {
-                "extended"
-            });
+            this.Extended.Items.AddRange(new object[] {
+            "extended"});
             this.Extended.Location = new System.Drawing.Point(5, 55);
             this.Extended.Name = "Extended";
             this.Extended.Size = new System.Drawing.Size(110, 19);
@@ -185,18 +178,16 @@ namespace Cheshire
             // Problems
             // 
             this.Problems.FormattingEnabled = true;
-            this.Problems.Items.AddRange(new object[]
-            {
-                "j.rnd",
-                "j.rndn",
-                "f.rnd",
-                "f.rndn",
-                "f.jc",
-                "f.mc",
-                "f.mxc",
-                "j.rnd_p1mdoubled",
-                "j.rnd_pj1doubled"
-            });
+            this.Problems.Items.AddRange(new object[] {
+            "j.rnd",
+            "j.rndn",
+            "f.rnd",
+            "f.rndn",
+            "f.jc",
+            "f.mc",
+            "f.mxc",
+            "j.rnd_p1mdoubled",
+            "j.rnd_pj1doubled"});
             this.Problems.Location = new System.Drawing.Point(5, 15);
             this.Problems.Name = "Problems";
             this.Problems.Size = new System.Drawing.Size(110, 139);
@@ -216,14 +207,12 @@ namespace Cheshire
             // Dimension
             // 
             this.Dimension.FormattingEnabled = true;
-            this.Dimension.Items.AddRange(new object[]
-            {
-                "6x5",
-                "8x8",
-                "10x10",
-                "12x12",
-                "14x14"
-            });
+            this.Dimension.Items.AddRange(new object[] {
+            "6x5",
+            "8x8",
+            "10x10",
+            "12x12",
+            "14x14"});
             this.Dimension.Location = new System.Drawing.Point(5, 15);
             this.Dimension.Name = "Dimension";
             this.Dimension.Size = new System.Drawing.Size(110, 79);
@@ -243,7 +232,7 @@ namespace Cheshire
             this.groupBoxCMAObjFun.Controls.Add(this.startAsyncButtonCMA);
             this.groupBoxCMAObjFun.Controls.Add(this.CMAwrtMakespan);
             this.groupBoxCMAObjFun.Controls.Add(this.CMAwrtRho);
-            this.groupBoxCMAObjFun.Location = new System.Drawing.Point(10, 470);
+            this.groupBoxCMAObjFun.Location = new System.Drawing.Point(12, 460);
             this.groupBoxCMAObjFun.Name = "groupBoxCMAObjFun";
             this.groupBoxCMAObjFun.Size = new System.Drawing.Size(130, 84);
             this.groupBoxCMAObjFun.TabIndex = 23;
@@ -324,11 +313,13 @@ namespace Cheshire
             this.splitBDR.Name = "splitBDR";
             this.splitBDR.Size = new System.Drawing.Size(40, 20);
             this.splitBDR.TabIndex = 49;
-            this.splitBDR.Value = 40;
-            this.splitBDR.Minimum = 0;
-            this.splitBDR.Maximum = 100;
+            this.splitBDR.Value = new decimal(new int[] {
+            40,
+            0,
+            0,
+            0});
             // 
-            // lblSplitBDR
+            // labelSplitBDR
             // 
             this.labelSplitBDR.AutoSize = true;
             this.labelSplitBDR.Location = new System.Drawing.Point(2, 17);
@@ -354,14 +345,6 @@ namespace Cheshire
             this.SDR2.Size = new System.Drawing.Size(100, 64);
             this.SDR2.TabIndex = 47;
             this.SDR2.SelectedIndexChanged += new System.EventHandler(this.ckb_ClickAllowOnly1);
-            this.SDR2.Items.AddRange(new object[]
-            {
-                SDRData.SDR.SPT,
-                SDRData.SDR.LPT,
-                SDRData.SDR.LWR,
-                SDRData.SDR.MWR,
-                SDRData.SDR.RND
-            });
             // 
             // SDR1
             // 
@@ -371,14 +354,6 @@ namespace Cheshire
             this.SDR1.Size = new System.Drawing.Size(100, 64);
             this.SDR1.TabIndex = 52;
             this.SDR1.SelectedIndexChanged += new System.EventHandler(this.ckb_ClickAllowOnly1);
-            this.SDR1.Items.AddRange(new object[]
-            {
-                SDRData.SDR.SPT,
-                SDRData.SDR.LPT,
-                SDRData.SDR.LWR,
-                SDRData.SDR.MWR,
-                SDRData.SDR.RND
-            });
             // 
             // lblSDR2
             // 
@@ -396,7 +371,7 @@ namespace Cheshire
             this.groupBoxPREF.Controls.Add(this.groupBoxRetrace);
             this.groupBoxPREF.Location = new System.Drawing.Point(260, 10);
             this.groupBoxPREF.Name = "groupBoxPREF";
-            this.groupBoxPREF.Size = new System.Drawing.Size(161, 444);
+            this.groupBoxPREF.Size = new System.Drawing.Size(149, 444);
             this.groupBoxPREF.TabIndex = 4;
             this.groupBoxPREF.TabStop = false;
             this.groupBoxPREF.Text = "Preference learning";
@@ -441,19 +416,6 @@ namespace Cheshire
             this.Tracks.Size = new System.Drawing.Size(125, 154);
             this.Tracks.TabIndex = 23;
             this.Tracks.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
-            this.Tracks.Items.AddRange(new object[]
-            {
-                TrainingSet.Trajectory.OPT,
-                TrainingSet.Trajectory.SPT,
-                TrainingSet.Trajectory.LPT,
-                TrainingSet.Trajectory.LWR,
-                TrainingSet.Trajectory.MWR,
-                TrainingSet.Trajectory.RND,
-                TrainingSet.Trajectory.CMA,
-                TrainingSet.Trajectory.ILUNSUP,
-                TrainingSet.Trajectory.ILSUP,
-                TrainingSet.Trajectory.ILFIX
-            });
             // 
             // groupBoxRanks
             // 
@@ -475,13 +437,6 @@ namespace Cheshire
             this.Ranks.Size = new System.Drawing.Size(125, 64);
             this.Ranks.TabIndex = 24;
             this.Ranks.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
-            this.Ranks.Items.AddRange(new object[]
-            {
-                PreferenceSet.Ranking.All,
-                PreferenceSet.Ranking.Basic,
-                PreferenceSet.Ranking.FullPareto,
-                PreferenceSet.Ranking.PartialPareto
-            });
             // 
             // cancelAsyncButtonRankTrData
             // 
@@ -541,10 +496,10 @@ namespace Cheshire
             this.PhiLocal.AutoSize = true;
             this.PhiLocal.Location = new System.Drawing.Point(5, 15);
             this.PhiLocal.Name = "PhiLocal";
-            this.PhiLocal.Size = new System.Drawing.Size(45, 17);
+            this.PhiLocal.Size = new System.Drawing.Size(92, 17);
             this.PhiLocal.TabIndex = 30;
             this.PhiLocal.TabStop = true;
-            this.PhiLocal.Text = Features.Mode.Local.ToString();
+            this.PhiLocal.Text = "Local features";
             this.PhiLocal.UseVisualStyleBackColor = true;
             // 
             // PhiGlobal
@@ -552,10 +507,10 @@ namespace Cheshire
             this.PhiGlobal.AutoSize = true;
             this.PhiGlobal.Location = new System.Drawing.Point(5, 35);
             this.PhiGlobal.Name = "PhiGlobal";
-            this.PhiGlobal.Size = new System.Drawing.Size(45, 17);
+            this.PhiGlobal.Size = new System.Drawing.Size(96, 17);
             this.PhiGlobal.TabIndex = 32;
             this.PhiGlobal.TabStop = true;
-            this.PhiGlobal.Text = Features.Mode.Global.ToString();
+            this.PhiGlobal.Text = "Global features";
             this.PhiGlobal.UseVisualStyleBackColor = true;
             // 
             // groupBoxDependent
@@ -620,14 +575,6 @@ namespace Cheshire
             this.SDR.Size = new System.Drawing.Size(100, 79);
             this.SDR.TabIndex = 24;
             this.SDR.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
-            this.SDR.Items.AddRange(new object[]
-            {
-                SDRData.SDR.SPT,
-                SDRData.SDR.LPT,
-                SDRData.SDR.LWR,
-                SDRData.SDR.MWR,
-                SDRData.SDR.RND
-            });
             // 
             // groupBoxOpt
             // 
@@ -635,7 +582,7 @@ namespace Cheshire
             this.groupBoxOpt.Controls.Add(this.lblTimeLimit);
             this.groupBoxOpt.Controls.Add(this.cancelAsyncButtonOptimize);
             this.groupBoxOpt.Controls.Add(this.startAsyncButtonOptimize);
-            this.groupBoxOpt.Location = new System.Drawing.Point(10, 392);
+            this.groupBoxOpt.Location = new System.Drawing.Point(10, 381);
             this.groupBoxOpt.Name = "groupBoxOpt";
             this.groupBoxOpt.Size = new System.Drawing.Size(130, 73);
             this.groupBoxOpt.TabIndex = 24;
@@ -645,12 +592,14 @@ namespace Cheshire
             // TimeLimit
             // 
             this.TimeLimit.Location = new System.Drawing.Point(80, 13);
-            this.TimeLimit.Maximum = 120;
-            this.TimeLimit.Minimum = 0;
+            this.TimeLimit.Maximum = new decimal(new int[] {
+            120,
+            0,
+            0,
+            0});
             this.TimeLimit.Name = "TimeLimit";
             this.TimeLimit.Size = new System.Drawing.Size(44, 20);
             this.TimeLimit.TabIndex = 34;
-            this.TimeLimit.Value = AUTOSAVE;
             // 
             // lblTimeLimit
             // 
@@ -722,9 +671,9 @@ namespace Cheshire
             this.groupApply.Controls.Add(this.groupBoxProblemApply);
             this.groupApply.Controls.Add(this.cancelAsyncButtonApply);
             this.groupApply.Controls.Add(this.startAsyncButtonApply);
-            this.groupApply.Location = new System.Drawing.Point(146, 470);
+            this.groupApply.Location = new System.Drawing.Point(146, 460);
             this.groupApply.Name = "groupApply";
-            this.groupApply.Size = new System.Drawing.Size(254, 190);
+            this.groupApply.Size = new System.Drawing.Size(263, 190);
             this.groupApply.TabIndex = 39;
             this.groupApply.TabStop = false;
             this.groupApply.Text = "Apply";
@@ -743,14 +692,12 @@ namespace Cheshire
             // DimensionApply
             // 
             this.DimensionApply.FormattingEnabled = true;
-            this.DimensionApply.Items.AddRange(new object[]
-            {
-                "6x5",
-                "8x8",
-                "10x10",
-                "12x12",
-                "14x14"
-            });
+            this.DimensionApply.Items.AddRange(new object[] {
+            "6x5",
+            "8x8",
+            "10x10",
+            "12x12",
+            "14x14"});
             this.DimensionApply.Location = new System.Drawing.Point(5, 15);
             this.DimensionApply.Name = "DimensionApply";
             this.DimensionApply.Size = new System.Drawing.Size(110, 79);
@@ -760,11 +707,9 @@ namespace Cheshire
             // ORLIBApply
             // 
             this.ORLIBApply.FormattingEnabled = true;
-            this.ORLIBApply.Items.AddRange(new object[]
-            {
-                "FSP ORLIB",
-                "JSP ORLIB"
-            });
+            this.ORLIBApply.Items.AddRange(new object[] {
+            "FSP ORLIB",
+            "JSP ORLIB"});
             this.ORLIBApply.Location = new System.Drawing.Point(131, 118);
             this.ORLIBApply.Name = "ORLIBApply";
             this.ORLIBApply.Size = new System.Drawing.Size(110, 34);
@@ -784,18 +729,16 @@ namespace Cheshire
             // ProblemApply
             // 
             this.ProblemApply.FormattingEnabled = true;
-            this.ProblemApply.Items.AddRange(new object[]
-            {
-                "j.rnd",
-                "j.rndn",
-                "f.rnd",
-                "f.rndn",
-                "f.jc",
-                "f.mc",
-                "f.mxc",
-                "j.rnd_p1mdoubled",
-                "j.rnd_pj1doubled"
-            });
+            this.ProblemApply.Items.AddRange(new object[] {
+            "j.rnd",
+            "j.rndn",
+            "f.rnd",
+            "f.rndn",
+            "f.jc",
+            "f.mc",
+            "f.mxc",
+            "j.rnd_p1mdoubled",
+            "j.rnd_pj1doubled"});
             this.ProblemApply.Location = new System.Drawing.Point(5, 15);
             this.ProblemApply.Name = "ProblemApply";
             this.ProblemApply.Size = new System.Drawing.Size(110, 139);
@@ -846,7 +789,7 @@ namespace Cheshire
             this.ClientSize = new System.Drawing.Size(866, 660);
             this.Controls.Add(this.splitContainerForm);
             this.Name = "App";
-            this.Text = "JSP PREF SIMULATION";
+            this.Text = "ALICE: Adaptive Learning Intelligent Composite rulEs";
             this.Load += new System.EventHandler(this.App_Load);
             this.groupBoxData.ResumeLayout(false);
             this.groupBoxSet.ResumeLayout(false);
@@ -856,7 +799,7 @@ namespace Cheshire
             this.groupBoxCMAObjFun.PerformLayout();
             this.groupBoxBDR.ResumeLayout(false);
             this.groupBoxBDR.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize) (this.splitBDR)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.splitBDR)).EndInit();
             this.groupBoxPREF.ResumeLayout(false);
             this.groupBoxTracks.ResumeLayout(false);
             this.groupBoxRanks.ResumeLayout(false);
@@ -867,10 +810,10 @@ namespace Cheshire
             this.groupBoxSDR.ResumeLayout(false);
             this.groupBoxOpt.ResumeLayout(false);
             this.groupBoxOpt.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize) (this.TimeLimit)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.TimeLimit)).EndInit();
             this.splitContainerForm.Panel1.ResumeLayout(false);
             this.splitContainerForm.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize) (this.splitContainerForm)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerForm)).EndInit();
             this.splitContainerForm.ResumeLayout(false);
             this.groupApply.ResumeLayout(false);
             this.groupBoxDimensionApply.ResumeLayout(false);
