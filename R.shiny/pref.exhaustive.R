@@ -171,16 +171,16 @@ plot.exhaust.paretoFront <- function(prefSummary,paretoFront,plotAllSolutions=T,
   return(p)
 }
 
-rankPareto <- function(weights,byVar){
+rankPareto <- function(x,byVar){
 
-  weights=arrange(weights, desc(weights[,byVar]), weights$Validation.Rho)
-  weights$Pareto.front=F
-  weights[which(!duplicated(cummin(weights$Validation.Rho))),'Pareto.front']=T
+  x=plyr::arrange(x, desc(x[,byVar]), x$Validation.Rho)
+  x$Pareto.front=F
+  x[which(!duplicated(cummin(x$Validation.Rho))),'Pareto.front']=T
 
-  front=subset(weights,Pareto.front==T)
+  front=subset(x,Pareto.front==T)
   front=front[order(front$Validation.Rho),]
 
-  return(list(Front=front,Ranked=weights))
+  return(list(Front=front,Ranked=x))
 }
 
 get.prefAccuracy <- function(file,type=NULL,onlyMean=F){
@@ -231,7 +231,7 @@ get.optAccuracy <- function(file,reportMean=T){
   return(acc)
 }
 
-get.prefSummary <- function(problems,dim,tracks='OPT',rank='p',stepwiseBias='equal',timedependent=F){
+get.prefSummary <- function(problems,dim,tracks='OPT',rank='p',bias='equal',timedependent=F){
 
   get.prefSummary1 <- function(file,Set='Validation'){
     rho.stats = rho.statistic(file)
@@ -259,7 +259,7 @@ get.prefSummary <- function(problems,dim,tracks='OPT',rank='p',stepwiseBias='equ
   pat=paste('exhaust',
             paste0('(',paste(problems,collapse = '|'),')'),dim,rank,
             paste0('(',paste(tracks,collapse = '|'),')'),
-            paste0('(',paste(stepwiseBias,collapse='|'),')'),'weights',
+            paste0('(',paste(bias,collapse='|'),')'),'weights',
             ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.')
   files=list.files(paste0(DataDir,'PREF/summary'),pat)
   prefSummary=NULL
