@@ -1,10 +1,10 @@
-get.stepwiseProbability <- function(steps,problem,dim,probability){
+get.stepwiseBias <- function(steps,problem,dim,bias){
   nDim=numericDimension(dim)
   half=round(nDim/2,digit=0)
   last=nDim-half
-  w=switch(probability,
+  w=switch(bias,
            'linear'=1:max(steps),
-           'opt'=1-get.StepwiseOptimality(problem,dim,'OPT',nDim)$Stats$rnd.mu,
+           'opt'=1-get.StepwiseOptimality(problem,dim,'OPT')$Stats$rnd.mu,
            'bcs'=subset(get.BestWorst(problem,dim),Track=='OPT' & Followed==F)$best.mu,
            'wcs'=subset(get.BestWorst(problem,dim),Track=='OPT' & Followed==F)$worst.mu,
            'dbl1st'=c(rep(2,half),rep(1,last)),
@@ -14,11 +14,11 @@ get.stepwiseProbability <- function(steps,problem,dim,probability){
   return(w[steps])
 }
 
-estimate.prefModels <- function(problem,dim,start,probability,timedependent,tracks,rank){
+estimate.prefModels <- function(problem,dim,start,bias,timedependent,tracks,rank){
   ix=grepl('IL',tracks)
   if(any(ix)){ tracks[ix]=paste0(substr(tracks[ix],1,2),'[0-9]+',substr(tracks[ix],3,100)) }
   tracks=paste0('(',paste(tracks,collapse = '|'),')')
-  files=list.files('..//PREF/CDR/',paste(start,problem,dim,rank,tracks,probability,"weights",ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
+  files=list.files(paste0(DataDir,'PREF/CDR/'),paste(start,problem,dim,rank,tracks,bias,"weights",ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
   for(file in files){ rho.statistic(file) }
   return(paste('Estimate LIBLINEAR models for',length(files),'files'))
 }
@@ -26,35 +26,37 @@ estimate.prefModels <- function(problem,dim,start,probability,timedependent,trac
 rho.statistic <- function(model){
   if(grepl('exhaust',model)){
     minNum=choose(16,1)+choose(16,2)+choose(16,3)+choose(16,16)
-  } else { minNum=2 }
+  } else { minNum=1 }
 
-  fname=paste0('..//PREF/summary/',model)
+  fname=paste0(DataDir,'PREF/summary/',model)
   if(!grepl('.csv',fname)){ fname=paste0(fname, '.csv') }
 
-  if(file.exists(fname)){ rho.stats=read.csv(fname)}
+  if(file.exists(fname)){ rho.stats=read_csv(fname)}
   else{
-    files=list.files(paste0('..//PREF/CDR/',model))
-    print(paste(length(files),'models found for',model))
-    if(length(files)<minNum){return(NULL)}
-    dat=get.files(paste0('../PREF/CDR/',model),files,T)
-    m=regexpr("F(?<NrFeat>[0-9]+).Model(?<Model>[0-9]+)",dat$File,perl=T)
-    dat$NrFeat=getAttribute(dat$File,m,1,F)
-    dat$Model=getAttribute(dat$File,m,2)
-    m=regexpr("(?<Problem>[a-z].[a-z]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Probability>[a-z0-9]+).weights.time",model,perl=T)
-    dat$Problem=getAttribute(model,m,1)
-    dat$Prob=getAttribute(model,m,5)
+    files=list.files(paste0(DataDir,'PREF/CDR/',model))
+    dat=get.files(paste0(DataDir,'PREF/CDR/',model),files)
+    if(length(unique(dat$CDR))<minNum) { return(NULL) }
+
+    m=regexpr("F(?<NrFeat>[0-9]+).M(?<Model>[0-9]+)",dat$CDR,perl=T)
+    dat=factorFromName(dat)
+    dat$NrFeat=getAttribute(dat$CDR,m,1,F)
+    dat$Model=getAttribute(dat$CDR,m,2)
+    m=regexpr("(?<Problem>[a-z].[a-z]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Bias>[a-z0-9]+).weights.time",model,perl=T)
+    dat$ModelProblem=getAttribute(model,m,1)
+    dat$Bias=getAttribute(model,m,5)
     dat$TimeIndependent=grepl('timeindependent',model)
     dat$Dimension=getAttribute(model,m,2)
     dat$Track=getAttribute(model,m,4)
     dat$Extended=grepl('EXT',dat$Track)
     dat$Rho = factorRho(dat)
+
     ix=dat$Dimension=='10x10' & dat$Set=='train' & dat$PID>Ntrain10x10 & !dat$Extended
     if(any(ix)){ dat$Set[ix]='test' }
 
     Ntrain=quantile(unique(subset(dat,Set=='train')$PID),.8) # 80% of training data saved for validation
     levels(dat$Set)=c(levels(dat$Set),'validation')
     dat$Set[dat$Set=='train' & dat$PID>Ntrain]='validation' # 20% of training data saved for validation
-    rho.stats = ddply(dat,~Problem+NrFeat+Model+Prob+TimeIndependent, summarise,
+    rho.stats = ddply(dat,~Problem+NrFeat+Model+Bias+TimeIndependent, summarise,
                       Training.Rho = round(mean(Rho[Set=='train']), digits = 5),
                       NTrain = sum(Set=='train'),
                       Validation.Rho = round(mean(Rho[Set=='validation']), digits = 5),
@@ -66,20 +68,20 @@ rho.statistic <- function(model){
   return(rho.stats)
 }
 
-create.prefModel <- function(problem,dim,track,rank,probability,timedependent,exhaustive,lmax,scale=F){
+create.prefModel <- function(problem,dim,track,rank,bias,timedependent,exhaustive,lmax,scale=F){
   library('LiblineaR')
 
   if(substr(track,1,2)=='IL')
   {
     supstr=substr(track,3,100)
-    track=paste0('IL',length(list.files(path = '../trainingData',paste('trdat',problem,dim,paste0('IL[0-9]+',supstr),'Local','diff',rank,'csv',sep='.'))),supstr)
+    track=paste0('IL',length(list.files(path = paste0(DataDir,'Training'),paste('trdat',problem,dim,paste0('IL[0-9]+',supstr),'Local','diff',rank,'csv',sep='.'))),supstr)
   }
 
   logFile <- function(exhaustive){
-    file = paste(problem,dim,rank,track,probability,'weights',
+    file = paste(problem,dim,rank,track,bias,'weights',
                  ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.')
     if(scale){file=paste('sc',file,sep='.')}
-    file = paste0('../PREF/weights/',ifelse(exhaustive,'exhaust.','full.'),file)
+    file = paste0(DataDir,'PREF/weights/',ifelse(exhaustive,'exhaust.','full.'),file)
     return(file)
   }
 
@@ -177,7 +179,7 @@ create.prefModel <- function(problem,dim,track,rank,probability,timedependent,ex
       train = dat$PID <= Ntrain
 
       if(timedependent){
-        model=stepwiseLiblinearModel(dat$X[train,phiCol], dat$Y[train], dat$Probability[train], dat$STEP[train])
+        model=stepwiseLiblinearModel(dat$X[train,phiCol], dat$Y[train], dat$Bias[train], dat$STEP[train])
         Weights=matrix(0,ncol=length(model[[1]]$W),nrow=max(dat$STEP))
         for(step in 1:length(model)){
           if(!is.null(model[[step]])) {
@@ -188,7 +190,7 @@ create.prefModel <- function(problem,dim,track,rank,probability,timedependent,ex
         rownames(Weight)=1:nrow(Weights)
         colnames(Weight)=colnames(dat$X)[phiCol]
       } else {
-        model = liblinearModel(dat$X[train,phiCol], dat$Y[train], dat$Probability[train],lmax)
+        model = liblinearModel(dat$X[train,phiCol], dat$Y[train], dat$Bias[train],lmax)
         Weight=model$W*model$ClassNames[1]*-1 # assume max
       }
       validation.acc = liblinearPrediction(model, dat$X[!train,phiCol], dat$Y[!train], dat$STEP[!train])
@@ -234,7 +236,7 @@ create.prefModel <- function(problem,dim,track,rank,probability,timedependent,ex
       }
     }
 
-    dat$Probability = get.stepwiseProbability(dat$STEP, problem, dim, probability)
+    dat$Bias = get.stepwiseBias(dat$STEP, problem, dim, bias)
     phiCol = grep('phi',colnames(dat$X));
 
     # use all features

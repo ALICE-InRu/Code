@@ -1,54 +1,53 @@
 source('global.R')
 save=NA
-dim='10x10'
-problem='j.rnd'
-problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc')
-SDR=subset(dataset.SDR,Problem %in% problems & dim %in% dim)
+input=list(dimension='10x10',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd'))
+#input=list(dimension='10x10',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc'))
+SDR=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension)
 
 source('sdr.R')
-dataset.diff=checkDifficulty(subset(SDR, Set=='train' & dim==dim & Problem==problems))
+dataset.diff=checkDifficulty(subset(SDR, Set=='train' & Dimension==input$dimension & Problem%in%input$problems))
 print(xtable(dataset.diff$Quartiles), include.rownames = FALSE)
 print(xtable(dataset.diff$Split), include.rownames = FALSE)
 print(xtable(splitSDR(dataset.diff$Easy)))# first problem
 print(xtable(splitSDR(dataset.diff$Easy)))# first problem
 plot.SDR(SDR,'boxplot', save)
-plot.BDR('10x10',problems,'SPT','MWR',40,save)
+plot.BDR('10x10',input$problems,'SPT','MWR',40,save)
 
-if(dim=='6x5'){
+if(input$dimension=='6x5'){
   source('gantt.R')
-  gantt=get.gantt(problem,'6x5','MWR',10)
+  gantt=get.gantt(input$problem,input$dimension,'MWR',10)
   plot.gantt(gantt,'30')
 }
 
 source('pref.trajectories.R')
 tracks=c(sdrs,'ALL','OPT'); ranks=c('a','b','f','p')
-trainingDataSize=get.trainingDataSize(problems,dim,tracks)
-preferenceSetSize=get.preferenceSetSize(problems,dim,tracks,ranks)
-rhoTracksRanks=get.rhoTracksRanks(problems,dim,tracks,ranks)
+trainingDataSize=get.trainingDataSize(input$problems,input$dimension,tracks)
+preferenceSetSize=get.preferenceSetSize(input$problems,input$dimension,tracks,ranks)
+rhoTracksRanks=get.rhoTracksRanks(input$problems,input$dimension,tracks,ranks)
 plot.trainingDataSize(trainingDataSize)
 plot.preferenceSetSize(preferenceSetSize)
 plot.rhoTracksRanks(rhoTracksRanks, SDR)
 if(!is.null(rhoTracksRanks))
-  print(xtable(table.rhoTracksRanks(problem, rhoTracksRanks, SDR),rownames=F))
+  print(xtable(table.rhoTracksRanks(input$problem, rhoTracksRanks, SDR),rownames=F))
 
 source('opt.uniqueness.R'); smooth=F
-all.StepwiseOptimality=get.StepwiseOptimality(problems,dim,'OPT')
+all.StepwiseOptimality=get.StepwiseOptimality(input$problems,input$dimension,'OPT')
 plot.stepwiseUniqueness(all.StepwiseOptimality,smooth,save)
 plot.stepwiseOptimality(all.StepwiseOptimality,F,smooth,save)
 
 source('opt.SDR.R')
-StepwiseOptimality=get.StepwiseOptimality(problem,dim,'OPT')
-StepwiseExtremal=get.StepwiseExtremal(problem,dim)
-plot.StepwiseSDR.wrtTrack(StepwiseOptimality,StepwiseExtremal,dim,F,save)
+StepwiseOptimality=get.StepwiseOptimality(input$problem,input$dimension,'OPT')
+StepwiseExtremal=get.StepwiseExtremal(input$problem,input$dimension)
+plot.StepwiseSDR.wrtTrack(StepwiseOptimality,StepwiseExtremal,input$dimension,F,save)
 
 source('opt.bw.R')
-plot.BestWorst(problems,dim,'OPT',save)
-plot.BestWorst(problem,dim,'ALL',save)
+plot.BestWorst(input$problems,input$dimension,'OPT',save)
+plot.BestWorst(input$problem,input$dimension,'ALL',save)
 
-if(dim=='10x10'){
+if(input$dimension=='10x10'){
   source('pref.exhaustive.R'); source('pref.settings.R')
-  probability='equal'
-  prefSummary=get.prefSummary(problems,'10x10','OPT','p',probability,F)
+  bias='equal'
+  prefSummary=get.prefSummary(input$problems,input$dimension,'OPT','p',bias,F)
   paretoFront=get.paretoFront(prefSummary)
   bestPrefModel=get.bestPrefModel(paretoFront)
 
@@ -59,7 +58,7 @@ if(dim=='10x10'){
   plot.exhaust.bestBoxplot(bestPrefModel,SDR)
   print(table.exhaust.paretoFront(paretoFront),
         include.rownames=FALSE, sanitize.text.function=function(x){x})
-  ks=suppressWarnings(get.pareto.ks(paretoFront,problem, onlyPareto = F, SDR=NULL))
+  ks=suppressWarnings(get.pareto.ks(paretoFront,input$problem, onlyPareto = F, SDR=NULL))
   if(!is.null(ks)){
     print(ks$Rho.train,sanitize.text.function=function(x){x})
     print(ks$Rho.test,sanitize.text.function=function(x){x})
@@ -69,18 +68,18 @@ if(dim=='10x10'){
 
 source('feat.R')
 plot.StepwiseExtremal(StepwiseOptimality,StepwiseExtremal,F)
-plot.StepwiseFeatures(problem,dim,T,F)
-plot.StepwiseFeatures(problem,dim,F,T)
+plot.StepwiseFeatures(input$problem,input$dimension,T,F)
+plot.StepwiseFeatures(input$problem,input$dimension,F,T)
 
 source('pref.imitationLearning.R')
-plot.imitationLearning.boxplot(problem,dim)
-plot.imitationLearning.weights(problem,dim)
-stats.imitationLearning(problem,dim)
+plot.imitationLearning.boxplot(input$problem,input$dimension)
+plot.imitationLearning.weights(input$problem,input$dimension)
+stats.imitationLearning(input$problem,input$dimension)
 
-if(dim=='6x5'){
+if(input$dimension=='6x5'){
   source('cma.R')
-  evolutionCMA=get.evolutionCMA(problems,dim)
-  plot.evolutionCMA.Weights(evolutionCMA,problem)
+  evolutionCMA=get.evolutionCMA(input$problems,input$dimension)
+  plot.evolutionCMA.Weights(evolutionCMA,input$problem)
   plot.evolutionCMA.Fitness(evolutionCMA)
-  plot.CMAPREF.timedependentWeights(problem, dim)
+  plot.CMAPREF.timedependentWeights(input$problem, input$dimension)
 }

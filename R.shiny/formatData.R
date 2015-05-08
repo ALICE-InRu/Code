@@ -11,6 +11,7 @@ factorFromName <- function(x){
   x$Dimension=getAttribute(x$Name,m,2)
   x$Dimension = factorDimension(x)
   x$Set=factorSet(getAttribute(x$Name,m,3))
+  x$PID=getAttribute(x$Name,m,4,F)
   return(x)
 }
 
@@ -28,7 +29,7 @@ numericDimension <- function(Dimension){
   return(getAttribute(Dimension,m,1,F)*getAttribute(Dimension,m,2,F))
 }
 
-factorSet <- function(Set){ return(factor(Set, levels=c('train','test'))) }
+factorSet <- function(Set){ return(factor(Set, levels=c('train','validation','test'))) }
 
 factorDimension <- function(x){
   if('NumJobs' %in% names(x) & 'NumMachines' %in% names(x) ) {
@@ -43,7 +44,7 @@ factorRank <- function(Rank,simple=T){
   droplevels(factor(Rank, levels=c('p','f','b','a'), labels=lbs)) }
 
 factorTrack <- function(x){
-  lvs=c(sdrs,'OPT','RND','ALL')
+  lvs=c(sdrs,'OPT','ALL')
   x$Extended=grepl('EXT',x$Track)
   ix=grepl('EXT', x$Track)
   if(any(ix)){ x$Track[ix]=substr(x$Track[ix],1,stringr::str_length(x$Track[ix])-3) }
@@ -53,7 +54,7 @@ factorTrack <- function(x){
     m=regexpr('IL(?<Iter>[0-9]+)(?<Supervision>[A-Z]+)',x$Track[ix],perl=T)
     x$Iter=0
     x$Iter[ix]=getAttribute(x$Track[ix],m,1,F)
-    x$Supervision='Fixed'
+    x$Supervision='FIXSUP'
     x$Supervision[ix]=getAttribute(x$Track[ix],m,2)
     x$Track[ix]=paste0('IL',x$Iter[ix])
     lvs=c(lvs,paste0('IL',1:max(x$Iter)))
@@ -67,7 +68,7 @@ factorTrack <- function(x){
 }
 
 factorSDR <- function(SDR, simple=T){
-  if(simple) { lbs=sdrs } else { lbs = c('Shortest Processing Time','Largest Processing Time','Least Work Remaining','Most Work Remaining') }
+  if(simple) { lbs=sdrs } else { lbs = c('Shortest Processing Time','Largest Processing Time','Least Work Remaining','Most Work Remaining','Random dispatches') }
   droplevels(factor(SDR,levels=sdrs, labels=lbs))
 }
 
@@ -100,4 +101,17 @@ factorCDR <- function(x,useProb=F){
   } else  {
     return(interaction(x$NrFeat,x$Model))
   }
+}
+
+factorFromCDR <- function(x){
+  m=regexpr('F(?<NrFeat>[0-9]+).M(?<Model>[0-9]+)',x$CDR,perl=T)
+  x$NrFeat=getAttribute(x$CDR,m,1,F)
+  x$Model=getAttribute(x$CDR,m,2,F)
+  x$CDR=factorCDR(x)
+  return(x)
+}
+
+factorBias <- function(Bias){
+  Bias = factor(Bias, levels = c('equal','opt','bcs','wcs','dbl1st','dbl2nd'))
+  return(droplevels(Bias))
 }

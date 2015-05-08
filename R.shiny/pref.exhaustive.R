@@ -2,7 +2,7 @@ table.exhaust.paretoFront = function(paretoFront,onlyPareto=F){
   if(is.null(paretoFront)){return(NULL)}
   if(onlyPareto){paretoFront=subset(paretoFront,Pareto.front==T)}
   library('xtable')
-  tmp=ddply(paretoFront,~Problem+NrFeat+Model+Prob,summarise,
+  tmp=ddply(paretoFront,~Problem+NrFeat+Model+Bias,summarise,
             Accuracy.Optimality=round(Validation.Accuracy.Optimality,digit=2),
             Accuracy.Classification=round(Validation.Accuracy.Classification,digit=2),
             Rho=round(Validation.Rho,digit=2),
@@ -56,8 +56,8 @@ plot.exhaust.bestAcc <- function(StepwiseOptimality,bestPrefModel,save=NA){
 
   if(!is.na(save)){
     dim=ifelse(length(levels(StepwiseOptimality$Stats$Dimension))>1,'ALL',StepwiseOptimality$Stats$Dimension[1])
-    Probability=ifelse(levels(bestPrefModels$Prob)>1,'ALL',bestPrefModels$Prob[1])
-    fname=paste(paste(subdir,'trdat',sep='/'),'prob.moveIsOptimal',dim,'OPT',Probability,'best',extension,sep='.')
+    Bias=ifelse(levels(bestPrefModels$Bias)>1,'ALL',bestPrefModels$Bias[1])
+    fname=paste(paste(subdir,'trdat',sep='/'),'prob.moveIsOptimal',dim,'OPT',Bias,'best',extension,sep='.')
     if(save=='full')
       ggsave(p,filename=fname,width=Width,height=Height.full,units=units,dpi=dpi)
     else if (save=='half')
@@ -99,7 +99,7 @@ plot.exhaust.bestBoxplot <- function(bestPrefModel,SDR=NULL,save=NA){
 
   if(!is.na(save)){
     dim=ifelse(length(levels(CDR$Dimension))==1,as.character(CDR$Dimension[1]),'ALL')
-    prob = ifelse(length(levels(CDR$Prob))==1,as.character(CDR$Prob[1]),'ALL')
+    prob = ifelse(length(levels(CDR$Bias))==1,as.character(CDR$Bias[1]),'ALL')
     fname=paste(subdir,paste('boxplotRho','CDR',dim,prob,extension,sep='.'),sep='/')
     if(save=='half'){
       ggsave(p,filename=fname,width=Width,height=Height.half,units=units,dpi=dpi)
@@ -111,7 +111,7 @@ plot.exhaust.bestBoxplot <- function(bestPrefModel,SDR=NULL,save=NA){
 plot.exhaust.acc <- function(prefSummary,save=NA){
   if(is.null(prefSummary)) return(NULL)
 
-  p=ggplot(prefSummary,aes(y=Validation.Rho,shape=Prob))+
+  p=ggplot(prefSummary,aes(y=Validation.Rho,shape=Bias))+
     facet_grid(~Problem, scales='free')+
     geom_point(aes(x=Validation.Accuracy.Classification,color='classification'))+
     geom_point(aes(x=Validation.Accuracy.Optimality,color='optimality'))+
@@ -119,12 +119,12 @@ plot.exhaust.acc <- function(prefSummary,save=NA){
     ylab(expression('Expected mean for'*~rho*~'(%)'))+
     xlab('Validation accuracy (%)')
 
-  Probability=ifelse(length(levels(prefSummary$Prob))>1,'ALL',prefSummary$Prob[1])
-  if(Probability!='ALL'){p=p+scale_shape_discrete(guide = F)}
+  Bias=ifelse(length(levels(prefSummary$Bias))>1,'ALL',prefSummary$Bias[1])
+  if(Bias!='ALL'){p=p+scale_shape_discrete(guide = F)}
 
   if(!is.na(save)){
     Problem=ifelse(length(levels(prefSummary$Problem))>1,'ALL',prefSummary$Problem[1])
-    fname=paste(subdir,paste('training','accuracy',Probability,Problem,extension,sep='.'),sep='/')
+    fname=paste(subdir,paste('training','accuracy',Bias,Problem,extension,sep='.'),sep='/')
     if(save=='half'){
       ggsave(fname,p,units=units,width=Width,height=Height.half)
     }
@@ -139,9 +139,9 @@ plot.exhaust.paretoFront <- function(prefSummary,paretoFront,plotAllSolutions=T,
                            color=as.factor(NrFeat)))+
     facet_grid(~Problem,scales='free_y')
 
-  if(length(unique(paretoFront$Prob))>1){
-    if(plotAllSolutions){p=p+geom_point(aes(shape=Prob))}
-    p=p+geom_point(data=paretoFront,aes(shape=Prob,size=Pareto.front))
+  if(length(unique(paretoFront$Bias))>1){
+    if(plotAllSolutions){p=p+geom_point(aes(shape=Bias))}
+    p=p+geom_point(data=paretoFront,aes(shape=Bias,size=Pareto.front))
   } else {
     if(plotAllSolutions){p=p+geom_point()}
     p=p+geom_point(data=paretoFront,aes(shape=Pareto.front),size=5)
@@ -158,9 +158,9 @@ plot.exhaust.paretoFront <- function(prefSummary,paretoFront,plotAllSolutions=T,
     ) + themeVerticalLegend
 
   if(!is.na(save)){
-    Probability=ifelse(levels(prefSummary$Prob)>1,'ALL',prefSummary$Prob[1])
+    Bias=ifelse(levels(prefSummary$Bias)>1,'ALL',prefSummary$Bias[1])
     Problem=ifelse(levels(prefSummary$Problem)>1,'ALL',prefSummary$Problem[1])
-    fname=paste(subdir,paste('pareto',Probability,Problem,extension,sep='.'),sep='/')
+    fname=paste(subdir,paste('pareto',Bias,Problem,extension,sep='.'),sep='/')
     if(save=='full')
       ggsave(fname,p,units=units,width=Width,height=Height.full)
     else if (save=='half')
@@ -186,7 +186,7 @@ rankPareto <- function(weights,byVar){
 get.prefAccuracy <- function(file,type=NULL,onlyMean=F){
   m=regexpr(".(?<Dimension>[0-9]+x[0-9]+).",file,perl=T)
   dim=getAttribute(file,m,1)
-  acc=read.csv(paste0('../PREF/weights/',file))
+  acc=read_csv(paste0(DataDir,'PREF/weights/',file))
   acc=subset(acc,Type!='Weight'); acc$Feature=NULL
   if(!is.null(type)){ acc = subset(acc,Type==type)}
 
@@ -206,9 +206,9 @@ get.prefAccuracy <- function(file,type=NULL,onlyMean=F){
 get.optAccuracy <- function(file,reportMean=T){
   m=regexpr(".(?<Dimension>[0-9]+x[0-9]+).",file,perl=T)
   dim=getAttribute(file,m,1)
-  fname=paste0('../stepwise/accuracy/',file)
+  fname=paste0(DataDir,'Stepwise/accuracy/',file)
   if(!file.exists(fname)){ return(NULL)}
-  acc = read.csv(fname)
+  acc = read_csv(fname)
   if(!grepl(fname,'MATLAB')){
     m=regexpr("F(?<Feature>[0-9]+).M(?<Model>[0-9]+)", acc$variable, perl=T)
     acc$NrFeat=getAttribute(acc$variable,m,1,F)
@@ -231,12 +231,12 @@ get.optAccuracy <- function(file,reportMean=T){
   return(acc)
 }
 
-get.prefSummary <- function(problems,dim,tracks='OPT',rank='p',probabilities='equal',timedependent=F){
+get.prefSummary <- function(problems,dim,tracks='OPT',rank='p',stepwiseBias='equal',timedependent=F){
 
   get.prefSummary1 <- function(file,Set='Validation'){
     rho.stats = rho.statistic(file)
     if(is.null(rho.stats)){return(NULL)}
-    rho.stats = rho.stats[,c('Problem','NrFeat','Model','Prob',paste(Set,'Rho',sep='.'),'NValidation')]
+    rho.stats = rho.stats[,c('Problem','NrFeat','Model','Bias',paste(Set,'Rho',sep='.'),paste0('N',Set))]
 
     acc.pref = get.prefAccuracy(file,paste(Set,'Accuracy',sep='.'),onlyMean = T)
     if(is.null(acc.pref)){return(NULL)}
@@ -259,9 +259,9 @@ get.prefSummary <- function(problems,dim,tracks='OPT',rank='p',probabilities='eq
   pat=paste('exhaust',
             paste0('(',paste(problems,collapse = '|'),')'),dim,rank,
             paste0('(',paste(tracks,collapse = '|'),')'),
-            paste0('(',paste(probabilities,collapse='|'),')'),'weights',
+            paste0('(',paste(stepwiseBias,collapse='|'),')'),'weights',
             ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.')
-  files=list.files('..//PREF/summary',pat)
+  files=list.files(paste0(DataDir,'PREF/summary'),pat)
   prefSummary=NULL
   for(file in files){ prefSummary=rbind(prefSummary,get.prefSummary1(file)); }
   if(is.null(prefSummary)){return(NULL)}
@@ -318,6 +318,7 @@ get.pareto.ks <- function(paretoFront,problem,onlyPareto=T,SDR=NULL){
   if(is.null(paretoFront)){return(NULL)}
 
   ks.matrix <- function(dat,var,label){
+    if(nrow(dat)==0) return(NULL)
     ks.mat=matrix(nrow=length(dat[,label]),ncol=length(dat[,label]))
     rownames(ks.mat)=dat[,label]
     colnames(ks.mat)=dat[,label]
@@ -357,8 +358,8 @@ get.pareto.ks <- function(paretoFront,problem,onlyPareto=T,SDR=NULL){
   if(!is.null(SDR)){
     SDR <- subset(SDR, Name %in% dat.Rho$Name)
     SDR$CDR=SDR$SDR
-    dat.Rho=rbind(dat.Rho[,c('Problem','CDR','Rho','Set','PID')],SDR[,c('Problem','CDR','Rho','Set','PID')])
-  } else { dat.Rho=dat.Rho[,c('Problem','CDR','Rho','Set','PID')] }
+    dat.Rho=rbind(dat.Rho[,c('Problem','CDR','Rho','Set','Name')],SDR[,c('Problem','CDR','Rho','Set','Name')])
+  } else { dat.Rho=dat.Rho[,c('Problem','CDR','Rho','Set','Name')] }
 
   stat.Rho=ddply(dat.Rho,~Problem+CDR+Set, function(X) data.frame(Rho=I(list(unlist(X$Rho)))))
   stat.Acc=ddply(dat.Acc,~Problem+CDR, function(X) data.frame(isOptimal=I(list(unlist(X$validation.isOptimal)))))

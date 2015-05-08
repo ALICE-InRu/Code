@@ -5,14 +5,14 @@ output$tabPref.settings <- renderUI({
       valueBoxOutput("progressPrefs", width = 3),
       valueBoxOutput("progressTracks", width = 3),
       valueBoxOutput("progressRanks", width = 3),
-      valueBoxOutput("progressProbs", width = 3)
+      valueBoxOutput("progressBias", width = 3)
     ),
     fluidRow(helpText('Using main problem distribution...')),
     fluidRow(
       box(title = "Settings", status = "primary", solidHeader = TRUE, collapsible = TRUE,
         selectInput("tracks", "Trajectories:", c("OPT",sdrs,"RND","ALL","ILSUP","ILUNSUP","ILFIXSUP", "OPTEXT","ILUNSUPEXT"), multiple = T, selected = 'OPT'),
         selectInput("rank", "Ranking:", c("p","f","b","a")),
-        selectInput("probability", "Stepwise bias:", c('equal','opt','wcs','bcs','dbl1st','dbl2nd')),
+        selectInput("bias", "Stepwise bias:", c('equal','opt','wcs','bcs','dbl1st','dbl2nd')),
         checkboxInput("exhaustive","Exhaustive search for models, i.e., 1,2,3 or all $d$ features"),
         checkboxInput("timedependent","Stepwise dependent:"),
         selectInput("liblinearModel", "Action:", c("Estimate", "Create")),
@@ -20,7 +20,7 @@ output$tabPref.settings <- renderUI({
       ),
       box(title = "Stepwise bias", collapsible = TRUE,
           helpText('Features instances are resampled w.r.t. its stepwise bias.'),
-          plotOutput("plot.stepwiseProbability", height = 150)),
+          plotOutput("plot.stepwiseBias", height = 150)),
       box(title = "Action output", width = 6, collapsible = TRUE,
           verbatimTextOutput("output.liblinearModel"))
     )
@@ -31,9 +31,9 @@ dataset.training <- reactive({
   getTrainingDataRaw(input$problem,input$dimension,input$tracks)
 })
 
-output$plot.stepwiseProbability <- renderPlot({
+output$plot.stepwiseBias <- renderPlot({
   steps=1:numericDimension(input$dimension)
-  w=get.stepwiseProbability(steps,input$problem,input$dimension,input$probability)
+  w=get.stepwiseBias(steps,input$problem,input$dimension,input$bias)
   df=data.frame('Step'=steps,'Weight'=w)
   ggplot(df,aes(x=Step,y=Weight))+geom_line()+scale_x_continuous(expand=c(0,0))
 })
@@ -47,19 +47,19 @@ output$output.liblinearModel <- renderPrint({
   dimension=isolate(input$dimension)
   rank=isolate(input$rank)
   exhaustive=isolate(input$exhaustive)
-  probability=isolate(input$probability)
+  bias=isolate(input$bias)
   timedependent=isolate(input$timedependent)
 
   if(isolate(input$liblinearModel)=="Estimate") {
-    estimate.prefModels(problem,dimension,ifelse(exhaustive,'exhaust','full'),probability,timedependent,tracks,rank)
+    estimate.prefModels(problem,dimension,ifelse(exhaustive,'exhaust','full'),bias,timedependent,tracks,rank)
   } else {
     patTracks=tracks
     patTracks[grepl('ILSUP',patTracks)]='IL[0-9]+SUP'
     patTracks[grepl('ILUNSUP',patTracks)]='IL[0-9]+UNSUP'
     patTracks[grepl('ILFIXSUP',patTracks)]='IL[0-9]+FIXSUP'
     patTracks=paste0('(',paste(patTracks,collapse='|'),')')
-    fT=list.files('../trainingData/',paste('^trdat',problem,dimension,patTracks,'Local','diff',rank,'csv',sep='.'))
-    fW=list.files('../PREF/weights/',paste(ifelse(exhaustive,'exhaust','full'),problem,dimension,rank,tracks,probability,'weights',ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.'))
+    fT=list.files(paste0(DataDir,'Training'),paste('^trdat',problem,dimension,patTracks,'Local','diff',rank,'csv',sep='.'))
+    fW=list.files(paste0(DataDir,'PREF/weights'),paste(ifelse(exhaustive,'exhaust','full'),problem,dimension,rank,tracks,bias,'weights',ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.'))
     if(length(fT)+any(grepl('ALL',tracks))>length(fW)){
 
       lmax=ifelse(numericDimension(input$dimension)<100,
@@ -68,14 +68,14 @@ output$output.liblinearModel <- renderPrint({
 
       for(track in tracks)
         withProgress(message = paste('Create model for',track), value = 0, {
-          create.prefModel(problem,dimension,track,rank,probability,timedependent,exhaustive,lmax)
+          create.prefModel(problem,dimension,track,rank,bias,timedependent,exhaustive,lmax)
         })
     } else { return(paste(length(fW),'LIBLINEAR models exist for current setting')) }
   }
 })
 
 pref.files <- reactive({
-  list.files(paste0('../PREF/weights/'),paste(input$problem,input$dimension,'[a-z]{1}','[A-Z0-9]+','[a-z]+','weights','time[dependent|independent]*','csv',sep='.'))
+  list.files(paste0(DataDir,'PREF/weights'),paste(input$problem,input$dimension,'[a-z]{1}','[A-Z0-9]+','[a-z]+','weights','time[dependent|independent]*','csv',sep='.'))
 })
 pref.files.pat = paste('(?<rank>[a-z]{1})','(?<track>[A-Z0-9]+)','(?<prob>[a-z]+)','weights','time[dependent|independent]*','csv',sep='.')
 
@@ -99,8 +99,8 @@ output$progressRanks <- renderValueBox({
   valueBox( paste0('#',length(rank)), "ranks", color = "olive", icon = icon("filter"))
 })
 
-output$progressProbs <- renderValueBox({
+output$progressBias <- renderValueBox({
   m=regexpr(pref.files.pat,pref.files(),perl = T)
-  probs=unique(getAttribute(pref.files(),m,3))
-  valueBox( paste0('#',length(probs)), "probabilities", color = "lime", icon = icon("eraser "))
+  bias=unique(getAttribute(pref.files(),m,3))
+  valueBox( paste0('#',length(bias)), "bias", color = "lime", icon = icon("eraser"))
 })

@@ -3,7 +3,7 @@ plot.SDR <- function(SDR,type='boxplot',save=NA){
   SDR$Names=droplevels(factorSDR(SDR$SDR,F))
   p=ggplot(SDR,aes(fill=SDR,colour=Set))+
     ggplotColor("Data set",length(unique(SDR$Set)))+
-    ggplotFill("Simple priority dispatching rule",4,levels(SDR$Names))+
+    ggplotFill("Simple priority dispatching rule",length(sdrs),levels(SDR$Names))+
     ylab(rhoLabel)+xlab('')+
     facet_wrap(ncol=2,~Problem+Dimension,scales='free_y')+
     guides(fill = guide_legend(order=1, direction = "vertical", title.position = "top"),
@@ -89,14 +89,13 @@ splitSDR <- function(dat,problem,dim){
 }
 
 get.BDR <- function(dim,problems,firstSDR='SPT',secSDR='MWR',split=40){
-  files=list.files('../BDR',paste(paste(problems,collapse='|'),'*',firstSDR,secSDR,paste(split,'proc',sep=''),'csv',sep='.'))
-  BDR <- get.files('../BDR/',files)
+  files=list.files(paste0(DataDir,'BDR'),paste(paste0('(',paste(problems,collapse='|'),')'),dim,'(train|test)','csv',sep='.'))
+  BDR <- get.files(paste0(DataDir,'BDR'),files)
+  BDR = factorFromName(BDR)
   BDR$SDR='BDR'
   BDR$BDR=paste(firstSDR,'(first',split,'%),',secSDR,'(last',100-split,'%)')
-  BDR$Problem=factorProblem(BDR)
-  BDR$Dimension=factorDimension(BDR)
   BDR$Rho=factorRho(BDR)
-  BDR = subset(BDR,Dimension==dim & Problem %in% problems)
+  BDR = subset(BDR,Dimension==dim & Problem %in% problems & !is.na(Rho))
   if(nrow(BDR)>1) return(BDR)
   return(NULL)
 }
