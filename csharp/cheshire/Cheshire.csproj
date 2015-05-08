@@ -138,7 +138,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="cheshirecat.ico" />
-    <Content Include="chesirecat.ico" />
     <Content Include="lp\fssp-post.mod" />
     <Content Include="lp\fssp-pre.mod" />
     <Content Include="lp\jssp-post.mod" />

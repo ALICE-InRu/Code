@@ -33,6 +33,9 @@
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>cheshirecat.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="alglibnet2, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -49,47 +52,30 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BDRData.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="CDRData.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="CMAESData.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="BDRData.cs" />
+    <Compile Include="CDRData.cs" />
+    <Compile Include="CMAESData.cs" />
     <Compile Include="CSV.cs" />
-    <Compile Include="HeuristicData.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="RawData.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="HeuristicData.cs" />
+    <Compile Include="RawData.cs" />
     <Compile Include="Features.cs" />
     <Compile Include="GurobiJspModel.cs" />
     <Compile Include="ProblemInstance.cs" />
     <Compile Include="LinearAlgebra.cs" />
     <Compile Include="LinearModel.cs" />
-    <Compile Include="OPTData.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="PreferenceSet.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="OPTData.cs" />
+    <Compile Include="PreferenceSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RetraceSet.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="RetraceSet.cs" />
     <Compile Include="Schedule.cs" />
-    <Compile Include="SDRData.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="TrainingSet.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="SDRData.cs" />
+    <Compile Include="TrainingSet.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="cheshirecat.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
