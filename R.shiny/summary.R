@@ -1,4 +1,6 @@
 source('global.R')
+library(tidyr)
+library(dplyr)
 
 format <- function(x){
   pat='(?<Problem>[jf].[a-z1_]+).(?<Dimension>[0-9]+x[0-9]+).(?<RankPREF>[a-z].)?(?<Track>[0-9A-Z]+)'
@@ -50,15 +52,15 @@ diff <- format(data.frame(File=list.files('../../Data/Training/','diff.*.csv')))
 pref <- format(data.frame(File=list.files('../../Data/PREF/weights/','.csv')))
 rho <- format(data.frame(File=list.files('../../Data/PREF/CDR/','.csv',recursive = T)))
 
-d.training = ddply(training, .(Problem, Dimension, Track, Supervision, Extended),
+d.training = ddply(training, .(Dimension, Problem, Track, Supervision, Extended),
                    summarise, freq=length(Track))
-d.global = ddply(global, .(Problem, Dimension, Track, Extended),
+d.global = ddply(global, .(Dimension, Problem, Track, Extended),
                  summarise, freq=length(Track))
-d.diff = ddply(diff, .(Problem, Dimension, Track, Extended, Supervision),
+d.diff = ddply(diff, .(Dimension, Problem, Track, Extended, Supervision),
                summarise, freq=length(Track))
-d.pref = ddply(pref, .(Problem, Dimension, Track, Extended, Supervision, Bias, Timedependent),
+d.pref = ddply(pref, .(Dimension, Problem, Bias, Track, Extended, Supervision, Timedependent),
                summarise, freq=length(Track))
-d.rho = ddply(rho, .(Problem, Dimension, Track, Extended, Bias, Timedependent),
+d.rho = ddply(rho, .(Dimension, Problem, Bias, Track, Extended, Timedependent),
               summarise, freq=length(Track))
 
 d.training %>%  spread(Track, freq)
