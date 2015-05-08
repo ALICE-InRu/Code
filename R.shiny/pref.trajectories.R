@@ -1,7 +1,7 @@
 get.trainingDataSize <- function(problems,dim,tracks='ALL'){
   get.trainingDataSize1 <- function(problem){
-    fname=paste('../stepwise/size','trainingSet',problem,dim,'csv',sep='.')
-    if(file.exists(fname)){ stat=read.csv(fname)
+    fname=paste(paste0(DataDir,'Stepwise/size'),'trainingSet',problem,dim,'csv',sep='.')
+    if(file.exists(fname)){ stat=read_csv(fname)
     } else {
       trdat <- get.files.TRDAT(problem,dim,tracks)
       if(is.null(trdat)) return(NULL)
@@ -30,8 +30,8 @@ plot.trainingDataSize <- function(trainingDataSize){
 
 get.preferenceSetSize <- function(problems,dim,tracks='ALL',ranks=c('a','b','f','p')){
   get.preferenceSetSize1 <- function(problem,rank){
-    fname=paste('../stepwise/size','prefSet',problem,dim,rank,'csv',sep='.')
-    if(file.exists(fname)){ stat=read.csv(fname)
+    fname=paste(paste0(DataDir,'Stepwise/size'),'prefSet',problem,dim,rank,'csv',sep='.')
+    if(file.exists(fname)){ stat=read_csv(fname)
     } else {
       stat <- get.files.TRDAT(problem,dim,tracks,rank,useDiff = T)
       if(is.null(stat)) { return(NULL) }
@@ -65,12 +65,12 @@ plot.preferenceSetSize <- function(preferenceSetSize){
 
 get.rhoTracksRanks <- function(problems,dim,tracks=c(sdrs,'OPT','RND','ALL'),
                                ranks=c('a','b','f','p'),
-                               timedependent=F,probability='equal'){
+                               timedependent=F,bias='equal'){
   if(length(problems)>1) problems=paste0('(',paste(problems,collapse='|'),')')
   if(length(tracks)>1) tracks=paste0('(',paste(tracks,collapse='|'),')')
   if(length(ranks)>1) ranks=paste0('(',paste(ranks,collapse='|'),')')
 
-  files=list.files('../PREF/summary/',paste(problems,dim,ranks,tracks,probability,'weights',ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
+  files=list.files(paste0(DataDir,'PREF/summary/'),paste(problems,dim,ranks,tracks,bias,'weights',ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
 
   CDR=get.CDR(files,16,1,'train')
 

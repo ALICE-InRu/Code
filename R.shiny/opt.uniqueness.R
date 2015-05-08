@@ -1,9 +1,9 @@
 get.StepwiseOptimality <- function(problems,dim,track='OPT'){
 
   get.StepwiseOptimality1 <- function(problem){
-    fname=paste('../stepwise/optimality',problem,dim,track,'csv',sep='.')
+    fname=paste(paste0(DataDir,'Stepwise/optimality'),problem,dim,track,'csv',sep='.')
 
-    if(file.exists(fname)){ split=read.csv(fname) } else {
+    if(file.exists(fname)){ split=read_csv(fname) } else {
       dat=get.files.TRDAT(problem, dim, track)
       if(is.null(dat)){ return(NULL) }
       dat$isOPT=dat$Rho==0

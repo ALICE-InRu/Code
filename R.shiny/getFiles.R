@@ -12,7 +12,7 @@ get.files <- function(dir, files, addFileNameColumn=F){
 }
 
 get.files.OPT <- function(){
-  opt=get.files('../OPT', list.files('../OPT'))
+  opt=get.files(paste0(DataDir,'OPT'), list.files(paste0(DataDir,'OPT')))
   rownames(opt)=opt$Name
   opt=subset(opt,!is.na(Optimum))
   opt=factorFromName(opt)
@@ -20,7 +20,7 @@ get.files.OPT <- function(){
 }
 
 get.files.SDR <- function(){
-  sdr=get.files('../SDR', list.files('../SDR'))
+  sdr=get.files(paste0(DataDir,'SDR'), list.files(paste0(DataDir,'SDR')))
   sdr=factorFromName(sdr)
   sdr$SDR=factorSDR(sdr$SDR)
   sdr=subset(sdr, !is.na(SDR))
@@ -50,7 +50,7 @@ get.files.TRDAT <- function(problems,dim,tracks,rank='p',useDiff=F,Global=F){
   trdat=NULL
   for(problem in problems){
     for(track in tracks){
-      file=list.files('../trainingData/', paste('^trdat',problem,dim,track,fileEnd,sep='.'),
+      file=list.files(paste0(DataDir,'Training'), paste('^trdat',problem,dim,track,fileEnd,sep='.'),
                       full.names = T)
       if(length(file)>0){
         dat=read_csv(file)
@@ -85,29 +85,24 @@ get.files.TRDAT <- function(problems,dim,tracks,rank='p',useDiff=F,Global=F){
 }
 
 
-get.CDR <- function(files,NrFeat,Model,sets='train'){
+get.CDR <- function(files,nrFeat,model,sets='train'){
 
   get.CDR1 <- function(file,set){
     if(grepl('.csv$',file)){file=substr(file,1,stringr::str_length(file)-4)}
-    model.rex="(?<Problem>[a-z].[a-z]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Probability>[a-z0-9]+).weights.time"
+    model.rex="(?<Problem>[a-z].[a-z]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Bias>[a-z0-9]+).weights.time"
     m=regexpr(model.rex,file,perl=T)
     problem = getAttribute(file,m,1)
     dim=getAttribute(file,m,2)
     Rank=getAttribute(file,m,3)
     Track=getAttribute(file,m,4)
-    Prob=getAttribute(file,m,5)
+    Bias=getAttribute(file,m,5)
 
-    fname=paste('../PREF/CDR',file,paste(paste0('F',NrFeat),paste0('Model',Model),'on',problem,dim,set,'csv',sep='.'),sep='/')
+    fname=paste(DataDir,'PREF/CDR/',file,paste(problem,dim,set,'csv',sep='.'),sep='/')
     if(!file.exists(fname)){return(NULL)}
     dat=read_csv(fname)
-    dat$Problem=problem
-    dat$NrFeat=NrFeat
-    dat$Model=Model
-    dat$Prob=Prob
+    dat$Bias=Bias
     dat$Rank=Rank
     dat$Track=Track
-    dat$Dimension=dim
-    dat$Set=set
     return(dat)
   }
 
@@ -119,22 +114,23 @@ get.CDR <- function(files,NrFeat,Model,sets='train'){
   }
   if(is.null(dat)){return(NULL)}
 
-  dat$Rho=factorRho(dat)
-  dat$CDR=factorCDR(dat)
-  dat=factorTrack(dat)
+  dat = factorFromCDR(dat)
+  dat = factorTrack(dat)
+  dat = subset(dat,NrFeat == nrFeat & Model == model)
+  dat = factorFromName(dat)
+  dat$Rho = factorRho(dat)
 
   ix=dat$Dimension=='10x10' & dat$Set=='train' & dat$PID > Ntrain10x10
   if(any(ix)) {dat$Set[ix]='test'}
   ix=dat$Dimension=='6x5' & dat$Set=='train' & dat$PID > Ntrain6x5
   if(any(ix)) {dat$Set[ix]='test'}
-  dat$Set=factorSet(dat$Set)
   return(dat)
 }
 
 get.prefWeights <- function(file,timedependent,asMatrix=F){
   m=regexpr("(?<Problem>[jf].[a-z0-9]+).(?<Dimension>[0-9]+x[0-9]+).",file,perl=T)
   problem=getAttribute(file,m,1)
-  weights=read_csv(paste0('../PREF/weights/',file))
+  weights=read_csv(paste0(DataDir,'PREF/weights/',file))
   weights=subset(weights,Type=='Weight')
   if(!timedependent){ weights=weights[,c(1:4,6)] } else { weights$mean=NULL };
   if(asMatrix){

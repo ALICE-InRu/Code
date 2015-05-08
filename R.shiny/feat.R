@@ -32,9 +32,9 @@ plot.StepwiseExtremal <- function(StepwiseOptimality,StepwiseExtremal,smooth,sav
 
 get.StepwiseFeatures <- function(problem,dim){
 
-  fname=paste('../stepwise/evolution',problem,dim,'csv',sep='.')
+  fname=paste(paste0(DataDir,'Stepwise/evolution'),problem,dim,'csv',sep='.')
   if(file.exists(fname)) {
-    stat = read.csv(fname)
+    stat = read_csv(fname)
   } else {
     trdatL=get.files.TRDAT(problem,dim,'ALL')
     if(is.null(trdatL)){return(NULL)}

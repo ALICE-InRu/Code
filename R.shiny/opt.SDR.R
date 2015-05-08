@@ -2,9 +2,9 @@ get.StepwiseExtremal <- function(problems,dim){
 
   get.StepwiseExtremal1 <- function(problem){
 
-    fname=paste('../stepwise/extremal',problem,dim,'csv',sep='.')
+    fname=paste(paste0(DataDir,'Stepwise/extremal'),problem,dim,'csv',sep='.')
 
-    if(file.exists(fname)){ split=read.csv(fname)
+    if(file.exists(fname)){ split=read_csv(fname)
     } else {
       trdatL=get.files.TRDAT(problem, dim, 'OPT', Global = F)
       if(is.null(trdatL)) { return(NULL)}
@@ -72,17 +72,18 @@ plot.StepwiseSDR.wrtTrack <- function(StepwiseOptimality,StepwiseExtremal,dim,sm
     SDR$SDR[SDR$Feature=='proc' & SDR$Extremal=='max']='LPT'
     SDR$SDR[SDR$Feature=='wrmJob' & SDR$Extremal=='min']='LWR'
     SDR$SDR[SDR$Feature=='wrmJob' & SDR$Extremal=='max']='MWR'
+    SDR$SDR=factorSDR(SDR$SDR)
 
     p=plot.stepwiseOptimality(StepwiseOptimality,T,smooth) # random guessing
 
     if(smooth){
-      p=p+geom_smooth(data=SDR,aes(y=value,color=SDR,fill=SDR,size='OPT'))+ggplotFill('SDR',4)
+      p=p+geom_smooth(data=SDR,aes(y=value,color=SDR,fill=SDR,size='OPT'))+ggplotFill('SDR',length(sdrs))
     } else {
       stat=ddply(SDR,~Problem+Step+SDR,summarise,mu=mean(value))
       p=p+geom_line(data=stat,aes(y=mu,color=SDR,size='OPT'))
     }
 
-    p=p+ggplotColor('SDR',4)+
+    p=p+ggplotColor('SDR',length(sdrs))+
       facet_grid(Problem~.)+
       ylab('Probability of SDR being optimal')
 

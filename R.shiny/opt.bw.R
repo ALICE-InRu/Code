@@ -2,9 +2,9 @@ get.BestWorst <- function(problems,dim){
 
   stats=NULL
   for(problem in problems){
-    fname = paste('../stepwise/bw',problem,dim,'csv',sep='.')
+    fname = paste(paste0(DataDir,'Stepwise/bw'),problem,dim,'csv',sep='.')
     if(file.exists(fname)){
-      stat=read.csv(fname)
+      stat=read_csv(fname)
     } else {
 
       trdat=get.files.TRDAT(problem,dim,'ALL')

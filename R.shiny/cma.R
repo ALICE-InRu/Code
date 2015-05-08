@@ -2,7 +2,7 @@ get.evolutionCMA <- function(problems,dim,Timedependent=T,Timeindependent=T,mean
   get.evolutionCMA1 <- function(problem,type,timedependent){
     file=paste('output',problem,dim,type,'weights',
                ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.')
-    file=paste0('../CMAES/results/',file)
+    file=paste0(DataDir,'CMAES/results/',file)
     if(!file.exists(file)) { return(NULL) }
     x <- read_csv(file)
     x=subset(x, Generation==1 | Generation %% 10 == 0 | Generation==max(Generation)) # otherwise too much data
@@ -72,7 +72,7 @@ plot.CMAPREF.timedependentWeights <- function(problem,dim='6x5',
 
   getPrefWeight <- function(){
     file=paste('full',problem,dim,rank,track,probability,'weights.timedependent.csv',sep='.')
-    w=read.csv(paste0('../PREF/weights/',file))
+    w=read_csv(paste0(DataDir,'PREF/weights/',file))
     w=subset(w[,-5],Type=='Weight');
     w=tidyr::gather(w,'Step','value',grep('Step',names(w)))
     w$Step=as.numeric(substr(w$Step,6,10))
@@ -82,7 +82,7 @@ plot.CMAPREF.timedependentWeights <- function(problem,dim='6x5',
 
   getCMAWeight <- function(type){
     file=paste('full',problem,dim,type,'weights.timedependent.csv',sep='.')
-    w <- subset(read.csv(paste0('../CMAES/',file)),Type=='Weight')
+    w <- subset(read_csv(paste0(DataDir,'CMAES/weights/',file)),Type=='Weight')
     w=subset(w[,-5],Type=='Weight');
     w=tidyr::gather(w,'Step','value',grep('Step',names(w)))
     w$Step=as.numeric(substr(w$Step,6,10))
