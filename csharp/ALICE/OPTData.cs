@@ -21,7 +21,7 @@ namespace ALICE
                 new FileInfo(string.Format(@"{0}\OPT\{1}.{2}.{3}.csv", data.FullName,
                     Distribution, Dimension, Set));
 
-            SetAlreadySavedPID(false);
+            SetAlreadySavedPID();
 
             Data.Columns.Add("Solved", typeof (string));
             Data.Columns.Add("Optimum", typeof (int));

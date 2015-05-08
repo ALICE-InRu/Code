@@ -71,7 +71,7 @@ namespace ALICE
             ReadProblemText(extended);
         }
 
-        internal void SetAlreadySavedPID(bool warn = true)
+        internal void SetAlreadySavedPID()
         {
             if (!FileInfo.Exists) return;
             var firstLine = File.ReadLines(FileInfo.FullName).First();
@@ -94,10 +94,6 @@ namespace ALICE
             }
 
             if (AlreadySavedPID <= NumInstances) return;
-            if (warn)
-                throw new WarningException(
-                    String.Format("Use extended data set, otherwise you will lose information on {0} instances!",
-                        AlreadySavedPID - NumInstances));
             AlreadySavedPID = NumInstances;
         }
 
