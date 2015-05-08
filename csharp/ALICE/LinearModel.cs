@@ -10,6 +10,7 @@ namespace ALICE
     public class LinearModel
     {
         public readonly string Name;
+        public readonly FileInfo FileInfo;
         private readonly int _numFeatures;
         private readonly int _modelID;
         public readonly Features.Mode FeatureMode;
@@ -18,17 +19,27 @@ namespace ALICE
         public readonly double[][] GlobalWeights = new double[Features.GlobalCount][];
         public readonly bool TimeIndependent;
 
-        protected LinearModel(Features.Mode featureMode, int numFeatures, int modelID, bool timeIndependent)
+        public readonly string Distribution;
+        public readonly string Dimension;
+
+        public readonly int Iteration;
+
+        protected LinearModel(FileInfo file, Features.Mode featureMode, int numFeatures, int modelID, bool timeIndependent,
+            string distribution, string dimension)
         {
+            FileInfo = file; 
             FeatureMode = featureMode;
             _numFeatures = numFeatures;
             _modelID = modelID;
-            Name = String.Format("{0}.{1}", _numFeatures, _modelID);
+            Name = String.Format("F{0}.M{1}", _numFeatures, _modelID);
             TimeIndependent = timeIndependent;
+            Distribution = distribution;
+            Dimension = dimension;
         }
 
-        protected LinearModel(Features.Mode featureMode, int timeDependentSteps, int numFeatures, int modelID)
-            : this(featureMode, numFeatures, modelID, timeDependentSteps == 1)
+        protected LinearModel(FileInfo file, Features.Mode featureMode, int timeDependentSteps, int numFeatures, int modelID,
+            string distribution, string dimension)
+            : this(file, featureMode, numFeatures, modelID, timeDependentSteps == 1, distribution, dimension)
         {
             switch (featureMode)
             {
@@ -43,7 +54,8 @@ namespace ALICE
             }
         }
 
-        public LinearModel(SDRData.SDR sdr) : this(Features.Mode.Local, 1, 1, (int) sdr)
+        public LinearModel(SDRData.SDR sdr, string distribution, string dimension)
+            : this(null, Features.Mode.Local, 1, 1, (int) sdr, distribution, dimension)
         {
             Name = String.Format("{0}Equiv", sdr);
             switch (sdr)
@@ -65,12 +77,14 @@ namespace ALICE
             }
         }
 
-        public LinearModel(FileInfo file, int numFeatures, int modelID)
+        public LinearModel(FileInfo file, int numFeatures, int modelID, string distribution, string dimension)
             : this(
+                file,
                 Regex.IsMatch(file.Name, Features.Mode.Global.ToString()) ? Features.Mode.Global : Features.Mode.Local,
-                numFeatures, modelID, Regex.IsMatch(file.Name, "timeindependent"))
+                numFeatures, modelID, Regex.IsMatch(file.Name, "timeindependent"), distribution, dimension)
         {
-            LinearModel[] loggedWeights = ReadLoggedLinearWeights(file);
+            FileInfo = file;
+            LinearModel[] loggedWeights = ReadLoggedLinearWeights(file, distribution, dimension);
 
             foreach (var w in loggedWeights.Where(w => w._numFeatures == numFeatures && w._modelID == _modelID))
             {
@@ -78,6 +92,102 @@ namespace ALICE
                 return;
             }
             throw new Exception(String.Format("Cannot find weights {0} to user requirements from {1}!", Name, file.Name));
+        }
+
+        public LinearModel(string distribution, string dimension, CMAESData.ObjectiveFunction objFun,
+            bool timedependent, DirectoryInfo dataDir)
+            : this(null, Features.Mode.Local, 16, 1, !timedependent, distribution, dimension)
+        {
+            string pat = String.Format("full.{0}.{1}.{2}.weights.{3}",
+                distribution, dimension, objFun, timedependent ? "timedependent" : "timeindependent");
+
+            DirectoryInfo dir = new DirectoryInfo(String.Format(@"{0}\CMAES\weights", dataDir.FullName));
+            Regex reg = new Regex(pat);
+            var files = dir.GetFiles("*.csv").Where(path => reg.IsMatch(path.ToString())).ToList();
+
+            if (files.Count <= 0)
+                throw new Exception(String.Format("Cannot find any weights belonging to {0}!", pat));
+
+            FileInfo = files[0];
+
+            LinearModel[] w = ReadLoggedLinearWeights(files[0], distribution, dimension);
+            LocalWeights = w[0].LocalWeights;
+        }
+
+        public LinearModel(string distribution, string dimension, TrainingSet.Trajectory track, bool extended,
+            PreferenceSet.Ranking rank, bool timedependent, DirectoryInfo dataDir, int iter = -1,
+            string stepwiseBias = "equal", int numFeatures = 16, int modelID = 1)
+            : this(null, Features.Mode.Local, numFeatures, modelID, !timedependent, distribution, dimension)
+        {
+            switch (track)
+            {
+                case TrainingSet.Trajectory.ILFIX:
+                case TrainingSet.Trajectory.ILUNSUP:
+                case TrainingSet.Trajectory.ILSUP:
+                    LinearModel model;
+                    Iteration = GetImitationLearningFile(out model, distribution, dimension, track, extended,
+                        dataDir.FullName, timedependent, iter);
+                    LocalWeights = model.LocalWeights;
+                    return;
+                default:
+                    string pat = String.Format("\\b(exhaust|full)\\.{0}.{1}.{2}.{3}{4}.{5}.weights.{6}.csv",
+                        distribution, dimension, (char) rank,
+                        track, extended ? "EXT" : "", stepwiseBias, timedependent ? "timedependent" : "timeindependent");
+
+                    DirectoryInfo dir = new DirectoryInfo(String.Format(@"{0}\PREF\weights", dataDir.FullName));
+                    Regex reg = new Regex(pat);
+                    var files = dir.GetFiles("*.csv").Where(path => reg.IsMatch(path.ToString())).ToList();
+
+                    if (files.Count <= 0)
+                        throw new Exception(String.Format("Cannot find any weights belonging to {0}!", pat));
+
+                    LinearModel[] loggedWeights = ReadLoggedLinearWeights(files[0], distribution, dimension);
+                    FileInfo = files[0];
+
+                    foreach (var w in loggedWeights.Where(w => w._numFeatures == _numFeatures && w._modelID == _modelID)
+                        )
+                    {
+                        LocalWeights = w.LocalWeights;
+                        return;
+                    }
+                    throw new Exception(String.Format("Cannot find weights {0} to user requirements from {1}!", Name,
+                        files[0].Name));
+            }
+        }
+
+        private int GetImitationLearningFile(out LinearModel model, string distribution, string dimension,
+            TrainingSet.Trajectory track, bool extended, string directoryName, bool timedependent = false,
+            int iter = -1, int numFeatures = 16, int modelID = 1, string stepwiseBias = "equal")
+        {
+            DirectoryInfo dir = new DirectoryInfo(String.Format(@"{0}\PREF\weights", directoryName));
+
+            string pat = String.Format("\\b(exhaust|full)\\.{0}.{1}.{2}.(OPT|IL([0-9]+){3}{4}).{5}.weights.{6}",
+                distribution, dimension, (char) PreferenceSet.Ranking.PartialPareto, track.ToString().Substring(2),
+                extended ? "EXT" : "", stepwiseBias, timedependent ? "timedependent" : "timeindependent");
+
+            Regex reg = new Regex(pat);
+
+            var files = dir.GetFiles("*.csv").Where(path => reg.IsMatch(path.ToString())).ToList();
+
+            if (files.Count <= 0)
+                throw new Exception(String.Format("Cannot find any weights belonging to {0}. Start with optimal!", track));
+
+            int[] iters = new int[files.Count];
+            for (int i = 0; i < iters.Length; i++)
+            {
+                Match m = reg.Match(files[i].Name);
+                if (m.Groups[2].Value == "OPT")
+                    iters[i] = 0;
+                else
+                    iters[i] = Convert.ToInt32(m.Groups[3].Value);
+            }
+
+            if (iter < 0) iter = iters.Max(); // then take the latest version 
+
+            FileInfo weightFile = files[Array.FindIndex(iters, x => x == iter)];
+            model = new LinearModel(weightFile, numFeatures, modelID, Distribution, Dimension);
+
+            return iters.Max();
         }
 
         public double PriorityIndex(Features phi)
@@ -98,16 +208,38 @@ namespace ALICE
             return index;
         }
 
-        public LinearModel(double[][] localWeights, int generation)
-            : this(Features.Mode.Local, localWeights[0].Length, Features.LocalCount, generation)
+        public LinearModel(double[][] localWeights, int generation, string distribution, string dimension)
+            : this(
+                null, Features.Mode.Local, localWeights[0].Length, Features.LocalCount, generation, distribution,
+                dimension)
         {
             LocalWeights = localWeights;
         }
-    
-        private LinearModel[] ReadLoggedLinearWeights(FileInfo file)
+
+        public static LinearModel[] GetAllExhaustiveModels(string distribution, string dimension,
+            TrainingSet.Trajectory track, bool extended, PreferenceSet.Ranking rank, bool timedependent,
+            DirectoryInfo dataDir, string stepwiseBias)
+        {
+            string pat = String.Format("exhaust.{0}.{1}.{2}.{3}{4}.{5}.weights.{6}.csv",
+                distribution, dimension, (char) rank,
+                track, extended ? "EXT" : "", stepwiseBias, timedependent ? "timedependent" : "timeindependent");
+
+            DirectoryInfo dir = new DirectoryInfo(String.Format(@"{0}\PREF\weights", dataDir.FullName));
+            Regex reg = new Regex(pat);
+            var files = dir.GetFiles("*.csv").Where(path => reg.IsMatch(path.ToString())).ToList();
+
+            return files.Count < 1 ? null : ReadLoggedLinearWeights(files[0], distribution, dimension);
+        }
+
+        private static LinearModel[] ReadLoggedLinearWeights(FileInfo file, string distribution, string dimension)
         {
             if (!file.Exists)
                 throw new Exception(String.Format("File {0} doesn't exist! Cannot read weights.", file.Name));
+
+            bool timeIndependent = Regex.IsMatch(file.Name, "timeindependent");
+            Features.Mode featureMode = Regex.IsMatch(file.Name, Features.Mode.Global.ToString())
+                ? Features.Mode.Global
+                : Features.Mode.Local;
 
             List<string> header;
             List<string[]> content = CSV.Read(file, out header);
@@ -126,15 +258,7 @@ namespace ALICE
             var models = new List<LinearModel>();
             LinearModel linearWeights = null;
 
-            int uniqueTimeSteps;
-            if (!TimeIndependent)
-            {
-                var dim = Regex.Match(file.Name, "([0-9]+x[0-9]+)");
-                var dimension = dim.Groups[0].Value;
-                uniqueTimeSteps = RawData.DimString2Num(dimension);
-            }
-            else uniqueTimeSteps = 1;
-
+            var uniqueTimeSteps = !timeIndependent ? RawData.DimString2Num(dimension) : 1;
 
             int nrFeat = -1, featFound = -1;
             foreach (var line in content.Where(line => line[WEIGHT].Equals("Weight")))
@@ -144,12 +268,12 @@ namespace ALICE
                     if (linearWeights != null) models.Add(linearWeights);
                     nrFeat = Convert.ToInt32(line[NRFEAT]);
                     var idModel = Convert.ToInt32(line[MODEL]);
-                    linearWeights = new LinearModel(FeatureMode, uniqueTimeSteps, nrFeat, idModel);
+                    linearWeights = new LinearModel(file, featureMode, uniqueTimeSteps, nrFeat, idModel, distribution, dimension);
                     featFound = 0;
                 }
 
                 var local = line[FEATURE];
-                if (TimeIndependent) // robust model 
+                if (timeIndependent) // robust model 
                 {
                     var value = Convert.ToDouble(line[VALUE], CultureInfo.InvariantCulture);
                     for (var i = 0; i < Features.LocalCount; i++)
