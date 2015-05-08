@@ -13,25 +13,27 @@ namespace ALICE
     {
         public readonly int TimeLimit; // in minutes
 
-        internal OPTData(string distribution, string dimension, DataSet set, bool extended, bool readAll, DirectoryInfo data)
+        internal OPTData(string distribution, string dimension, DataSet set, bool extended, bool readAll,
+            DirectoryInfo data)
             : base(distribution, dimension, set, extended, data)
         {
             FileInfo =
-                new FileInfo(string.Format("{0}//OPT//{1}.{2}.{3}.csv", data.FullName,
+                new FileInfo(string.Format(@"{0}\OPT\{1}.{2}.{3}.csv", data.FullName,
                     Distribution, Dimension, Set));
 
             SetAlreadySavedPID(false);
 
-            Columns.Add("Solved", typeof (string));
-            Columns.Add("Optimum", typeof (int));
-            Columns.Add("Solution", typeof (int[,]));
-            Columns.Add("Simplex", typeof (int));
- 
+            Data.Columns.Add("Solved", typeof (string));
+            Data.Columns.Add("Optimum", typeof (int));
+            Data.Columns.Add("Solution", typeof (int[,]));
+            Data.Columns.Add("Simplex", typeof (int));
+
             if (readAll)
                 Read();
         }
 
-        public OPTData(string distribution, string dimension, DataSet set, bool extended, int timeLimit_min, DirectoryInfo data)
+        public OPTData(string distribution, string dimension, DataSet set, bool extended, int timeLimit_min,
+            DirectoryInfo data)
             : this(distribution, dimension, set, extended, false, data)
         {
             TimeLimit = timeLimit_min;
@@ -72,7 +74,7 @@ namespace ALICE
 
         private void AddOptMakespan(string name, int makespan, bool solved, int[,] xTimeJob, int simplexIterations)
         {
-            var row = Rows.Find(name);
+            var row = Data.Rows.Find(name);
             if (row == null) return;
             row.SetField("Solved", solved ? "opt" : "bks");
             row.SetField("Optimum", makespan);
@@ -82,10 +84,10 @@ namespace ALICE
 
         internal int[] OptimumArray()
         {
-            int[] opts = new int[Rows.Count];
-            for (int i = 0; i < Rows.Count; i++)
+            int[] opts = new int[Data.Rows.Count];
+            for (int i = 0; i < Data.Rows.Count; i++)
             {
-                opts[i] = (int) Rows[i]["Optimum"];
+                opts[i] = (int) Data.Rows[i]["Optimum"];
             }
             return opts;
         }
@@ -114,7 +116,7 @@ namespace ALICE
 
                 foreach (
                     DataRow row in
-                        from DataRow row in Rows let pid = (int) row["PID"] where pid > AlreadySavedPID select row)
+                        from DataRow row in Data.Rows let pid = (int)row["PID"] where pid > AlreadySavedPID select row)
                 {
                     if (row["Optimum"].ToString() == "")
                     {

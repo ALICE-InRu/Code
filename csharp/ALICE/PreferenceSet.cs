@@ -28,10 +28,10 @@ namespace ALICE
         {
             FileInfo =
                 new FileInfo(string.Format(
-                    "{0}//Training//{1}.diff.{2}.csv", data.FullName,
+                    @"{0}\Training\{1}.diff.{2}.csv", data.FullName,
                     FileInfo.Name.Substring(0, FileInfo.Name.Length - FileInfo.Extension.Length), (char) rank));
 
-            Columns.Add("Rank", typeof (int));
+            Data.Columns.Add("Rank", typeof(int));
 
             var ranking = rank;
             switch (ranking)

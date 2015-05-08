@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace ALICE
 {
@@ -23,12 +22,14 @@ namespace ALICE
             RND,
             ILUNSUP,
             ILSUP,
-            ILFIX
+            ILFIX,
+            ALL
         }
 
         private readonly Func<Schedule, List<Preference>, int> _trajectory;
         internal readonly Trajectory Track;
 
+        public readonly int NumTraining;
         public int NumFeatures { get; internal set; }
         private const int TMLIM_STEP = 2; // max 2 min per step/possible dispatch
 
@@ -40,7 +41,7 @@ namespace ALICE
         internal readonly LinearModel Model;
         private readonly double _beta; // only used in imitation learning 
 
-        internal class Preference 
+        internal class Preference
         {
             public Features Feature;
             public int ResultingOptMakespan;
@@ -87,7 +88,8 @@ namespace ALICE
             Track = track;
             string strTrack = track.ToString();
             NumInstances = ResetNumInstances(extended);
-
+            NumTraining = ResetNumInstances(false);
+            
             switch (Track)
             {
                 case Trajectory.ILFIX:
@@ -102,9 +104,8 @@ namespace ALICE
 
                     if (extended)
                     {
-                        int numTraining = ResetNumInstances(false);
-                        AlreadySavedPID = Math.Max(AlreadySavedPID, numTraining*iter);
-                        NumInstances = Math.Min(Rows.Count, numTraining*(iter + 1));
+                        AlreadySavedPID = Math.Max(AlreadySavedPID, NumTraining*iter);
+                        NumInstances = Math.Min(Data.Rows.Count, NumTraining*(iter + 1));
                     }
 
                     break;
@@ -117,7 +118,7 @@ namespace ALICE
                     _trajectory = ChooseOptJob;
                     break;
                 default: // SDR  
-                    Model = new LinearModel((SDRData.SDR) Track);
+                    Model = new LinearModel((SDRData.SDR) Track, distribution, Dimension);
                     _trajectory = ChooseSDRJob;
                     break;
             }
@@ -126,47 +127,26 @@ namespace ALICE
 
             FileInfo =
                 new FileInfo(string.Format(
-                    "{0}//Training//trdat.{1}.{2}.{3}.{4}.csv", data.FullName,
+                    @"{0}\Training\trdat.{1}.{2}.{3}.{4}.csv", data.FullName,
                     Distribution, Dimension, strTrack, FeatureMode));
 
-            Columns.Add("Step", typeof (int));
-            Columns.Add("Dispatch", typeof (Schedule.Dispatch));
-            Columns.Add("Followed", typeof (bool));
-            Columns.Add("ResultingOptMakespan", typeof (int));
-            Columns.Add("Features", typeof (Features));
+            Data.Columns.Add("Step", typeof (int));
+            Data.Columns.Add("Dispatch", typeof (Schedule.Dispatch));
+            Data.Columns.Add("Followed", typeof (bool));
+            Data.Columns.Add("ResultingOptMakespan", typeof (int));
+            Data.Columns.Add("Features", typeof (Features));
 
             SetAlreadySavedPID();
 
             Preferences = new List<Preference>[NumInstances, NumDimension];
         }
 
-        private string GetImitationModel(out LinearModel model, out double beta, out int currentIter, bool extended,
-            string probability = "equal", bool timedependent = false, int numFeatures = 16, int modelID = 1)
+        private string GetImitationModel(out LinearModel model, out double beta, out int currentIter, bool extended)
         {
-            DirectoryInfo dir = new DirectoryInfo(String.Format("{0}//..//PREF//weights", FileInfo.DirectoryName));
+            model = new LinearModel(Distribution, Dimension, Track, extended, PreferenceSet.Ranking.PartialPareto, false,
+                new DirectoryInfo(String.Format(@"{0}\..", FileInfo.DirectoryName)));
 
-            string pat = String.Format("\\b(exhaust|full)\\.{0}.{1}.{2}.(OPT|IL([0-9]+){3}{4}).{5}.weights.{6}",
-                Distribution, Dimension, (char) PreferenceSet.Ranking.PartialPareto, Track.ToString().Substring(2),
-                extended ? "EXT" : "", probability, timedependent ? "timedependent" : "timeindependent");
-
-            Regex reg = new Regex(pat);
-
-            var files = dir.GetFiles("*.csv").Where(path => reg.IsMatch(path.ToString())).ToList();
-
-            if (files.Count <= 0)
-                throw new Exception(String.Format("Cannot find any weights belonging to {0}. Start with optimal!", Track));
-
-            int[] iters = new int[files.Count];
-            for (int i = 0; i < iters.Length; i++)
-            {
-                Match m = reg.Match(files[i].Name);
-                if (m.Groups[2].Value == "OPT")
-                    iters[i] = 0;
-                else
-                    iters[i] = Convert.ToInt32(m.Groups[3].Value);
-            }
-
-            currentIter = iters.Max() + 1;
+            currentIter = model.Iteration + 1;
             switch (Track)
             {
                 case Trajectory.ILFIX:
@@ -182,8 +162,6 @@ namespace ALICE
                     throw new Exception(String.Format("{0} is not supported as imitation learning!", Track));
             }
 
-            FileInfo weightFile = files[Array.FindIndex(iters, x => x == iters.Max())];
-            model = new LinearModel(weightFile, numFeatures, modelID);
             return String.Format("IL{0}{1}", currentIter, Track.ToString().Substring(2));
         }
 
@@ -194,22 +172,23 @@ namespace ALICE
 
         internal void Write(FileMode fileMode, List<Preference>[,] data)
         {
-            bool dispatch = data == Preferences; 
+            bool dispatch = data == Preferences;
 
             var fs = new FileStream(FileInfo.FullName, fileMode, FileAccess.Write);
             using (var st = new StreamWriter(fs))
             {
                 if (fs.Length == 0) // header is missing 
                 {
-                    var header = String.Format("PID,Step{0},Followed,ResultingOptMakespan,Rank", dispatch ? ",Dispatch" : "");
+                    var header = String.Format("PID,Step{0},Followed,ResultingOptMakespan,Rank",
+                        dispatch ? ",Dispatch" : "");
                     switch (FeatureMode)
                     {
                         case Features.Mode.Global:
-                            for (var i = 0; i < (int) Features.GlobalCount; i++)
+                            for (var i = 0; i < Features.GlobalCount; i++)
                                 header += string.Format(",phi.{0}", (Features.Global) i);
                             break;
                         case Features.Mode.Local:
-                            for (var i = 0; i < (int) Features.LocalCount; i++)
+                            for (var i = 0; i < Features.LocalCount; i++)
                                 header += string.Format(",phi.{0}", (Features.Local) i);
                             break;
                     }
@@ -236,11 +215,11 @@ namespace ALICE
                             switch (FeatureMode)
                             {
                                 case Features.Mode.Global:
-                                    for (var i = 0; i < (int) Features.GlobalCount; i++)
+                                    for (var i = 0; i < Features.GlobalCount; i++)
                                         info += string.Format(",{0:0}", pref.Feature.PhiGlobal[i]);
                                     break;
                                 case Features.Mode.Local:
-                                    for (var i = 0; i < (int) Features.LocalCount; i++)
+                                    for (var i = 0; i < Features.LocalCount; i++)
                                         info += string.Format(",{0:0}", pref.Feature.PhiLocal[i]);
                                     break;
                             }
@@ -268,7 +247,7 @@ namespace ALICE
         protected string CollectAndLabel(int pid)
         {
             string name = GetName(pid);
-            DataRow instance = Rows.Find(name);
+            DataRow instance = Data.Rows.Find(name);
             ProblemInstance prob = (ProblemInstance) instance["Problem"];
 
             GurobiJspModel gurobiModel = new GurobiJspModel(prob, name, TMLIM_STEP);
@@ -323,7 +302,9 @@ namespace ALICE
         {
             int minMakespan = prefs.Min(p => p.ResultingOptMakespan);
             List<Preference> optimums = prefs.Where(p => p.ResultingOptMakespan == minMakespan).ToList();
-            return optimums.Count == 1 ? optimums[0].Dispatch.Job : optimums[Random.Next(0, optimums.Count)].Dispatch.Job;
+            return optimums.Count == 1
+                ? optimums[0].Dispatch.Job
+                : optimums[Random.Next(0, optimums.Count)].Dispatch.Job;
         }
 
         private int ChooseWeightedJob(Schedule jssp, List<Preference> prefs)

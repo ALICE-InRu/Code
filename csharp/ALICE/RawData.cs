@@ -10,32 +10,44 @@ namespace ALICE
     /// <summary>
     /// Parent class for all JobShop data
     /// </summary>
-    public class RawData : DataTable
+    public class RawData 
     {
         public FileInfo FileInfo;
         public readonly string Distribution;
         public readonly int NumDimension;
         public readonly string Dimension;
         public readonly DataSet Set;
-        public int NumInstances;
+        public int NumInstances { get; internal set; }
+        public int AlreadySavedPID { get; internal set; }
+        internal readonly DataTable Data; 
 
-        public new enum DataSet
+        public enum DataSet
         {
             train,
             test
         };
 
-        public int AlreadySavedPID;
-
-        public RawData(string distribution, string dimension, DataSet set, bool extended, DirectoryInfo data)
+        internal RawData(string distribution, string dimension, DataSet set)
         {
             Distribution = distribution;
             Dimension = dimension;
             NumDimension = DimString2Num(dimension);
             Set = set;
+        }
 
+        internal RawData(RawData clone) : this(clone.Distribution, clone.Dimension, clone.Set)
+        {
+            FileInfo = clone.FileInfo;
+            NumInstances = clone.NumInstances;
+            AlreadySavedPID = clone.AlreadySavedPID;
+            Data = clone.Data.Copy();
+        }
+
+        public RawData(string distribution, string dimension, DataSet set, bool extended, DirectoryInfo data)
+            : this(distribution, dimension, set)
+        {
             FileInfo =
-                new FileInfo(String.Format("{0}//Raw//{1}.{2}.{3}.txt",
+                new FileInfo(String.Format(@"{0}\Raw\{1}.{2}.{3}.txt",
                     data.FullName, Distribution, Dimension, Set));
 
             if (!FileInfo.Exists)
@@ -48,11 +60,13 @@ namespace ALICE
                             FileInfo.DirectoryName));
             }
 
-            Columns.Add("Name", typeof(string)); // unique!
-            Columns.Add("PID", typeof(int)); // problem instance Index
-            Columns.Add("Problem", typeof(ProblemInstance));
+            Data = new DataTable("Problem");
 
-            PrimaryKey = new[] { Columns["Name"] };
+            Data.Columns.Add("Name", typeof (string)); // unique!
+            Data.Columns.Add("PID", typeof (int)); // problem instance Index
+            Data.Columns.Add("Problem", typeof (ProblemInstance));
+
+            Data.PrimaryKey = new[] {Data.Columns["Name"]};
 
             ReadProblemText(extended);
         }
@@ -102,7 +116,7 @@ namespace ALICE
 
         internal ProblemInstance GetProblem(string name)
         {
-            var instance = Rows.Find(name);
+            var instance = Data.Rows.Find(name);
             return instance == null ? null : (ProblemInstance) instance["Problem"];
         }
 
@@ -135,7 +149,7 @@ namespace ALICE
             const int SEED = 19850712;
             var rnd = (Distribution[0] == 'j' ? new Random(SEED) : null);
 
-            string workDir = String.Format("{0}//generator//{1}", FileInfo.Directory.FullName,
+            string workDir = String.Format(@"{0}\generator\{1}", FileInfo.Directory.FullName,
                 Distribution.Substring(2));
 
             if (!Directory.Exists(workDir)) return;
@@ -252,10 +266,10 @@ namespace ALICE
                     AddProblem(prob);
                     shortName = string.Empty;
                 }
-                if (Rows.Count >= maxNumInstances)
+                if (Data.Rows.Count >= maxNumInstances)
                     break;
             }
-            NumInstances = Rows.Count;
+            NumInstances = Data.Rows.Count;
         }
 
         private ProblemInstance ReadSingleProblem(string content, Random rnd = null)
@@ -312,11 +326,11 @@ namespace ALICE
             if (prob == null) return;
 
             var pid = ++NumInstances;
-            var row = NewRow();
+            var row = Data.NewRow();
             row["Name"] = GetName(pid);
             row["PID"] = pid;
             row["Problem"] = prob;
-            Rows.Add(row);
+            Data.Rows.Add(row);
         }
 
         public static int[] GetIntValuesFromLine(string line)

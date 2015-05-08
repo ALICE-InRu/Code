@@ -57,7 +57,7 @@ namespace ALICE
             public double Fitness;
         }
 
-        public class SummaryCMA
+        private class SummaryCMA
         {
             public double[] DistributionMeanVector;
             public double Fitness;
@@ -77,12 +77,12 @@ namespace ALICE
             AlreadySavedPID = Generation;
 
             FileInfo =
-                new FileInfo(String.Format("{0}//CMAES//full.{1}.{2}.{3}.weights.{4}.csv", data.FullName, Distribution,
-                    Dimension, objFun, dependentModel ? "timedependent" : "timeindependent"));
+                new FileInfo(String.Format(@"{0}\CMAES\weights\full.{1}.{2}.{3}.weights.{4}.csv", data.FullName,
+                    Distribution, Dimension, objFun, dependentModel ? "timedependent" : "timeindependent"));
 
             FileInfoResults =
                 new FileInfo(
-                    String.Format("{0}//CMAES//results//output.{1}.{2}.{3}.weights.{4}.csv", data.FullName, Distribution,
+                    String.Format(@"{0}\CMAES\results\output.{1}.{2}.{3}.weights.{4}.csv", data.FullName, Distribution,
                         Dimension, objFun, dependentModel ? "timedependent" : "timeindependent"));
 
             if (FileInfo.Exists)
@@ -196,7 +196,7 @@ namespace ALICE
                 }
             }
 
-            return new LinearModel(xArray, Generation);
+            return new LinearModel(xArray, Generation, Distribution, Dimension);
         }
 
         private int[] ApplyWeights(double[] x)

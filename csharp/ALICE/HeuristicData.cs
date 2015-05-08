@@ -11,18 +11,29 @@ namespace ALICE
         public readonly string HeuristicValue;
         public readonly string HeuristicName;
 
-        public HeuristicData(string distribution, string dimension, DataSet set, bool extended, string heuristicName,
+        internal HeuristicData(string distribution, string dimension, DataSet set, bool extended, string heuristicName,
             string heuristicValue, DirectoryInfo data) : base(distribution, dimension, set, extended, data)
         {
             HeuristicName = heuristicName;
             HeuristicValue = heuristicValue;
-            Columns.Add("Makespan", typeof (int));
-            Columns.Add(heuristicName, typeof (string));
+            Data.Columns.Add("Makespan", typeof (int));
+            Data.Columns.Add(heuristicName, typeof (string));
+            Read(false);
+        }
+
+        internal HeuristicData(string heuristicName, string heuristicValue, RawData clone)
+            : base(clone)
+        {
+            HeuristicName = heuristicName;
+            HeuristicValue = heuristicValue;
+            Data.Columns.Add("Makespan", typeof (int));
+            Data.Columns.Add(heuristicName, typeof (string));
+            Read(false);
         }
 
         internal void AddMakespan(string name, int makespan)
         {
-            var row = Rows.Find(name);
+            var row = Data.Rows.Find(name);
             row.SetField(HeuristicName, HeuristicValue);
             row.SetField("Makespan", makespan);
         }
@@ -35,7 +46,7 @@ namespace ALICE
 
             foreach (var line in content)
             {
-                var row = Rows.Find(line[0]);
+                var row = Data.Rows.Find(line[0]);
                 if (row == null) continue;
                 if (!all && HeuristicValue != line[1]) continue;
                 row[HeuristicName] = line[1];
@@ -47,6 +58,9 @@ namespace ALICE
 
         internal void Write()
         {
+            if (FileInfo.Directory != null && !FileInfo.Directory.Exists)
+                Directory.CreateDirectory(FileInfo.Directory.FullName);
+
             var fs = new FileStream(FileInfo.FullName, FileMode.Append, FileAccess.Write);
             using (var st = new StreamWriter(fs))
             {
@@ -56,7 +70,7 @@ namespace ALICE
                     st.WriteLine(header);
                 }
 
-                foreach (var info in from DataRow row in Rows
+                foreach (var info in from DataRow row in Data.Rows
                     let pid = (int) row["PID"]
                     where pid > AlreadySavedPID
                     select String.Format("{0},{1},{2}", row["Name"], HeuristicValue, row["Makespan"]))
@@ -66,6 +80,13 @@ namespace ALICE
                 st.Close();
             }
             fs.Close();
+        }
+
+        internal void ApplyAll(Func<int, Schedule> apply1)
+        {
+            for (int pid = AlreadySavedPID + 1; pid <= NumInstances; pid++)
+                apply1(pid);
+            Write();
         }
     }
 }

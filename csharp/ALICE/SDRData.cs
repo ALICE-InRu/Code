@@ -29,7 +29,7 @@ namespace ALICE
         {
             _sdr = sdr;
             FileInfo =
-                new FileInfo(string.Format("{0}//{1}//{2}.{3}.{4}.csv", data.FullName, "SDR",
+                new FileInfo(string.Format(@"{0}\{1}\{2}.{3}.{4}.csv", data.FullName, "SDR",
                     Distribution, Dimension, Set));
 
             Read(false);
@@ -40,7 +40,7 @@ namespace ALICE
             : base(distribution, dimension, set, extended, heuristicName, heuristicValue, data)
         {
             FileInfo =
-                new FileInfo(string.Format("{0}//{1}//{2}.{3}.{4}.csv", data.FullName, HeuristicName,
+                new FileInfo(string.Format(@"{0}\{1}\{2}.{3}.{4}.csv", data.FullName, HeuristicName,
                     Distribution, Dimension, Set));
 
             Read(false);
@@ -50,14 +50,7 @@ namespace ALICE
         {
             ApplyAll(Apply);
         }
-
-        internal void ApplyAll(Func<int, Schedule> apply1)
-        {
-            for (int pid = AlreadySavedPID + 1; pid <= NumInstances; pid++)
-                apply1(pid);
-            Write();
-        }
-
+        
         public Schedule Apply(int pid)
         {
             string name = GetName(pid);
