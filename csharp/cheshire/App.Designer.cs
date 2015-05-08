@@ -85,12 +85,21 @@ namespace Cheshire
             this.startAsyncButtonOptimize = new System.Windows.Forms.Button();
             this.progressBarOuter = new System.Windows.Forms.ProgressBar();
             this.splitContainerForm = new System.Windows.Forms.SplitContainer();
+            this.groupLinModel = new System.Windows.Forms.GroupBox();
+            this.ApplyModel = new System.Windows.Forms.ComboBox();
+            this.lblModelIndex = new System.Windows.Forms.Label();
+            this.Iteration = new System.Windows.Forms.NumericUpDown();
+            this.StepwiseBias = new System.Windows.Forms.ComboBox();
+            this.NumFeatures = new System.Windows.Forms.NumericUpDown();
+            this.lblIteration = new System.Windows.Forms.Label();
+            this.ModelIndex = new System.Windows.Forms.NumericUpDown();
+            this.lblNumFeatures = new System.Windows.Forms.Label();
             this.groupApply = new System.Windows.Forms.GroupBox();
             this.groupBoxDimensionApply = new System.Windows.Forms.GroupBox();
             this.DimensionApply = new System.Windows.Forms.CheckedListBox();
             this.ORLIBApply = new System.Windows.Forms.CheckedListBox();
             this.groupBoxProblemApply = new System.Windows.Forms.GroupBox();
-            this.ProblemApply = new System.Windows.Forms.CheckedListBox();
+            this.ProblemsApply = new System.Windows.Forms.CheckedListBox();
             this.cancelAsyncButtonApply = new System.Windows.Forms.Button();
             this.startAsyncButtonApply = new System.Windows.Forms.Button();
             this.textHeader = new System.Windows.Forms.RichTextBox();
@@ -115,6 +124,10 @@ namespace Cheshire
             this.splitContainerForm.Panel1.SuspendLayout();
             this.splitContainerForm.Panel2.SuspendLayout();
             this.splitContainerForm.SuspendLayout();
+            this.groupLinModel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.Iteration)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NumFeatures)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ModelIndex)).BeginInit();
             this.groupApply.SuspendLayout();
             this.groupBoxDimensionApply.SuspendLayout();
             this.groupBoxProblemApply.SuspendLayout();
@@ -150,7 +163,7 @@ namespace Cheshire
             this.Set.Name = "Set";
             this.Set.Size = new System.Drawing.Size(110, 34);
             this.Set.TabIndex = 49;
-            this.Set.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
+            this.Set.SelectedIndexChanged += new System.EventHandler(this.Set_SelectedIndexChanged);
             // 
             // Extended
             // 
@@ -190,7 +203,7 @@ namespace Cheshire
             this.Problems.Name = "Problems";
             this.Problems.Size = new System.Drawing.Size(110, 139);
             this.Problems.TabIndex = 22;
-            this.Problems.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
+            this.Problems.SelectedIndexChanged += new System.EventHandler(this.Set_SelectedIndexChanged);
             // 
             // groupBoxDim
             // 
@@ -215,7 +228,7 @@ namespace Cheshire
             this.Dimension.Name = "Dimension";
             this.Dimension.Size = new System.Drawing.Size(110, 79);
             this.Dimension.TabIndex = 48;
-            this.Dimension.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
+            this.Dimension.SelectedIndexChanged += new System.EventHandler(this.Set_SelectedIndexChanged);
             // 
             // progressBarInner
             // 
@@ -232,7 +245,7 @@ namespace Cheshire
             this.groupBoxCMAObjFun.Controls.Add(this.CMAwrtRho);
             this.groupBoxCMAObjFun.Location = new System.Drawing.Point(12, 460);
             this.groupBoxCMAObjFun.Name = "groupBoxCMAObjFun";
-            this.groupBoxCMAObjFun.Size = new System.Drawing.Size(130, 84);
+            this.groupBoxCMAObjFun.Size = new System.Drawing.Size(128, 84);
             this.groupBoxCMAObjFun.TabIndex = 23;
             this.groupBoxCMAObjFun.TabStop = false;
             this.groupBoxCMAObjFun.Text = "CMA-ES optimisation";
@@ -543,6 +556,7 @@ namespace Cheshire
             this.DependentModel.TabIndex = 38;
             this.DependentModel.Text = "Dependent";
             this.DependentModel.UseVisualStyleBackColor = true;
+            this.DependentModel.CheckedChanged += new System.EventHandler(this.Set_SelectedIndexChanged);
             // 
             // groupBoxSDR
             // 
@@ -643,6 +657,7 @@ namespace Cheshire
             // 
             // splitContainerForm.Panel1
             // 
+            this.splitContainerForm.Panel1.Controls.Add(this.groupLinModel);
             this.splitContainerForm.Panel1.Controls.Add(this.groupApply);
             this.splitContainerForm.Panel1.Controls.Add(this.groupBoxBDR);
             this.splitContainerForm.Panel1.Controls.Add(this.groupBoxDependent);
@@ -662,6 +677,144 @@ namespace Cheshire
             this.splitContainerForm.SplitterDistance = 426;
             this.splitContainerForm.TabIndex = 0;
             // 
+            // groupLinModel
+            // 
+            this.groupLinModel.Controls.Add(this.ApplyModel);
+            this.groupLinModel.Controls.Add(this.lblModelIndex);
+            this.groupLinModel.Controls.Add(this.Iteration);
+            this.groupLinModel.Controls.Add(this.StepwiseBias);
+            this.groupLinModel.Controls.Add(this.NumFeatures);
+            this.groupLinModel.Controls.Add(this.lblIteration);
+            this.groupLinModel.Controls.Add(this.ModelIndex);
+            this.groupLinModel.Controls.Add(this.lblNumFeatures);
+            this.groupLinModel.Location = new System.Drawing.Point(10, 550);
+            this.groupLinModel.Name = "groupLinModel";
+            this.groupLinModel.Size = new System.Drawing.Size(130, 100);
+            this.groupLinModel.TabIndex = 53;
+            this.groupLinModel.TabStop = false;
+            this.groupLinModel.Text = "Model settings";
+            // 
+            // ApplyModel
+            // 
+            this.ApplyModel.FormattingEnabled = true;
+            this.ApplyModel.Items.AddRange(new object[] {
+            "PREF",
+            "CMAES",
+            "PREF-exhaust"});
+            this.ApplyModel.Location = new System.Drawing.Point(65, 71);
+            this.ApplyModel.Name = "ApplyModel";
+            this.ApplyModel.Size = new System.Drawing.Size(60, 21);
+            this.ApplyModel.TabIndex = 59;
+            // 
+            // lblModelIndex
+            // 
+            this.lblModelIndex.AutoSize = true;
+            this.lblModelIndex.Location = new System.Drawing.Point(64, 17);
+            this.lblModelIndex.Name = "lblModelIndex";
+            this.lblModelIndex.Size = new System.Drawing.Size(16, 13);
+            this.lblModelIndex.TabIndex = 58;
+            this.lblModelIndex.Text = "M";
+            // 
+            // Iteration
+            // 
+            this.Iteration.Location = new System.Drawing.Point(80, 41);
+            this.Iteration.Maximum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.Iteration.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.Iteration.Name = "Iteration";
+            this.Iteration.Size = new System.Drawing.Size(44, 20);
+            this.Iteration.TabIndex = 57;
+            this.Iteration.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // StepwiseBias
+            // 
+            this.StepwiseBias.FormattingEnabled = true;
+            this.StepwiseBias.Items.AddRange(new object[] {
+            "equal",
+            "opt",
+            "wcs",
+            "bcs",
+            "dbl1st",
+            "dbl2nd"});
+            this.StepwiseBias.Location = new System.Drawing.Point(5, 71);
+            this.StepwiseBias.Name = "StepwiseBias";
+            this.StepwiseBias.Size = new System.Drawing.Size(60, 21);
+            this.StepwiseBias.TabIndex = 56;
+            // 
+            // NumFeatures
+            // 
+            this.NumFeatures.Location = new System.Drawing.Point(21, 15);
+            this.NumFeatures.Maximum = new decimal(new int[] {
+            16,
+            0,
+            0,
+            0});
+            this.NumFeatures.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.NumFeatures.Name = "NumFeatures";
+            this.NumFeatures.Size = new System.Drawing.Size(40, 20);
+            this.NumFeatures.TabIndex = 52;
+            this.NumFeatures.Value = new decimal(new int[] {
+            16,
+            0,
+            0,
+            0});
+            this.NumFeatures.ValueChanged += new System.EventHandler(this.NumFeatures_ValueChanged);
+            // 
+            // lblIteration
+            // 
+            this.lblIteration.AutoSize = true;
+            this.lblIteration.Location = new System.Drawing.Point(26, 43);
+            this.lblIteration.Name = "lblIteration";
+            this.lblIteration.Size = new System.Drawing.Size(48, 13);
+            this.lblIteration.TabIndex = 55;
+            this.lblIteration.Text = "Iteration:";
+            // 
+            // ModelIndex
+            // 
+            this.ModelIndex.Location = new System.Drawing.Point(80, 15);
+            this.ModelIndex.Maximum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.ModelIndex.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.ModelIndex.Name = "ModelIndex";
+            this.ModelIndex.Size = new System.Drawing.Size(44, 20);
+            this.ModelIndex.TabIndex = 54;
+            this.ModelIndex.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // lblNumFeatures
+            // 
+            this.lblNumFeatures.AutoSize = true;
+            this.lblNumFeatures.Location = new System.Drawing.Point(5, 17);
+            this.lblNumFeatures.Name = "lblNumFeatures";
+            this.lblNumFeatures.Size = new System.Drawing.Size(13, 13);
+            this.lblNumFeatures.TabIndex = 53;
+            this.lblNumFeatures.Text = "F";
+            // 
             // groupApply
             // 
             this.groupApply.Controls.Add(this.groupBoxDimensionApply);
@@ -675,12 +828,11 @@ namespace Cheshire
             this.groupApply.TabIndex = 39;
             this.groupApply.TabStop = false;
             this.groupApply.Text = "Apply";
-            this.groupApply.Click += new System.EventHandler(this.cancelAsyncButtonApply_Click);
             // 
             // groupBoxDimensionApply
             // 
             this.groupBoxDimensionApply.Controls.Add(this.DimensionApply);
-            this.groupBoxDimensionApply.Location = new System.Drawing.Point(126, 15);
+            this.groupBoxDimensionApply.Location = new System.Drawing.Point(134, 15);
             this.groupBoxDimensionApply.Name = "groupBoxDimensionApply";
             this.groupBoxDimensionApply.Size = new System.Drawing.Size(120, 100);
             this.groupBoxDimensionApply.TabIndex = 49;
@@ -700,7 +852,7 @@ namespace Cheshire
             this.DimensionApply.Name = "DimensionApply";
             this.DimensionApply.Size = new System.Drawing.Size(110, 79);
             this.DimensionApply.TabIndex = 48;
-            this.DimensionApply.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
+            this.DimensionApply.SelectedIndexChanged += new System.EventHandler(this.Set_SelectedIndexChanged);
             // 
             // ORLIBApply
             // 
@@ -708,15 +860,15 @@ namespace Cheshire
             this.ORLIBApply.Items.AddRange(new object[] {
             "FSP ORLIB",
             "JSP ORLIB"});
-            this.ORLIBApply.Location = new System.Drawing.Point(131, 118);
+            this.ORLIBApply.Location = new System.Drawing.Point(139, 119);
             this.ORLIBApply.Name = "ORLIBApply";
             this.ORLIBApply.Size = new System.Drawing.Size(110, 34);
             this.ORLIBApply.TabIndex = 48;
-            this.ORLIBApply.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
+            this.ORLIBApply.SelectedIndexChanged += new System.EventHandler(this.Set_SelectedIndexChanged);
             // 
             // groupBoxProblemApply
             // 
-            this.groupBoxProblemApply.Controls.Add(this.ProblemApply);
+            this.groupBoxProblemApply.Controls.Add(this.ProblemsApply);
             this.groupBoxProblemApply.Location = new System.Drawing.Point(5, 15);
             this.groupBoxProblemApply.Name = "groupBoxProblemApply";
             this.groupBoxProblemApply.Size = new System.Drawing.Size(120, 160);
@@ -724,10 +876,10 @@ namespace Cheshire
             this.groupBoxProblemApply.TabStop = false;
             this.groupBoxProblemApply.Text = "Distribution";
             // 
-            // ProblemApply
+            // ProblemsApply
             // 
-            this.ProblemApply.FormattingEnabled = true;
-            this.ProblemApply.Items.AddRange(new object[] {
+            this.ProblemsApply.FormattingEnabled = true;
+            this.ProblemsApply.Items.AddRange(new object[] {
             "j.rnd",
             "j.rndn",
             "f.rnd",
@@ -737,24 +889,25 @@ namespace Cheshire
             "f.mxc",
             "j.rnd_p1mdoubled",
             "j.rnd_pj1doubled"});
-            this.ProblemApply.Location = new System.Drawing.Point(5, 15);
-            this.ProblemApply.Name = "ProblemApply";
-            this.ProblemApply.Size = new System.Drawing.Size(110, 139);
-            this.ProblemApply.TabIndex = 22;
-            this.ProblemApply.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
+            this.ProblemsApply.Location = new System.Drawing.Point(5, 15);
+            this.ProblemsApply.Name = "ProblemsApply";
+            this.ProblemsApply.Size = new System.Drawing.Size(110, 139);
+            this.ProblemsApply.TabIndex = 22;
+            this.ProblemsApply.SelectedIndexChanged += new System.EventHandler(this.Set_SelectedIndexChanged);
             // 
             // cancelAsyncButtonApply
             // 
-            this.cancelAsyncButtonApply.Location = new System.Drawing.Point(191, 159);
+            this.cancelAsyncButtonApply.Location = new System.Drawing.Point(194, 159);
             this.cancelAsyncButtonApply.Name = "cancelAsyncButtonApply";
             this.cancelAsyncButtonApply.Size = new System.Drawing.Size(60, 25);
             this.cancelAsyncButtonApply.TabIndex = 52;
             this.cancelAsyncButtonApply.Text = "Cancel";
             this.cancelAsyncButtonApply.UseVisualStyleBackColor = true;
+            this.cancelAsyncButtonApply.Click += new System.EventHandler(this.cancelAsyncButtonApply_Click);
             // 
             // startAsyncButtonApply
             // 
-            this.startAsyncButtonApply.Location = new System.Drawing.Point(126, 159);
+            this.startAsyncButtonApply.Location = new System.Drawing.Point(131, 159);
             this.startAsyncButtonApply.Name = "startAsyncButtonApply";
             this.startAsyncButtonApply.Size = new System.Drawing.Size(60, 25);
             this.startAsyncButtonApply.TabIndex = 51;
@@ -813,6 +966,11 @@ namespace Cheshire
             this.splitContainerForm.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerForm)).EndInit();
             this.splitContainerForm.ResumeLayout(false);
+            this.groupLinModel.ResumeLayout(false);
+            this.groupLinModel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.Iteration)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NumFeatures)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ModelIndex)).EndInit();
             this.groupApply.ResumeLayout(false);
             this.groupBoxDimensionApply.ResumeLayout(false);
             this.groupBoxProblemApply.ResumeLayout(false);
@@ -872,6 +1030,18 @@ namespace Cheshire
                 new System.ComponentModel.RunWorkerCompletedEventHandler(bkgWorker_RunWorkerCompleted);
             this.bkgWorkerCMAES.ProgressChanged +=
                 new System.ComponentModel.ProgressChangedEventHandler(bkgWorker_ProgressChanged);
+            // 
+            // bkgWorkerApply
+            // 
+            this.bkgWorkerApply.WorkerReportsProgress = true;
+            this.bkgWorkerApply.WorkerSupportsCancellation = true;
+            this.bkgWorkerApply.DoWork += new System.ComponentModel.DoWorkEventHandler(bkgWorkerApply_DoWork);
+            this.bkgWorkerApply.RunWorkerCompleted +=
+                new System.ComponentModel.RunWorkerCompletedEventHandler(bkgWorker_RunWorkerCompleted);
+            this.bkgWorkerApply.ProgressChanged +=
+                new System.ComponentModel.ProgressChangedEventHandler(bkgWorker_ProgressChanged);
+
+
         }
 
         #endregion
@@ -937,9 +1107,18 @@ namespace Cheshire
         private CheckedListBox DimensionApply;
         private CheckedListBox ORLIBApply;
         private GroupBox groupBoxProblemApply;
-        private CheckedListBox ProblemApply;
+        private CheckedListBox ProblemsApply;
         private Button cancelAsyncButtonApply;
         private Button startAsyncButtonApply;
         private BackgroundWorker bkgWorkerApply;
+        private GroupBox groupLinModel;
+        private ComboBox StepwiseBias;
+        private NumericUpDown NumFeatures;
+        private Label lblIteration;
+        private NumericUpDown ModelIndex;
+        private Label lblNumFeatures;
+        private Label lblModelIndex;
+        private NumericUpDown Iteration;
+        private ComboBox ApplyModel;
     }
 }

@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net.Configuration;
 using System.Windows.Forms;
 using ALICE;
 
@@ -23,12 +24,15 @@ namespace Cheshire
             Icon = ico;
 
             TimeLimit.Value = AUTOSAVE;
-            Tracks.Items.AddRange(Enum.GetNames(typeof(TrainingSet.Trajectory)));
-            Ranks.Items.AddRange(Enum.GetNames(typeof(PreferenceSet.Ranking)));
-            Set.Items.AddRange(Enum.GetNames(typeof(RawData.DataSet)));
+            Tracks.Items.AddRange(Enum.GetNames(typeof (TrainingSet.Trajectory)));
+            Ranks.Items.AddRange(Enum.GetNames(typeof (PreferenceSet.Ranking)));
+            Set.Items.AddRange(Enum.GetNames(typeof (RawData.DataSet)));
             SDR.Items.AddRange(Enum.GetNames(typeof (SDRData.SDR)));
-            SDR1.Items.AddRange(Enum.GetNames(typeof(SDRData.SDR)));
-            SDR2.Items.AddRange(Enum.GetNames(typeof(SDRData.SDR)));
+            SDR1.Items.AddRange(Enum.GetNames(typeof (SDRData.SDR)));
+            SDR2.Items.AddRange(Enum.GetNames(typeof (SDRData.SDR)));
+
+            ApplyModel.SelectedIndex = 0;
+            StepwiseBias.SelectedIndex = 0;
         }
 
         private void App_Load(object sender, EventArgs e)
@@ -111,8 +115,8 @@ namespace Cheshire
 
             textHeader.AppendText(String.Format("\n{0} configurations: #{1}", sets.GetType(), sets.Length));
             sets = sets.Where(
-                    x => x.AlreadySavedPID < x.NumInstances).ToArray();
-            
+                x => x.AlreadySavedPID < x.NumInstances).ToArray();
+
             int iter = 0;
             progressBarOuter.Value = 0;
             foreach (var set in sets)
@@ -124,7 +128,8 @@ namespace Cheshire
                 textContent.AppendText(String.Format("\n{0} updated for {1}:{2}", set.FileInfo.Name,
                     set.HeuristicName, set.HeuristicValue));
             }
-            textHeader.AppendText(String.Format("\n{0} configurations: #{1} newly completed!", sets.GetType(), sets.Length));
+            textHeader.AppendText(String.Format("\n{0} configurations: #{1} newly completed!", sets.GetType(),
+                sets.Length));
         }
 
 
@@ -137,20 +142,21 @@ namespace Cheshire
             //This event is raised on the main thread.  
             //It is safe to access UI controls here.              
             object[] info = (object[]) e.UserState;
+            bool valid = e.ProgressPercentage >= 0 & e.ProgressPercentage <= 100;
             if (Convert.ToInt32(info[0]) == 0)
             {
-                progressBarOuter.Value = e.ProgressPercentage;
-                progressBarInner.Value = e.ProgressPercentage > 0 ? 100 : 0;
+                progressBarOuter.Value = valid ? e.ProgressPercentage : 100;
+                progressBarInner.Value = valid ? 100 : 0;
                 textHeader.AppendText(String.Format("\n{0}", info[1]));
             }
             else
             {
-                progressBarInner.Value = e.ProgressPercentage;
+                progressBarInner.Value = valid ? e.ProgressPercentage : 100;
                 textContent.AppendText(String.Format("\n{0}", info[1]));
             }
         }
 
-        //This is executed after the task is complete whatever the task has newly completed: a) successfully, b) with error c) has been cancelled  
+        //This is executed after the task is complete whatever the task has completed: a) successfully, b) with error c) has been cancelled  
         private void bkgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             if (e.Cancelled)
@@ -163,7 +169,7 @@ namespace Cheshire
             }
             else
             {
-                MessageBox.Show(String.Format("{0}. {1}", "The task has been newly completed", e.Result));
+                MessageBox.Show(String.Format("{0}. {1}", "The task has been completed", e.Result));
             }
             cancelAsyncButtonRetrace.Visible = false;
             cancelAsyncButtonCMA.Visible = false;
@@ -224,7 +230,7 @@ namespace Cheshire
             //NOTE: we shouldn't use a try catch block here (unless you rethrow the exception)  
             //the background worker will be able to detect any exception on this code.  
             //if any exception is produced, it will be available to you on   
-            //the RunWorkernewly completedEventArgs object, method bkgWorkerOptimise_RunWorkernewly completed  
+            //the RunWorker completedEventArgs object, method bkgWorkerOptimise_RunWorker completed  
 
             OPTData[] sets = (OPTData[]) e.Argument;
             e.Result = "";
@@ -277,7 +283,8 @@ namespace Cheshire
                     });
             }
             bkgWorkerOptimise.ReportProgress((int) (100.0*iter/sets.Length),
-                new object[] {0, String.Format("{0} configurations: #{1} complete!", sets.GetType(), sets.Length)});
+                new object[]
+                {0, String.Format("{0} configurations: #{1} newly completed!", sets.GetType(), sets.Length)});
         }
 
         #endregion
@@ -343,7 +350,7 @@ namespace Cheshire
                 for (int pid = set.AlreadySavedPID + 1; pid <= set.NumInstances; pid++)
                 {
                     string info = set.Apply(pid);
-                    bkgWorkerTrSet.ReportProgress((int) (100.0*pid/set.NumInstances),
+                    bkgWorkerTrSet.ReportProgress((int) (100.0*(pid%set.NumTraining)/set.NumTraining),
                         new object[] {1, info});
 
                     if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE | bkgWorkerTrSet.CancellationPending)
@@ -376,7 +383,8 @@ namespace Cheshire
                     });
             }
             bkgWorkerTrSet.ReportProgress((int) (100.0*iter/sets.Length),
-                new object[] {0, String.Format("{0} configurations: #{1} complete!", sets.GetType(), sets.Length)});
+                new object[]
+                {0, String.Format("{0} configurations: #{1} newly completed!", sets.GetType(), sets.Length)});
         }
 
         #endregion
@@ -402,7 +410,7 @@ namespace Cheshire
                     new RetraceSet(problem, dim,
                         (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
                         Extended.CheckedItems.Count > 0, featureMode, DataDir)).ToArray();
- 
+
             if (sets.Length == 0)
             {
                 textContent.AppendText("\nCannot retrace set:");
@@ -471,7 +479,8 @@ namespace Cheshire
                     });
             }
             bkgWorkerRetrace.ReportProgress((int) (100.0*iter/sets.Length),
-                new object[] {0, String.Format("{0} configurations: #{1} complete!", sets.GetType(), sets.Length)});
+                new object[]
+                {0, String.Format("{0} configurations: #{1} newly completed!", sets.GetType(), sets.Length)});
         }
 
         #endregion
@@ -555,7 +564,270 @@ namespace Cheshire
 
             }
             bkgWorkerPrefSet.ReportProgress((int) (100.0*iter/sets.Length),
-                new object[] {0, String.Format("{0} configurations: #{1} complete!", sets.GetType(), sets.Length)});
+                new object[]
+                {0, String.Format("{0} configurations: #{1} newly completed!", sets.GetType(), sets.Length)});
+        }
+
+        #endregion
+
+        #region bkgWorkerCMAES
+
+        private void startAsyncButtonCMA_click(object sender, EventArgs e)
+        {
+            bool dependentModel = DependentModel.Checked && !IndependentModel.Checked;
+            CMAESData.ObjectiveFunction objFun = CMAwrtMakespan.Checked
+                ? CMAESData.ObjectiveFunction.MinimumMakespan
+                : CMAESData.ObjectiveFunction.MinimumRho;
+
+            CMAESData[] sets = (from dim in Dimension.CheckedItems.Cast<string>()
+                from problem in Problems.CheckedItems.Cast<string>()
+                select new CMAESData(problem, dim, objFun, dependentModel, DataDir)).ToArray();
+
+            if (sets.Length == 0)
+            {
+                textContent.AppendText("\nCannot apply CMA-ES:");
+                if (Problems.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one problem distribution.");
+                if (Dimension.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one problem dimension.");
+                textContent.AppendText("\n");
+                return;
+            }
+
+            while (bkgWorkerCMAES.IsBusy)
+            {
+                /* wait */
+            }
+
+            bkgWorkerCMAES.RunWorkerAsync(sets);
+            cancelAsyncButtonCMA.Visible = true;
+        }
+
+        private void cancelAsyncButtonCMA_click(object sender, EventArgs e)
+        {
+            bkgWorkerCMAES.CancelAsync();
+            textHeader.AppendText("\nCancelling CMA-ES optimisation...");
+            cancelAsyncButtonTrSet.Visible = false;
+        }
+
+        private void bkgWorkerCMAES_DoWork(object sender, DoWorkEventArgs e)
+        {
+            CMAESData[] sets = (CMAESData[]) e.Argument;
+
+            e.Result = "";
+            int iter = 0;
+            bkgWorkerCMAES.ReportProgress((int) (100.0*iter/sets.Length),
+                new object[] {0, String.Format("{0} configurations: #{1}", sets.GetType(), sets.Length)});
+
+            sets = sets.Where(x => !x.OptimistationComplete).ToArray();
+
+            foreach (var set in sets)
+            {
+                DateTime start = DateTime.Now;
+                DateTime autoSave = DateTime.Now;
+
+                bkgWorkerCMAES.ReportProgress((int) (100.0*iter/sets.Length),
+                    new object[] {0, String.Format("Starting optimising with CMA-ES {0}", set.FileInfo.Name)});
+
+                while (!set.OptimistationComplete)
+                {
+                    string info = set.Optimise(set.Generation); //do some intense task here.
+                    bkgWorkerCMAES.ReportProgress((int) (100.0*set.CountEval/set.StopEval),
+                        new object[] {1, info});
+
+                    if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE | bkgWorkerCMAES.CancellationPending)
+                    {
+                        bkgWorkerCMAES.ReportProgress((int) (100.0*iter/sets.Length),
+                            new object[]
+                            {
+                                0,
+                                String.Format("Auto saving {0} ({1:0}min {2} generations)", set.FileInfo.Name,
+                                    (DateTime.Now - autoSave).TotalMinutes, set.Generation - set.AlreadySavedPID)
+                            });
+                        set.Write();
+                        autoSave = DateTime.Now;
+                    }
+
+                    if (!bkgWorkerCMAES.CancellationPending) continue;
+                    bkgWorkerCMAES.ReportProgress((int) (100.0*set.CountEval/set.StopEval),
+                        new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
+                    e.Cancel = true;
+                    return;
+                }
+
+                bkgWorkerCMAES.ReportProgress((int) (100.0*++iter/sets.Length),
+                    new object[]
+                    {
+                        0,
+                        String.Format(
+                            "Finished optimising with CMA-ES {0} ({1:0}min)\n\tGrand total of {2} generations with {3} evaluations.",
+                            set.FileInfo.Name, (DateTime.Now - start).TotalMinutes, set.Generation, set.CountEval)
+                    });
+            }
+            bkgWorkerCMAES.ReportProgress((int)(100.0 * iter / sets.Length),
+                new object[]
+                {0, String.Format("{0} configurations: #{1} newly completed!", sets.GetType(), sets.Length)});
+        }
+
+        #endregion
+
+        #region bkgWorkerApply
+
+        private void startAsyncButtonApply_Click(object sender, EventArgs e)
+        {
+            bool dependentModel = DependentModel.Checked && !IndependentModel.Checked;
+            LinearModel[] models;
+
+            if (ApplyModel.SelectedItem.ToString().Substring(0, 4) == "PREF")
+            {
+                string stepwiseBias = StepwiseBias.SelectedItem.ToString();
+                int iter = Convert.ToInt32(Iteration.Value);
+                int numFeatures = Convert.ToInt32(NumFeatures.Value);
+                int modelID = Convert.ToInt32(ModelIndex.Value);
+
+                if (ApplyModel.SelectedItem.ToString() == "PREF")
+                    models = (from dim in Dimension.CheckedItems.Cast<string>()
+                        from problem in Problems.CheckedItems.Cast<string>()
+                        from track in Tracks.CheckedItems.Cast<string>()
+                        from rank in Ranks.CheckedItems.Cast<string>()
+                        select new LinearModel(problem, dim,
+                            (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
+                            Extended.CheckedItems.Count > 0,
+                            (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank), dependentModel,
+                            DataDir, iter, stepwiseBias, numFeatures, modelID)).ToArray();
+                else
+                {
+                    models = GetAllExhaustiveModels(stepwiseBias);
+                }
+
+                if (models == null || models.Length == 0)
+                {
+                    textContent.AppendText("\nCannot apply PREF models:");
+                    if (Problems.CheckedItems.Count == 0)
+                        textContent.AppendText("\n\tPlease choose at least one problem distribution.");
+                    if (Dimension.CheckedItems.Count == 0)
+                        textContent.AppendText("\n\tPlease choose at least one problem dimension.");
+                    if (Tracks.CheckedItems.Count == 0)
+                        textContent.AppendText("\n\tPlease choose at least one training trajectory.");
+                    if (Ranks.CheckedItems.Count == 0)
+                        textContent.AppendText("\n\tPlease choose at least one ranking scheme.");
+                    textContent.AppendText("\n");
+                    return;
+                }
+            }
+            else
+            {
+                CMAESData.ObjectiveFunction objFun = CMAwrtMakespan.Checked
+                    ? CMAESData.ObjectiveFunction.MinimumMakespan
+                    : CMAESData.ObjectiveFunction.MinimumRho;
+
+                models = (from dim in Dimension.CheckedItems.Cast<string>()
+                    from problem in Problems.CheckedItems.Cast<string>()
+                    select new LinearModel(problem, dim, objFun, dependentModel, DataDir)).ToArray();
+
+                if (models.Length == 0)
+                {
+                    textContent.AppendText("\nCannot apply CMA-ES models:");
+                    if (Problems.CheckedItems.Count == 0)
+                        textContent.AppendText("\n\tPlease choose at least one problem distribution.");
+                    if (Dimension.CheckedItems.Count == 0)
+                        textContent.AppendText("\n\tPlease choose at least one problem dimension.");
+                    textContent.AppendText("\n");
+                    return;
+                }
+            }
+
+            RawData[] datas = (from dim in DimensionApply.CheckedItems.Cast<string>()
+                from problem in ProblemsApply.CheckedItems.Cast<string>()
+                from set in Set.CheckedItems.Cast<string>()
+                select
+                    new RawData(problem, dim, (RawData.DataSet) Enum.Parse(typeof (RawData.DataSet), set),
+                        Extended.CheckedItems.Count > 0, DataDir)).ToArray();
+
+            CDRData[] sets = (from data in datas
+                from model in models
+                select
+                    new CDRData(data, model)).ToArray();
+
+            if (sets.Length == 0)
+            {
+                textContent.AppendText("\nCannot apply sets to models:");
+                if (ProblemsApply.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one problem distribution.");
+                if (DimensionApply.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one problem dimension.");
+                textContent.AppendText("\n");
+                return;
+            }
+
+            while (bkgWorkerApply.IsBusy)
+            {
+                /* wait */
+            }
+
+            bkgWorkerApply.RunWorkerAsync(sets);
+            cancelAsyncButtonApply.Visible = true;
+        }
+
+        private LinearModel[] GetAllExhaustiveModels(string stepwiseBias)
+        {
+            foreach (var models in from problem in Problems.CheckedItems.Cast<string>()
+                from dim in Dimension.CheckedItems.Cast<string>()
+                from rank in Ranks.CheckedItems.Cast<string>()
+                from track in Tracks.CheckedItems.Cast<string>()
+                select LinearModel.GetAllExhaustiveModels(problem, dim,
+                    (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
+                    Extended.CheckedItems.Count > 0,
+                    (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank),
+                    false, DataDir, stepwiseBias)
+                into models
+                where models != null
+                select models)
+            {
+                textHeader.AppendText(String.Format("\nOnly {0} is considered!", models[0].FileInfo.Name));
+                return models;
+            }
+            return null;
+        }
+
+        private void cancelAsyncButtonApply_Click(object sender, EventArgs e)
+        {
+            bkgWorkerApply.CancelAsync();
+            textHeader.AppendText("\nCancelling application of models...");
+            cancelAsyncButtonApply.Visible = false;
+        }
+
+        private void bkgWorkerApply_DoWork(object sender, DoWorkEventArgs e)
+        {
+            CDRData[] sets = (CDRData[]) e.Argument;
+
+            e.Result = "";
+            int iter = 0;
+            bkgWorkerApply.ReportProgress((int) (100.0*iter/sets.Length),
+                new object[] {0, String.Format("{0} configurations: #{1}", sets.GetType(), sets.Length)});
+
+            sets = sets.Where(x => x.AlreadySavedPID < x.NumInstances).ToArray();
+
+            foreach (var set in sets)
+            {
+                set.Apply();
+                bkgWorkerApply.ReportProgress((int) (100.0*++iter/sets.Length),
+                    new object[]
+                    {
+                        1,
+                        String.Format("Applied {0}\n\tto {1}", set.Model.FileInfo.Name, set.FileInfo.Name)
+                    });
+
+                if (!bkgWorkerApply.CancellationPending) continue;
+                bkgWorkerApply.ReportProgress((int) (100.0*iter/sets.Length),
+                    new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
+                e.Cancel = true;
+                return;
+            }
+
+            bkgWorkerApply.ReportProgress((int)(100.0 * iter / sets.Length),
+                new object[]
+                {0, String.Format("{0} configurations: #{1} newly completed!", sets.GetType(), sets.Length)});
         }
 
         #endregion
@@ -607,137 +879,48 @@ namespace Cheshire
                 textContent.AppendText(String.Format("\n{0} updated for {1}:{2}", bdrData.FileInfo.Name,
                     bdrData.HeuristicName, bdrData.HeuristicValue));
             }
-            textHeader.AppendText(String.Format("\n{0} configurations: #{1} complete!", sets.GetType(), sets.Length));
+            textHeader.AppendText(String.Format("\n{0} configurations: #{1} newly completed!", sets.GetType(),
+                sets.Length));
         }
 
-        private void startAsyncButtonCMA_click(object sender, EventArgs e)
+
+
+        private void NumFeatures_ValueChanged(object sender, EventArgs e)
         {
-            bool dependentModel = DependentModel.Checked && !IndependentModel.Checked;
-            CMAESData.ObjectiveFunction objFun = CMAwrtMakespan.Checked
-                ? CMAESData.ObjectiveFunction.MinimumMakespan
-                : CMAESData.ObjectiveFunction.MinimumRho;
+            ModelIndex.Minimum = 1;
+            ModelIndex.Maximum = NChooseK(16, Convert.ToInt32(NumFeatures.Value));
+        }
 
-            CMAESData[] sets = (from dim in Dimension.CheckedItems.Cast<string>()
-                from problem in Problems.CheckedItems.Cast<string>()
-                select new CMAESData(problem, dim, objFun, dependentModel, DataDir)).ToArray();
-
-            if (sets.Length == 0)
+        private int NChooseK(int n, int k)
+        {
+            decimal result = 1;
+            for (int i = 1; i <= k; i++)
             {
-                textContent.AppendText("\nCannot apply CMA-ES:");
-                if (Problems.CheckedItems.Count == 0)
-                    textContent.AppendText("\n\tPlease choose at least one problem distribution.");
-                if (Dimension.CheckedItems.Count == 0)
-                    textContent.AppendText("\n\tPlease choose at least one problem dimension.");
-                textContent.AppendText("\n");
-                return;
+                result *= n - (k - i);
+                result /= i;
+            }
+            return (int) result;
+        }
+
+        private void Set_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ckb_SelectedIndexChanged(sender, e);
+            bool useTrainSet = Set.CheckedItems.Contains(RawData.DataSet.train.ToString());
+
+            if (DependentModel.Checked | useTrainSet)
+            {
+                ckb_ClickAllowOnly1(Dimension, e);
+                DimensionApply.SelectedIndex = Dimension.SelectedIndex;
+                ckb_ClickAllowOnly1(DimensionApply, e);
             }
 
-            while (bkgWorkerCMAES.IsBusy)
-            {
-                /* wait */
-            }
+            if (!useTrainSet) return;
 
-            bkgWorkerCMAES.RunWorkerAsync(sets);
-            cancelAsyncButtonCMA.Visible = true;
-        }
-
-        private void cancelAsyncButtonCMA_click(object sender, EventArgs e)
-        {
-            bkgWorkerCMAES.CancelAsync();
-            textHeader.AppendText("\nCancelling CMA-ES optimisation...");
-            cancelAsyncButtonTrSet.Visible = false;
-        }
-
-        private void bkgWorkerCMAES_DoWork(object sender, DoWorkEventArgs e)
-        {
-            CMAESData[] sets = (CMAESData[])e.Argument;
-
-            e.Result = "";
-            int iter = 0;
-            bkgWorkerCMAES.ReportProgress((int)(100.0 * iter / sets.Length),
-                new object[] { 0, String.Format("{0} configurations: #{1}", sets.GetType(), sets.Length) });
-
-            sets = sets.Where(x => !x.OptimistationComplete).ToArray();
-
-            foreach (var set in sets)
-            {
-                DateTime start = DateTime.Now;
-                DateTime autoSave = DateTime.Now;
-
-                bkgWorkerCMAES.ReportProgress((int) (100.0*iter/sets.Length),
-                    new object[] {0, String.Format("Starting optimising with CMA-ES {0}", set.FileInfo.Name)});
-
-                while (!set.OptimistationComplete)
-                {
-                    string info = set.Optimise(set.Generation); //do some intense task here.
-                    bkgWorkerCMAES.ReportProgress((int)(100.0 * set.CountEval / set.StopEval),
-                        new object[] {1, info});
-
-                    if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE | bkgWorkerCMAES.CancellationPending)
-                    {
-                        bkgWorkerCMAES.ReportProgress((int) (100.0*iter/sets.Length),
-                            new object[]
-                            {
-                                0,
-                                String.Format("Auto saving {0} ({1:0}min {2} generations)", set.FileInfo.Name,
-                                    (DateTime.Now - autoSave).TotalMinutes, set.Generation - set.AlreadySavedPID)
-                            });
-                        set.Write();
-                        autoSave = DateTime.Now;
-                    }
-
-                    if (!bkgWorkerCMAES.CancellationPending) continue;
-                    bkgWorkerCMAES.ReportProgress((int) (100.0*set.CountEval/set.StopEval),
-                        new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
-                    e.Cancel = true;
-                    return;
-                }
-
-                bkgWorkerCMAES.ReportProgress((int) (100.0*++iter/sets.Length),
-                    new object[]
-                    {
-                        0,
-                        String.Format(
-                            "Finished optimising with CMA-ES {0} ({1:0}min)\n\tGrand total of {2} generations with {3} evaluations.",
-                            set.FileInfo.Name, (DateTime.Now - start).TotalMinutes, set.Generation, set.CountEval)
-                    });
-            }
-        }
-
-        private void cancelAsyncButtonApply_Click(object sender, EventArgs e)
-        {
-            bkgWorkerApply.CancelAsync();
-            textHeader.AppendText("\nCancelling application of models...");
-            cancelAsyncButtonApply.Visible = false;
-        }
-
-        private void startAsyncButtonApply_Click(object sender, EventArgs e)
-        {
-            bool dependentModel = DependentModel.Checked && !IndependentModel.Checked;
-            
-            CMAESData.ObjectiveFunction objFun = CMAwrtMakespan.Checked
-                ? CMAESData.ObjectiveFunction.MinimumMakespan
-                : CMAESData.ObjectiveFunction.MinimumRho;
-
-            LinearModel[] cmaLinearModel = (from dim in Dimension.CheckedItems.Cast<string>()
-                from problem in Problems.CheckedItems.Cast<string>()
-                select new LinearModel(problem, dim, objFun, dependentModel, DataDir.FullName)).ToArray();
-
-            string probability = "equal";
-            int numFeatures = 16;
-            int modelID = 1; 
-            int iter = -1;
-
-            LinearModel[] prefLinearModel = (from dim in Dimension.CheckedItems.Cast<string>()
-                from problem in Problems.CheckedItems.Cast<string>()
-                from track in Tracks.CheckedItems.Cast<string>()
-                from rank in Ranks.CheckedItems.Cast<string>()
-                select new LinearModel(problem, dim, 
-                    (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
-                    Extended.CheckedItems.Count > 0,
-                    (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank), dependentModel, DataDir, iter, probability, numFeatures, modelID)).ToArray();
-            
-            throw new NotImplementedException();
+            ckb_ClickAllowOnly1(Problems, e);
+            ProblemsApply.SelectedIndex = Problems.SelectedIndex;
+            ckb_ClickAllowOnly1(ProblemsApply, e);
+            ORLIBApply.SelectedIndex = -1;
+            ckb_ClickAllowOnly1(ORLIBApply, e);
         }
     }
 }
