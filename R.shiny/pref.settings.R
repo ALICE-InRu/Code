@@ -19,8 +19,9 @@ estimate.prefModels <- function(problem,dim,start,bias,timedependent,tracks,rank
   if(any(ix)){ tracks[ix]=paste0(substr(tracks[ix],1,2),'[0-9]+',substr(tracks[ix],3,100)) }
   tracks=paste0('(',paste(tracks,collapse = '|'),')')
   files=list.files(paste0(DataDir,'PREF/CDR/'),paste(start,problem,dim,rank,tracks,bias,"weights",ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
-  for(file in files){ rho.statistic(file) }
-  return(paste('Estimate LIBLINEAR models for',length(files),'files'))
+  rho=NULL
+  for(file in files){ rho=rbind(rho,rho.statistic(file)) }
+  return(rho)
 }
 
 rho.statistic <- function(model){
@@ -28,43 +29,40 @@ rho.statistic <- function(model){
     minNum=choose(16,1)+choose(16,2)+choose(16,3)+choose(16,16)
   } else { minNum=1 }
 
-  fname=paste0(DataDir,'PREF/summary/',model)
-  if(!grepl('.csv',fname)){ fname=paste0(fname, '.csv') }
-
-  if(file.exists(fname)){ rho.stats=read_csv(fname)}
-  else{
-    files=list.files(paste0(DataDir,'PREF/CDR/',model))
-    dat=get.files(paste0(DataDir,'PREF/CDR/',model),files)
-    if(length(unique(dat$CDR))<minNum) { return(NULL) }
-
-    m=regexpr("F(?<NrFeat>[0-9]+).M(?<Model>[0-9]+)",dat$CDR,perl=T)
-    dat=factorFromName(dat)
-    dat$NrFeat=getAttribute(dat$CDR,m,1,F)
-    dat$Model=getAttribute(dat$CDR,m,2)
-    m=regexpr("(?<Problem>[a-z].[a-z]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Bias>[a-z0-9]+).weights.time",model,perl=T)
-    dat$ModelProblem=getAttribute(model,m,1)
-    dat$Bias=getAttribute(model,m,5)
-    dat$TimeIndependent=grepl('timeindependent',model)
-    dat$Dimension=getAttribute(model,m,2)
-    dat$Track=getAttribute(model,m,4)
-    dat$Extended=grepl('EXT',dat$Track)
-    dat$Rho = factorRho(dat)
-
-    ix=dat$Dimension=='10x10' & dat$Set=='train' & dat$PID>Ntrain10x10 & !dat$Extended
-    if(any(ix)){ dat$Set[ix]='test' }
-
-    Ntrain=quantile(unique(subset(dat,Set=='train')$PID),.8) # 80% of training data saved for validation
-    levels(dat$Set)=c(levels(dat$Set),'validation')
-    dat$Set[dat$Set=='train' & dat$PID>Ntrain]='validation' # 20% of training data saved for validation
-    rho.stats = ddply(dat,~Problem+NrFeat+Model+Bias+TimeIndependent, summarise,
-                      Training.Rho = round(mean(Rho[Set=='train']), digits = 5),
-                      NTrain = sum(Set=='train'),
-                      Validation.Rho = round(mean(Rho[Set=='validation']), digits = 5),
-                      NValidation = sum(Set=='validation'),
-                      Test.Rho = round(mean(Rho[Set=='test']), digits = 5),
-                      NTest = sum(Set=='test'))
-    write.table(rho.stats, file=fname, quote=F,row.names=F,dec='.',sep=',')
+  files=list.files(paste0(DataDir,'PREF/CDR/',model))
+  dat=get.files(paste0(DataDir,'PREF/CDR/',model),files)
+  num=length(unique(dat$CDR))
+  if(num<minNum) {
+    print(paste('Not enough models:',minNum,'are needed, but only',num,'were found.'))
+    return(NULL)
   }
+
+  m=regexpr("F(?<NrFeat>[0-9]+).M(?<Model>[0-9]+)",dat$CDR,perl=T)
+  dat=factorFromName(dat)
+  dat$NrFeat=getAttribute(dat$CDR,m,1,F)
+  dat$Model=getAttribute(dat$CDR,m,2)
+  m=regexpr("(?<Problem>[a-z].[a-z]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Bias>[a-z0-9]+).weights.time",model,perl=T)
+  dat$ModelProblem=getAttribute(model,m,1)
+  dat$Bias=getAttribute(model,m,5)
+  dat$TimeIndependent=grepl('timeindependent',model)
+  dat$Dimension=getAttribute(model,m,2)
+  dat$Track=getAttribute(model,m,4)
+  dat$Extended=grepl('EXT',dat$Track)
+  dat$Rho = factorRho(dat)
+
+  ix=dat$Dimension=='10x10' & dat$Set=='train' & dat$PID>Ntrain10x10 & !dat$Extended
+  if(any(ix)){ dat$Set[ix]='test' }
+
+  Ntrain=quantile(unique(subset(dat,Set=='train')$PID),.8) # 80% of training data saved for validation
+  levels(dat$Set)=c(levels(dat$Set),'validation')
+  dat$Set[dat$Set=='train' & dat$PID>Ntrain]='validation' # 20% of training data saved for validation
+  rho.stats = ddply(dat,~Problem+NrFeat+Model+Bias+TimeIndependent, summarise,
+                    Training.Rho = round(mean(Rho[Set=='train']), digits = 5),
+                    NTrain = sum(Set=='train'),
+                    Validation.Rho = round(mean(Rho[Set=='validation']), digits = 5),
+                    NValidation = sum(Set=='validation'),
+                    Test.Rho = round(mean(Rho[Set=='test']), digits = 5),
+                    NTest = sum(Set=='test'))
   return(rho.stats)
 }
 
