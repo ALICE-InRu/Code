@@ -22,10 +22,10 @@ namespace ALICE
             startTime, // start time 
             endTime, // end time 
             jobOps, // number of jobs 
-            arrivalTime, // arrival time of job
+            arrival, // arrival time of job
             //wrm, // work remaining for job
             //mwrm, // most work remaining for schedule (could be other job)
-            totProc, // total processing times
+            procTotal, // total processing times
             wait, // wait for job
 
             #endregion
@@ -123,7 +123,7 @@ namespace ALICE
             PhiLocal[(int)Local.startTime] = startTime;
             PhiLocal[(int)Local.endTime] = startTime + proc;
             PhiLocal[(int)Local.jobOps] = job.MacCount;
-            PhiLocal[(int)Local.arrivalTime] = arrivalTime;
+            PhiLocal[(int)Local.arrival] = arrivalTime;
             PhiLocal[(int)Local.wait] = startTime - arrivalTime;
 
             #endregion
@@ -138,7 +138,7 @@ namespace ALICE
 
             #region schedule related
 
-            PhiLocal[(int)Local.totProc] = job.TotProcTime;
+            PhiLocal[(int)Local.procTotal] = job.TotProcTime;
             PhiLocal[(int)Local.makespan] = makespan;
             PhiLocal[(int)Local.step] = step;
 

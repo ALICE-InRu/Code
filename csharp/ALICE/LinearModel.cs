@@ -24,10 +24,11 @@ namespace ALICE
 
         public readonly int Iteration;
 
-        protected LinearModel(FileInfo file, Features.Mode featureMode, int numFeatures, int modelID, bool timeIndependent,
+        protected LinearModel(FileInfo file, Features.Mode featureMode, int numFeatures, int modelID,
+            bool timeIndependent,
             string distribution, string dimension)
         {
-            FileInfo = file; 
+            FileInfo = file;
             FeatureMode = featureMode;
             _numFeatures = numFeatures;
             _modelID = modelID;
@@ -37,7 +38,8 @@ namespace ALICE
             Dimension = dimension;
         }
 
-        protected LinearModel(FileInfo file, Features.Mode featureMode, int timeDependentSteps, int numFeatures, int modelID,
+        protected LinearModel(FileInfo file, Features.Mode featureMode, int timeDependentSteps, int numFeatures,
+            int modelID,
             string distribution, string dimension)
             : this(file, featureMode, numFeatures, modelID, timeDependentSteps == 1, distribution, dimension)
         {
@@ -121,12 +123,13 @@ namespace ALICE
         {
             switch (track)
             {
-                case TrainingSet.Trajectory.ILFIX:
+                case TrainingSet.Trajectory.ILFIXSUP:
                 case TrainingSet.Trajectory.ILUNSUP:
                 case TrainingSet.Trajectory.ILSUP:
                     LinearModel model;
                     Iteration = GetImitationLearningFile(out model, distribution, dimension, track, extended,
                         dataDir.FullName, timedependent, iter);
+                    FileInfo = model.FileInfo;
                     LocalWeights = model.LocalWeights;
                     return;
                 default:
@@ -169,7 +172,7 @@ namespace ALICE
 
             var files = dir.GetFiles("*.csv").Where(path => reg.IsMatch(path.ToString())).ToList();
 
-            if (files.Count <= 0)
+            if (files.Count <= (iter >= 0 ? iter : 0))
                 throw new Exception(String.Format("Cannot find any weights belonging to {0}. Start with optimal!", track));
 
             int[] iters = new int[files.Count];
@@ -243,7 +246,7 @@ namespace ALICE
 
             List<string> header;
             List<string[]> content = CSV.Read(file, out header);
-            
+
             // 	Weight,NrFeat,Model,Feature,NA,values
             const int WEIGHT = 0;
             const int NRFEAT = 1;
@@ -268,7 +271,8 @@ namespace ALICE
                     if (linearWeights != null) models.Add(linearWeights);
                     nrFeat = Convert.ToInt32(line[NRFEAT]);
                     var idModel = Convert.ToInt32(line[MODEL]);
-                    linearWeights = new LinearModel(file, featureMode, uniqueTimeSteps, nrFeat, idModel, distribution, dimension);
+                    linearWeights = new LinearModel(file, featureMode, uniqueTimeSteps, nrFeat, idModel, distribution,
+                        dimension);
                     featFound = 0;
                 }
 
@@ -302,8 +306,26 @@ namespace ALICE
                 }
             }
             if (linearWeights != null) models.Add(linearWeights);
-            //if (models.Count == 697)
-            return models.ToArray();
+
+            int minNum = Regex.IsMatch(file.Name, "exhaust")
+                ? NChooseK(16, 1) + NChooseK(16, 2) + NChooseK(16, 3) + NChooseK(16, 16)
+                : 1;
+
+            return models.Count == minNum
+                ? models.ToArray()
+                : null;
+
+        }
+
+        public static int NChooseK(int n, int k)
+        {
+            decimal result = 1;
+            for (int i = 1; i <= k; i++)
+            {
+                result *= n - (k - i);
+                result /= i;
+            }
+            return (int) result;
         }
     }
 }

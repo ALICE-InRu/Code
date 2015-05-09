@@ -18,7 +18,6 @@ namespace ALICE
             HeuristicValue = heuristicValue;
             Data.Columns.Add("Makespan", typeof (int));
             Data.Columns.Add(heuristicName, typeof (string));
-            Read(false);
         }
 
         internal HeuristicData(string heuristicName, string heuristicValue, RawData clone)
@@ -28,7 +27,6 @@ namespace ALICE
             HeuristicValue = heuristicValue;
             Data.Columns.Add("Makespan", typeof (int));
             Data.Columns.Add(heuristicName, typeof (string));
-            Read(false);
         }
 
         internal void AddMakespan(string name, int makespan)

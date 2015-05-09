@@ -22,7 +22,7 @@ namespace ALICE
             RND,
             ILUNSUP,
             ILSUP,
-            ILFIX,
+            ILFIXSUP,
             ALL
         }
 
@@ -83,6 +83,12 @@ namespace ALICE
         }
 
         public TrainingSet(string distribution, string dimension, Trajectory track, bool extended, DirectoryInfo data)
+            : this(distribution, dimension, track, -1, extended, data)
+        {
+
+        }
+
+        internal TrainingSet(string distribution, string dimension, Trajectory track, int iter, bool extended, DirectoryInfo data)
             : base(distribution, dimension, DataSet.train, extended, data)
         {
             Track = track;
@@ -92,11 +98,10 @@ namespace ALICE
             
             switch (Track)
             {
-                case Trajectory.ILFIX:
+                case Trajectory.ILFIXSUP:
                 case Trajectory.ILSUP:
                 case Trajectory.ILUNSUP:
-                    int iter;
-                    strTrack = GetImitationModel(out Model, out _beta, out iter, extended);
+                    strTrack = GetImitationModel(out Model, out _beta, ref iter, extended);
                     if (Track == Trajectory.ILUNSUP)
                         _trajectory = ChooseWeightedJob;
                     else
@@ -141,15 +146,17 @@ namespace ALICE
             Preferences = new List<Preference>[NumInstances, NumDimension];
         }
 
-        private string GetImitationModel(out LinearModel model, out double beta, out int currentIter, bool extended)
+        private string GetImitationModel(out LinearModel model, out double beta, ref int currentIter, bool extended)
         {
             model = new LinearModel(Distribution, Dimension, Track, extended, PreferenceSet.Ranking.PartialPareto, false,
                 new DirectoryInfo(String.Format(@"{0}\..", FileInfo.DirectoryName)));
 
-            currentIter = model.Iteration + 1;
+            if (currentIter < 0) // use latest iteration
+                currentIter = model.Iteration + 1;
+
             switch (Track)
             {
-                case Trajectory.ILFIX:
+                case Trajectory.ILFIXSUP:
                     beta = 0.5;
                     break;
                 case Trajectory.ILSUP:

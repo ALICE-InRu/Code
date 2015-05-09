@@ -19,6 +19,7 @@ namespace ALICE
                     @"{0}\..\CDR\{1}\{2}.{3}.{4}.csv", Model.FileInfo.Directory,
                     Model.FileInfo.Name.Substring(0, Model.FileInfo.Name.Length - Model.FileInfo.Extension.Length),
                     Distribution, Dimension, Set));
+            Read(false);
         }
 
         public CDRData(RawData data, LinearModel model)
@@ -30,6 +31,7 @@ namespace ALICE
                     @"{0}\..\CDR\{1}\{2}.{3}.{4}.csv", Model.FileInfo.Directory,
                     Model.FileInfo.Name.Substring(0, Model.FileInfo.Name.Length - Model.FileInfo.Extension.Length),
                     Distribution, Dimension, Set));
+            Read(false);
         }
 
         public void Apply()
