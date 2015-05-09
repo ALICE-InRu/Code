@@ -15,11 +15,11 @@ mainPalette <- function(n) {
   else if (n <= 2)
     palette <- c("gray79", "black")
   else {
-    library('RColorBrewer')
-    palette = brewer.pal(min(9,n), name='Set1');
+    palette = RColorBrewer::brewer.pal(min(9,n), name='Set1')
   }
-  if (n > length(palette))
-    warning('generated palette has duplicated colours')
+  if (n > length(palette)) {
+    palette = c(palette, RColorBrewer::brewer.pal(min(8,n), name='Set2'))
+  }
   rep(palette, length.out=n)
 }
 
