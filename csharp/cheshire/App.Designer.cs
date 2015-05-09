@@ -258,7 +258,7 @@ namespace Cheshire
             this.cancelAsyncButtonCMA.TabIndex = 56;
             this.cancelAsyncButtonCMA.Text = "Cancel";
             this.cancelAsyncButtonCMA.UseVisualStyleBackColor = true;
-            this.cancelAsyncButtonCMA.Click += new System.EventHandler(this.cancelAsyncButtonCMA_click);
+            this.cancelAsyncButtonCMA.Click += new System.EventHandler(this.cancelAsyncButton_Click);
             // 
             // startAsyncButtonCMA
             // 
@@ -407,7 +407,7 @@ namespace Cheshire
             this.cancelAsyncButtonTrSet.TabIndex = 2;
             this.cancelAsyncButtonTrSet.Text = "Cancel";
             this.cancelAsyncButtonTrSet.UseVisualStyleBackColor = true;
-            this.cancelAsyncButtonTrSet.Click += new System.EventHandler(this.cancelAsyncButtonTrSet_Click);
+            this.cancelAsyncButtonTrSet.Click += new System.EventHandler(this.cancelAsyncButton_Click);
             // 
             // startAsyncButtonGenTrData
             // 
@@ -457,7 +457,7 @@ namespace Cheshire
             this.cancelAsyncButtonRankTrData.TabIndex = 55;
             this.cancelAsyncButtonRankTrData.Text = "Cancel";
             this.cancelAsyncButtonRankTrData.UseVisualStyleBackColor = true;
-            this.cancelAsyncButtonRankTrData.Click += new System.EventHandler(this.cancelAsyncButtonPrefSet_Click);
+            this.cancelAsyncButtonRankTrData.Click += new System.EventHandler(this.cancelAsyncButton_Click);
             // 
             // startAsyncButtonRankTrData
             // 
@@ -490,7 +490,7 @@ namespace Cheshire
             this.cancelAsyncButtonRetrace.TabIndex = 56;
             this.cancelAsyncButtonRetrace.Text = "Cancel";
             this.cancelAsyncButtonRetrace.UseVisualStyleBackColor = true;
-            this.cancelAsyncButtonRetrace.Click += new System.EventHandler(this.cancelAsyncButtonRetrace_Click);
+            this.cancelAsyncButtonRetrace.Click += new System.EventHandler(this.cancelAsyncButton_Click);
             // 
             // startAsyncButtonRetrace
             // 
@@ -630,7 +630,7 @@ namespace Cheshire
             this.cancelAsyncButtonOptimize.TabIndex = 50;
             this.cancelAsyncButtonOptimize.Text = "Cancel";
             this.cancelAsyncButtonOptimize.UseVisualStyleBackColor = true;
-            this.cancelAsyncButtonOptimize.Click += new System.EventHandler(this.cancelAsyncButtonOptimize_Click);
+            this.cancelAsyncButtonOptimize.Click += new System.EventHandler(this.cancelAsyncButton_Click);
             // 
             // startAsyncButtonOptimize
             // 
@@ -731,11 +731,9 @@ namespace Cheshire
             this.Iteration.Name = "Iteration";
             this.Iteration.Size = new System.Drawing.Size(44, 20);
             this.Iteration.TabIndex = 57;
-            this.Iteration.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
+            this.Iteration.Value = 1;
+            this.Iteration.Minimum = 0;
+            this.Iteration.Maximum = 10;
             // 
             // StepwiseBias
             // 
@@ -903,7 +901,7 @@ namespace Cheshire
             this.cancelAsyncButtonApply.TabIndex = 52;
             this.cancelAsyncButtonApply.Text = "Cancel";
             this.cancelAsyncButtonApply.UseVisualStyleBackColor = true;
-            this.cancelAsyncButtonApply.Click += new System.EventHandler(this.cancelAsyncButtonApply_Click);
+            this.cancelAsyncButtonApply.Click += new System.EventHandler(this.cancelAsyncButton_Click);
             // 
             // startAsyncButtonApply
             // 

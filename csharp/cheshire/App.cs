@@ -171,11 +171,56 @@ namespace Cheshire
             {
                 MessageBox.Show(String.Format("{0}. {1}", "The task has been completed", e.Result));
             }
-            cancelAsyncButtonRetrace.Visible = false;
-            cancelAsyncButtonCMA.Visible = false;
-            cancelAsyncButtonOptimize.Visible = false;
-            cancelAsyncButtonTrSet.Visible = false;
-            cancelAsyncButtonRankTrData.Visible = false;
+
+            if (sender == bkgWorkerRetrace)
+                cancelAsyncButtonRetrace.Visible = false;
+            if (sender == bkgWorkerCMAES)
+                cancelAsyncButtonCMA.Visible = false;
+            if (sender == bkgWorkerOptimise)
+                cancelAsyncButtonOptimize.Visible = false;
+            if (sender == bkgWorkerTrSet)
+                cancelAsyncButtonTrSet.Visible = false;
+            if (sender == bkgWorkerPrefSet)
+                cancelAsyncButtonRankTrData.Visible = false;
+            if (sender == bkgWorkerApply)
+                cancelAsyncButtonApply.Visible = false; 
+        }
+
+        private void cancelAsyncButton_Click(object sender, EventArgs e)
+        {
+            var bkgWorker = (BackgroundWorker) sender;
+            bkgWorker.CancelAsync();
+
+            if (sender == bkgWorkerRetrace)
+            {
+                cancelAsyncButtonRetrace.Visible = false;
+                textHeader.AppendText("\nCancelling feature update of training data...");
+            }
+            if (sender == bkgWorkerCMAES)
+            {
+                cancelAsyncButtonCMA.Visible = false;
+                textHeader.AppendText("\nCancelling CMA-ES optimisation...");
+            }
+            if (sender == bkgWorkerOptimise)
+            {
+                cancelAsyncButtonOptimize.Visible = false;
+                textHeader.AppendText("\nCancelling optimization...");
+            }
+            if (sender == bkgWorkerTrSet)
+            {
+                cancelAsyncButtonTrSet.Visible = false;
+                textHeader.AppendText("\nCancelling collection of training data...");
+            }
+            if (sender == bkgWorkerPrefSet)
+            {
+                cancelAsyncButtonRankTrData.Visible = false;
+                textHeader.AppendText("\nCancelling ranking of training data...");
+            }
+            if (sender == bkgWorkerApply)
+            {
+                cancelAsyncButtonApply.Visible = false;
+                textHeader.AppendText("\nCancelling application of models...");
+            }
         }
 
         #endregion
@@ -212,13 +257,6 @@ namespace Cheshire
 
             bkgWorkerOptimise.RunWorkerAsync(sets);
             cancelAsyncButtonOptimize.Visible = true;
-        }
-
-        private void cancelAsyncButtonOptimize_Click(object sender, EventArgs e)
-        {
-            bkgWorkerOptimise.CancelAsync();
-            textHeader.AppendText("\nCancelling optimization...");
-            cancelAsyncButtonOptimize.Visible = false;
         }
 
         //This method is executed in a separate thread created by the background worker.  
@@ -322,12 +360,6 @@ namespace Cheshire
             cancelAsyncButtonTrSet.Visible = true;
         }
 
-        private void cancelAsyncButtonTrSet_Click(object sender, EventArgs e)
-        {
-            bkgWorkerTrSet.CancelAsync();
-            textHeader.AppendText("\nCancelling generation of training data...");
-            cancelAsyncButtonTrSet.Visible = false;
-        }
 
         private void bkgWorkerTrSet_DoWork(object sender, DoWorkEventArgs e)
         {
@@ -403,12 +435,13 @@ namespace Cheshire
                 textContent.AppendText("\n\tPlease choose a feature mode.");
             }
 
+            int iter = Convert.ToInt32(Iteration.Value);
             RetraceSet[] sets = (from problem in Problems.CheckedItems.Cast<string>()
                 from dim in Dimension.CheckedItems.Cast<string>()
                 from track in Tracks.CheckedItems.Cast<string>()
                 select
                     new RetraceSet(problem, dim,
-                        (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
+                        (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track), iter,
                         Extended.CheckedItems.Count > 0, featureMode, DataDir)).ToArray();
 
             if (sets.Length == 0)
@@ -431,14 +464,6 @@ namespace Cheshire
 
             bkgWorkerRetrace.RunWorkerAsync(sets);
             cancelAsyncButtonRetrace.Visible = true;
-        }
-
-        private void cancelAsyncButtonRetrace_Click(object sender, EventArgs e)
-        {
-            bkgWorkerRetrace.CancelAsync();
-            textHeader.AppendText(
-                "\nCancelling feature update of training data...");
-            cancelAsyncButtonRetrace.Visible = false;
         }
 
         private void bkgWorkerRetrace_DoWork(object sender, DoWorkEventArgs e)
@@ -489,15 +514,18 @@ namespace Cheshire
 
         private void startAsyncButtonPrefSet_Click(object sender, EventArgs e)
         {
+            int iter = Convert.ToInt32(Iteration.Value);
+
             PreferenceSet[] sets = (from rank in Ranks.CheckedItems.Cast<string>()
                 from track in Tracks.CheckedItems.Cast<string>()
                 from problem in Problems.CheckedItems.Cast<string>()
                 from dim in Dimension.CheckedItems.Cast<string>()
                 select
                     new PreferenceSet(problem, dim,
-                        (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
+                        (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track), iter, 
                         Extended.CheckedItems.Count > 0,
-                        (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank), DataDir)).ToArray();
+                        (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank), DataDir))
+                .ToArray();
 
             if (sets.Length == 0)
             {
@@ -521,13 +549,6 @@ namespace Cheshire
 
             bkgWorkerPrefSet.RunWorkerAsync(sets);
             cancelAsyncButtonRankTrData.Visible = true;
-        }
-
-        private void cancelAsyncButtonPrefSet_Click(object sender, EventArgs e)
-        {
-            bkgWorkerPrefSet.CancelAsync();
-            textHeader.AppendText("\nCancelling ranking of training data...");
-            cancelAsyncButtonRankTrData.Visible = false;
         }
 
         private void bkgWorkerPrefSet_DoWork(object sender, DoWorkEventArgs e)
@@ -601,13 +622,6 @@ namespace Cheshire
 
             bkgWorkerCMAES.RunWorkerAsync(sets);
             cancelAsyncButtonCMA.Visible = true;
-        }
-
-        private void cancelAsyncButtonCMA_click(object sender, EventArgs e)
-        {
-            bkgWorkerCMAES.CancelAsync();
-            textHeader.AppendText("\nCancelling CMA-ES optimisation...");
-            cancelAsyncButtonTrSet.Visible = false;
         }
 
         private void bkgWorkerCMAES_DoWork(object sender, DoWorkEventArgs e)
@@ -790,13 +804,6 @@ namespace Cheshire
             return null;
         }
 
-        private void cancelAsyncButtonApply_Click(object sender, EventArgs e)
-        {
-            bkgWorkerApply.CancelAsync();
-            textHeader.AppendText("\nCancelling application of models...");
-            cancelAsyncButtonApply.Visible = false;
-        }
-
         private void bkgWorkerApply_DoWork(object sender, DoWorkEventArgs e)
         {
             CDRData[] sets = (CDRData[]) e.Argument;
@@ -888,18 +895,7 @@ namespace Cheshire
         private void NumFeatures_ValueChanged(object sender, EventArgs e)
         {
             ModelIndex.Minimum = 1;
-            ModelIndex.Maximum = NChooseK(16, Convert.ToInt32(NumFeatures.Value));
-        }
-
-        private int NChooseK(int n, int k)
-        {
-            decimal result = 1;
-            for (int i = 1; i <= k; i++)
-            {
-                result *= n - (k - i);
-                result /= i;
-            }
-            return (int) result;
+            ModelIndex.Maximum = LinearModel.NChooseK(16, Convert.ToInt32(NumFeatures.Value));
         }
 
         private void Set_SelectedIndexChanged(object sender, EventArgs e)
