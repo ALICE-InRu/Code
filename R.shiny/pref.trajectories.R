@@ -10,11 +10,11 @@ get.trainingDataSize <- function(problems,dim,tracks='ALL'){
     }
     return(stat)
   }
-  stats = NULL
-  for(problem in problems){
-    stats=rbind(stats,get.trainingDataSize1(problem))
-  }
+
+  stats <- ldply(problems, get.trainingDataSize1)
+
   stats=factorTrack(stats)
+  stats$Problem=factorProblem(stats)
   return(stats)
 }
 
@@ -41,14 +41,12 @@ get.preferenceSetSize <- function(problems,dim,tracks='ALL',ranks=c('a','b','f',
     }
     return(stat)
   }
-  stats = NULL
-  for(problem in problems){
-    for(rank in ranks){
-      stats=rbind(stats,get.preferenceSetSize1(problem,rank))
-    }
-  }
+
+  stats <- do.call(rbind, lapply(ranks, function(rank) { ldply(problems, get.preferenceSetSize1, rank) } ))
+
   stats=factorTrack(stats)
   stats$Rank=factorRank(stats$Rank)
+  stats$Problem=factorProblem(stats)
   return(stats)
 }
 

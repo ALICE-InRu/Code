@@ -15,41 +15,30 @@ get.StepwiseOptimality <- function(problems,dim,track='OPT'){
 
       write.csv(split,file=fname,row.names=F,quote=F)
     }
-
-    stats=ddply(split,~Problem+Step,summarise,
-                rnd.mu=mean(rnd),
-                rnd.Q1=quantile(rnd,.25),
-                rnd.Q3=quantile(rnd,.75),
-                unique.mu=mean(unique))
-
-    if(max(stats$Step)<numericDimension(dim)){
-      lastRow=stats[1,]
-      lastRow$rnd.mu=1
-      lastRow$rnd.Q1=1
-      lastRow$rnd.Q3=1
-      lastRow$unique.mu=1
-      lastRow$Step=numericDimension(dim)
-      stats=rbind(stats,lastRow)
-    }
-    return(list('Stats'=stats,'Raw'=split))
+    return(split)
   }
 
-  Stepwise=list('Stats'=NULL,'Raw'=NULL)
+  split <- ldply(problems, get.StepwiseOptimality1)
+  if(is.null(split)) { return(NULL) }
 
-  for(problem in problems){
-    tmp=get.StepwiseOptimality1(problem)
-    if(!is.null(tmp)){
-      Stepwise$Raw=rbind(Stepwise$Raw,tmp$Raw)
-      Stepwise$Stats=rbind(Stepwise$Stats,tmp$Stats)
-    }
+  split$Problem <- factorProblem(split)
+  stats=ddply(split,~Problem+Step,summarise,
+              rnd.mu=mean(rnd),
+              rnd.Q1=quantile(rnd,.25),
+              rnd.Q3=quantile(rnd,.75),
+              unique.mu=mean(unique))
+
+  if(max(stats$Step)<numericDimension(dim)){
+    lastRow=stats[1,]
+    lastRow$rnd.mu=1
+    lastRow$rnd.Q1=1
+    lastRow$rnd.Q3=1
+    lastRow$unique.mu=1
+    lastRow$Step=numericDimension(dim)
+    stats=rbind(stats,lastRow)
   }
 
-  if(!is.null(Stepwise$Stats)){
-    Stepwise$Raw$Problem=factorProblem(Stepwise$Raw)
-    Stepwise$Stats$Problem=factorProblem(Stepwise$Stats)
-  } else { return(NULL) }
-
-  return(Stepwise)
+  return(list('Stats'=stats,'Raw'=split))
 }
 
 

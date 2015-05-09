@@ -16,7 +16,8 @@ get.StepwiseExtremal <- function(problems,dim){
                 measure.vars = colnames(trdat)[grep('phi',colnames(trdat))])
 
       split=NULL
-      for(phi in levels(mdat$Feature)){ # cannot apply ddply on 10x10 all at once (out of memory)
+      for(phi in levels(mdat$Feature)){
+        # cannot apply ddply on 10x10 all at once (out of memory)
         tmp=ddply(subset(mdat,Feature==phi),~Problem+Step+PID+Feature,summarise,
                   max=mean(isOPT[value==max(value)]),
                   min=mean(isOPT[value==min(value)]),
@@ -24,46 +25,29 @@ get.StepwiseExtremal <- function(problems,dim){
 
         split=rbind(split,tmp)
       }
-
       write.csv(split,file=fname,row.names=F,quote=F)
     }
-
-    split=subset(split,Feature != 'phi.step' & Feature != 'phi.wrmTotal') # min == max
-    mdat=melt(split,measure.vars = c('min','max'),variable.name = 'Extremal')
-    stats=ddply(mdat,~Problem+Step+Feature+Extremal,summarise,Extremal.mu=mean(value))
-
-    return(list('Stats'=stats,'Raw'=mdat))
-
+    return(split)
   }
 
-  Extremal=list('Stats'=NULL,'Raw'=NULL)
+  split <- ldply(problems, get.StepwiseExtremal1)
+  if(is.null(split)) { return(NULL) }
 
-  for(problem in problems){
-    tmp=get.StepwiseExtremal1(problem)
-    Extremal$Raw=rbind(Extremal$Raw,tmp$Raw)
-    Extremal$Stats=rbind(Extremal$Stats,tmp$Stats)
-  }
+  split=subset(split,Feature != 'phi.step' & Feature != 'phi.wrmTotal') # min == max
 
-  if(!is.null(Extremal$Stats)){
-    Extremal$Raw$Feature=factorFeature(Extremal$Raw$Feature)
-    Extremal$Stats$Feature=factorFeature(Extremal$Stats$Feature)
-  } else { return(NULL)}
+  split$Problem <- factorProblem(split)
+  split$Feature <- factorFeature(split$Feature)
 
-  return(Extremal)
+  split=melt(split,measure.vars = c('min','max'),variable.name = 'Extremal')
+  stats=ddply(split,~Problem+Step+Feature+Extremal,summarise,Extremal.mu=mean(value))
+
+  return(list('Stats'=stats,'Raw'=split))
 }
 
 plot.StepwiseSDR.wrtTrack <- function(StepwiseOptimality,StepwiseExtremal,dim,smooth,save=NA){
   if(is.null(StepwiseOptimality)|is.null(StepwiseExtremal)) {return(NULL)}
 
-  problems=levels(StepwiseOptimality$Stats$Problem)
-  SDR=NULL
-  for(sdr in sdrs){
-    tmp=get.StepwiseOptimality(problems,dim,sdr)$Stats
-    if(!is.null(tmp)){
-      tmp$Track=sdr
-      SDR=rbind(SDR,tmp)
-    }
-  }
+  problems <- levels(StepwiseOptimality$Stats$Problem)
 
   plot.StepwiseSDR.wrtOPT <- function(){
 
@@ -91,9 +75,13 @@ plot.StepwiseSDR.wrtTrack <- function(StepwiseOptimality,StepwiseExtremal,dim,sm
   }
 
   p=plot.StepwiseSDR.wrtOPT()
+
+  SDR <- do.call(rbind, lapply(sdrs, function(sdr) { data.frame(Track = sdr, get.StepwiseOptimality(problems,dim,sdr)$Stats)} ))
+
   if(!is.null(SDR)){
+    SDR<- factorTrack(SDR)
     p=p+geom_line(data=SDR,aes(y=rnd.mu,color=Track,size='SDR'))
-    p=p+scale_size_manual('Track', values=c(0.5,1.2))
+    p=p+scale_size_manual('Track', values=c(1.2,0.8))
   } else { p=p+scale_size(guide=F) }
 
   if(!is.na(save)){
