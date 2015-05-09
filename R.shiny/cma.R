@@ -9,11 +9,11 @@ get.evolutionCMA <- function(problems,dim,Timedependent=T,Timeindependent=T,mean
     pat='phi.(?<Feature>[a-zA-Z]+).(?<Step>[0-9]+)'
     x=melt(x[,c(1:3,grep(pat,names(x),perl=T))], id.vars=c('Generation','CountEval','Fitness'))
     m=regexpr(pat,x$variable,perl=T)
-    x$Step=getAttribute(x$variable,m,2,F)
+    x$Step=getAttribute(x$variable,m,'Step',F)
     if(meanStep & timedependent){
       x=ddply(x,~Generation+CountEval+Fitness+variable,summarise,value=mean(value), .progress = 'text')
     } else { x=subset(x,Step==1)}
-    x$Feature=factorFeature(getAttribute(x$variable,m,1))
+    x$Feature=factorFeature(getAttribute(x$variable,m,'Feature'))
     x$ObjFun=type
     return(x)
   }

@@ -29,7 +29,7 @@ plot.imitationLearning.weights <- function(problem,dim){
     tmp$Track=file
     w=rbind(w,tmp)
   }
-  w$Track=getAttribute(w$Track,regexpr('(?<Track>[A-Z]{2}[A-Z0-9]+)',w$Track,perl=T),1)
+  w$Track=getAttribute(w$Track,regexpr('(?<Track>[A-Z]{2}[A-Z0-9]+)',w$Track,perl=T),'Track')
   w=factorTrack(w)
   w$Feature = factorFeature(w$Feature,F)
 
@@ -76,7 +76,7 @@ stats.imitationLearning <- function(problem,dim){
   if(length(files)==0) return(NULL)
   stat=get.files(paste0(DataDir,'PREF/summary/'),files,T)
   stat=subset(stat,Model==1 & NrFeat==16)
-  stat$Track=getAttribute(stat$File,regexpr('(?<Track>[A-Z]{2}[A-Z0-9]+)',stat$File,perl=T),1)
+  stat$Track=getAttribute(stat$File,regexpr('(?<Track>[A-Z]{2}[A-Z0-9]+)',stat$File,perl=T),'Track')
   stat=factorTrack(stat)
   if(!('Iter' %in% names(stat))){ return(NULL)}
   return(stat[order(stat$Iter,stat$Supervision),c(1,6:11,13:15)])

@@ -1,17 +1,20 @@
-getAttribute<-function(str,regexpr.m,id,asStr=T){
-  str=substr(str,attr(regexpr.m,'capture.start')[,id],attr(regexpr.m,'capture.start')[,id]+attr(regexpr.m,'capture.length')[,id]-1)
+getAttribute<-function(str,regexpr.m,name,asStr=T){
+  names=attr(m,"capture.names")
+  id=which(names==name)
+  str=substr(str,attr(regexpr.m,'capture.start')[,id],attr(regexpr.m,'capture.start')[,id]+
+               attr(regexpr.m,'capture.length')[,id]-1)
   if(asStr) return(str)
   return(as.numeric(str))
 }
 
 factorFromName <- function(x){
   m=regexpr("(?<Problem>[j|f].[a-z_1]+).(?<Dimension>[0-9]+x[0-9]+).(?<Set>train|test).(?<PID>[0-9]+)", x$Name, perl = T)
-  x$Problem=getAttribute(x$Name,m,1)
+  x$Problem=getAttribute(x$Name,m,'Problem')
   x$Problem = factorProblem(x)
-  x$Dimension=getAttribute(x$Name,m,2)
+  x$Dimension=getAttribute(x$Name,m,'Dimension')
   x$Dimension = factorDimension(x)
-  x$Set=factorSet(getAttribute(x$Name,m,3))
-  x$PID=getAttribute(x$Name,m,4,F)
+  x$Set=factorSet(getAttribute(x$Name,m,'Set'))
+  x$PID=getAttribute(x$Name,m,'PID',F)
   return(x)
 }
 
@@ -26,7 +29,7 @@ factorProblem <- function(x, simple=T){
 
 numericDimension <- function(Dimension){
   m=regexpr('(?<NumJobs>[0-9]+)x(?<NumMachines>[0-9]+)',Dimension,perl=T)
-  return(getAttribute(Dimension,m,1,F)*getAttribute(Dimension,m,2,F))
+  return(getAttribute(Dimension,m,'NumJobs',F)*getAttribute(Dimension,m,'NumMachines',F))
 }
 
 factorSet <- function(Set){ return(factor(Set, levels=c('train','validation','test'))) }
@@ -53,9 +56,9 @@ factorTrack <- function(x){
   if(any(ix)){
     m=regexpr('IL(?<Iter>[0-9]+)(?<Supervision>[A-Z]+)',x$Track[ix],perl=T)
     x$Iter=0
-    x$Iter[ix]=getAttribute(x$Track[ix],m,1,F)
+    x$Iter[ix]=getAttribute(x$Track[ix],m,'Iter',F)
     x$Supervision='FIXSUP'
-    x$Supervision[ix]=getAttribute(x$Track[ix],m,2)
+    x$Supervision[ix]=getAttribute(x$Track[ix],m,'Supervision')
     x$Track[ix]=paste0('IL',x$Iter[ix])
     lvs=c(lvs,paste0('IL',1:max(x$Iter)))
     ix=x$Track=='OPT'
@@ -80,12 +83,12 @@ factorRho <- function(x, var='Makespan'){
 factorFeature <- function(Feature,simple=T,phis=F){
   # remove 'phi.' from variable name (cleaner)
   if(length(grep('phi',Feature))>0){Feature=substr(Feature,5,100)}
-  if(any(grepl('macfree',Feature))){ Feature[grepl('macfree',Feature)]='macFree' }
-  if(any(grepl('totproc',Feature))){ Feature[grepl('totproc',Feature)]='totalProc' }
-  if(any(grepl('totProc',Feature))){ Feature[grepl('totProc',Feature)]='totalProc' }
-  if(any(grepl('arrivalTime',Feature))){ Feature[grepl('arrivalTime',Feature)]='arrival' }
+  #if(any(grepl('macfree',Feature))){ Feature[grepl('macfree',Feature)]='macFree' }
+  #if(any(grepl('totproc',Feature))){ Feature[grepl('totproc',Feature)]='procTotal' }
+  #if(any(grepl('totProc',Feature))){ Feature[grepl('totProc',Feature)]='procTotal' }
+  #if(any(grepl('arrivalTime',Feature))){ Feature[grepl('arrivalTime',Feature)]='arrival' }
 
-  lvs=c('proc','startTime','endTime','arrival','totalProc','wait','wrmJob','jobOps','mac','macFree','wrmMac','macOps','slotReduced','slots','slotsTotal','makespan','wrmTotal','step',sdrs,'RNDmean','RNDstd','RNDmin','RNDmax')
+  lvs=c('proc','startTime','endTime','arrival','procTotal','wait','wrmJob','jobOps','mac','macFree','wrmMac','macOps','slotReduced','slots','slotsTotal','makespan','wrmTotal','step',sdrs,'RNDmean','RNDstd','RNDmin','RNDmax')
   if(phis) return(paste('phi',Feature,sep='.'))
 
   Feature=factor(Feature, levels = lvs)
@@ -105,8 +108,8 @@ factorCDR <- function(x,useProb=F){
 
 factorFromCDR <- function(x){
   m=regexpr('F(?<NrFeat>[0-9]+).M(?<Model>[0-9]+)',x$CDR,perl=T)
-  x$NrFeat=getAttribute(x$CDR,m,1,F)
-  x$Model=getAttribute(x$CDR,m,2,F)
+  x$NrFeat=getAttribute(x$CDR,m,'NrFeat',F)
+  x$Model=getAttribute(x$CDR,m,'Model',F)
   x$CDR=factorCDR(x)
   return(x)
 }

@@ -1,7 +1,7 @@
 source('global.R')
 save=NA
 input=list(dimension='10x10',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd'))
-#input=list(dimension='10x10',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc'))
+#input=list(dimension='6x5',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc'))
 SDR=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension)
 
 source('sdr.R')
@@ -23,7 +23,7 @@ source('pref.trajectories.R')
 tracks=c(sdrs,'ALL','OPT'); ranks=c('a','b','f','p')
 trainingDataSize=get.trainingDataSize(input$problems,input$dimension,tracks)
 preferenceSetSize=get.preferenceSetSize(input$problems,input$dimension,tracks,ranks)
-rhoTracksRanks=get.rhoTracksRanks(input$problems,input$dimension,tracks,ranks)
+rhoTracksRanks=get.PREFCDR(input$problems,input$dimension,tracks,ranks)
 plot.trainingDataSize(trainingDataSize)
 plot.preferenceSetSize(preferenceSetSize)
 plot.rhoTracksRanks(rhoTracksRanks, SDR)

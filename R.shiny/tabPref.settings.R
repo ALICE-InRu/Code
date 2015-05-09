@@ -20,8 +20,9 @@ output$tabPref.settings <- renderUI({
       ),
       box(title = "Stepwise bias", collapsible = TRUE,
           helpText('Features instances are resampled w.r.t. its stepwise bias.'),
-          plotOutput("plot.stepwiseBias", height = 150)),
-      box(title = "Action output", width = 6, collapsible = TRUE,
+          plotOutput("plot.stepwiseBias", height = 150))
+    ),
+    fluidRow(box(title = "Action output", width = 12, collapsible = TRUE,
           verbatimTextOutput("output.liblinearModel"))
     )
   )
@@ -85,7 +86,7 @@ output$progressPrefs <- renderValueBox({
 
 output$progressTracks <- renderValueBox({
   m=regexpr(pref.files.pat,pref.files(),perl = T)
-  track=unique(getAttribute(pref.files(),m,2))
+  track=unique(getAttribute(pref.files(),m,'Track'))
   ntrack=sum(grepl('^[A-Z]{3}',track))+
     any(grepl('[0-9]+UNSUP',track))+
     any(grepl('[0-9]+SUP',track))+
@@ -95,12 +96,12 @@ output$progressTracks <- renderValueBox({
 
 output$progressRanks <- renderValueBox({
   m=regexpr(pref.files.pat,pref.files(),perl = T)
-  rank=unique(getAttribute(pref.files(),m,1))
+  rank=unique(getAttribute(pref.files(),m,'Rank'))
   valueBox( paste0('#',length(rank)), "ranks", color = "olive", icon = icon("filter"))
 })
 
 output$progressBias <- renderValueBox({
   m=regexpr(pref.files.pat,pref.files(),perl = T)
-  bias=unique(getAttribute(pref.files(),m,3))
+  bias=unique(getAttribute(pref.files(),m,'Bias'))
   valueBox( paste0('#',length(bias)), "bias", color = "lime", icon = icon("eraser"))
 })

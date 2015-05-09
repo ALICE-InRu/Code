@@ -5,7 +5,7 @@ get.gantt <- function(problem,dim,SDR='ALL',plotPID=-1){
   m=regexpr('(?<Job>[0-9]+).(?<Mac>[0-9]+).(?<StartTime>[0-9]+)',trdat$Dispatch,perl = T)
   trdat$Dimension=dim
   trdat$Step=trdat$Step-1 # start from 0
-  trdat$Job=as.numeric(getAttribute(trdat$Dispatch,m,1))+1
+  trdat$Job=as.numeric(getAttribute(trdat$Dispatch,m,'Job'))+1
   trdat$phi.mac=trdat$phi.mac-min(trdat$phi.mac)+1
   trdat$x=trdat$phi.startTime+(trdat$phi.endTime-trdat$phi.startTime)/2
   return(trdat)

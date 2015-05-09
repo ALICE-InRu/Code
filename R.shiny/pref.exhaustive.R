@@ -78,9 +78,9 @@ plot.exhaust.bestBoxplot <- function(bestPrefModel,SDR=NULL,save=NA){
       for(var in colnames(bestSummary)[2:ncol(bestSummary)]){
         m=regexpr('(?<File>[a-zA-Z0-9.]+).csv.(?<NrFeat>[0-9]+).(?<Model>[0-9]+)',
                   bestSummary[r,var],perl=T)
-        File=getAttribute(bestSummary[r,var],m,1)
-        NrFeat=getAttribute(bestSummary[r,var],m,2,F)
-        Model=getAttribute(bestSummary[r,var],m,3,F)
+        File=getAttribute(bestSummary[r,var],m,'File')
+        NrFeat=getAttribute(bestSummary[r,var],m,'NrFeat',F)
+        Model=getAttribute(bestSummary[r,var],m,'Model',F)
         dat=get.CDR(File,NrFeat,Model)
         if(!is.null(dat)){
           dat$Best=factor(var)
@@ -185,7 +185,7 @@ rankPareto <- function(x,byVar){
 
 get.prefAccuracy <- function(file,type=NULL,onlyMean=F){
   m=regexpr(".(?<Dimension>[0-9]+x[0-9]+).",file,perl=T)
-  dim=getAttribute(file,m,1)
+  dim=getAttribute(file,m,'Dimension')
   acc=read_csv(paste0(DataDir,'PREF/weights/',file))
   acc=subset(acc,Type!='Weight'); acc$Feature=NULL
   if(!is.null(type)){ acc = subset(acc,Type==type)}
@@ -205,14 +205,14 @@ get.prefAccuracy <- function(file,type=NULL,onlyMean=F){
 
 get.optAccuracy <- function(file,reportMean=T){
   m=regexpr(".(?<Dimension>[0-9]+x[0-9]+).",file,perl=T)
-  dim=getAttribute(file,m,1)
+  dim=getAttribute(file,m,'Dimension')
   fname=paste0(DataDir,'Stepwise/accuracy/',file)
   if(!file.exists(fname)){ return(NULL)}
   acc = read_csv(fname)
   if(!grepl(fname,'MATLAB')){
-    m=regexpr("F(?<Feature>[0-9]+).M(?<Model>[0-9]+)", acc$variable, perl=T)
-    acc$NrFeat=getAttribute(acc$variable,m,1,F)
-    acc$Model=getAttribute(acc$variable,m,2,F)
+    m=regexpr("F(?<NrFeat>[0-9]+).M(?<Model>[0-9]+)", acc$variable, perl=T)
+    acc$NrFeat=getAttribute(acc$variable,m,'NrFeat',F)
+    acc$Model=getAttribute(acc$variable,m,'Model',F)
     acc$variable=NULL
     acc=melt(acc,id.vars = c('NrFeat','Model'), variable.name = 'Step', value.name = 'validation.isOptimal')
     acc$Step=as.numeric(substr(acc$Step,6,100))

@@ -63,20 +63,6 @@ plot.preferenceSetSize <- function(preferenceSetSize){
   return(p)
 }
 
-get.rhoTracksRanks <- function(problems,dim,tracks=c(sdrs,'OPT','RND','ALL'),
-                               ranks=c('a','b','f','p'),
-                               timedependent=F,bias='equal'){
-  if(length(problems)>1) problems=paste0('(',paste(problems,collapse='|'),')')
-  if(length(tracks)>1) tracks=paste0('(',paste(tracks,collapse='|'),')')
-  if(length(ranks)>1) ranks=paste0('(',paste(ranks,collapse='|'),')')
-
-  files=list.files(paste0(DataDir,'PREF/summary/'),paste(problems,dim,ranks,tracks,bias,'weights',ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
-
-  CDR=get.CDR(files,16,1,'train')
-
-  return(CDR)
-}
-
 joinRhoSDR <- function(rhoTracksRanks,SDR){
   rhoTracksRanks$Model='PREF'
   if(!is.null(SDR)){
