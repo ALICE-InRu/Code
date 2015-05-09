@@ -1,5 +1,5 @@
 getAttribute<-function(str,regexpr.m,name,asStr=T){
-  names=attr(m,"capture.names")
+  names=attr(regexpr.m,"capture.names")
   id=which(names==name)
   str=substr(str,attr(regexpr.m,'capture.start')[,id],attr(regexpr.m,'capture.start')[,id]+
                attr(regexpr.m,'capture.length')[,id]-1)
