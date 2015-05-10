@@ -209,16 +209,15 @@ get.optAccuracy <- function(model,reportMean=T){
   fname=paste0(DataDir,'Stepwise/accuracy/',paste0(model,'.csv'))
   if(!file.exists(fname)){ return(NULL)}
   acc = read_csv(fname)
-  if(!grepl(fname,'MATLAB')){
-    m=regexpr("F(?<NrFeat>[0-9]+).M(?<Model>[0-9]+)", acc$variable, perl=T)
-    acc$NrFeat=getAttribute(acc$variable,m,'NrFeat',F)
-    acc$Model=getAttribute(acc$variable,m,'Model',F)
-    acc$variable=NULL
-    acc=melt(acc,id.vars = c('NrFeat','Model'), variable.name = 'Step', value.name = 'validation.isOptimal')
-    acc$Step=as.numeric(substr(acc$Step,6,100))
-    acc$test.isOptimal=NA
-    acc$train.isOptimal=NA
-  }
+
+  m=regexpr("F(?<NrFeat>[0-9]+).M(?<Model>[0-9]+)", acc$variable, perl=T)
+  acc$NrFeat=getAttribute(acc$variable,m,'NrFeat',F)
+  acc$Model=getAttribute(acc$variable,m,'Model',F)
+  acc$variable=NULL
+  acc=melt(acc,id.vars = c('NrFeat','Model'), variable.name = 'Step', value.name = 'validation.isOptimal')
+  acc$Step=as.numeric(substr(acc$Step,6,100))
+  acc$test.isOptimal=NA
+  acc$train.isOptimal=NA
 
   if(reportMean){
     # summarise over all steps
@@ -246,10 +245,9 @@ get.prefSummary <- function(problems,dim,track,rank,timedependent,bias){
   get.prefSummary1 <- function(model,Set='Validation'){
     CDR <- get.CDR.Exhaust(model)
     vars = c('Bias','CDR','NrFeat','Model')
-    if(length(levels(CDR$Bias))>1) {vars = c('Bias',vars)}
     rho.stats = rho.statistic(CDR,vars,T)
     if(is.null(rho.stats)){return(NULL)}
-    rho.stats = rho.stats[,c('Problem','NrFeat','Model','Bias',paste(Set,'Rho',sep='.'),paste0('N',Set))]
+    rho.stats = rho.stats[,c(vars,paste(Set,'Rho',sep='.'),paste0('N',Set))]
 
     acc.pref = get.prefAccuracy(model,paste(Set,'Accuracy',sep='.'),onlyMean = T)
     if(is.null(acc.pref)){return(NULL)}
@@ -273,7 +271,13 @@ get.prefSummary <- function(problems,dim,track,rank,timedependent,bias){
   prefSummary <- ldply(file_list, get.prefSummary1)
 
   if(nrow(prefSummary)==0){return(NULL)}
-  prefSummary$Problem=factorProblem(prefSummary)
+
+  m=regexpr('exhaust.(?<Problem>[j|f].[a-z_1]+).(?<Dimension>[0-9]+x[0-9]+)',prefSummary$File,perl=T)
+  prefSummary$Problem <- getAttribute(prefSummary$File, m, 'Problem')
+  prefSummary$Problem <- factorProblem(prefSummary)
+  prefSummary$Dimension <- dim
+  prefSummary$Dimension <- factorDimension(prefSummary)
+
   return(prefSummary)
 }
 

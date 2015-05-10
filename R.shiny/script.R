@@ -3,6 +3,8 @@ save=NA
 input=list(dimension='10x10',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd'))
 #input=list(dimension='6x5',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc'))
 SDR=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension)
+input$bias='equal'
+input$timedependent=F
 
 source('sdr.R')
 dataset.diff=checkDifficulty(subset(SDR, Set=='train' & Dimension==input$dimension & Problem%in%input$problems))
@@ -18,11 +20,10 @@ gantt=get.gantt(input$problem,input$dimension,'MWR',10)
 plot.gantt(gantt,'30')
 
 source('pref.trajectories.R')
-bias='equal'; timedependent=F
 tracks=c(sdrs,'ALL','OPT'); ranks=c('a','b','f','p')
 trainingDataSize=get.trainingDataSize(input$problems,input$dimension,tracks)
 preferenceSetSize=get.preferenceSetSize(input$problems,input$dimension,tracks,ranks)
-CDR.full=get.many.CDR(get.CDR.file_list(input$problems,input$dimension,tracks,ranks,timedependent,bias),'train')
+CDR.full=get.many.CDR(get.CDR.file_list(input$problems,input$dimension,tracks,ranks,input$timedependent,input$bias),'train')
 plot.trainingDataSize(trainingDataSize)
 plot.preferenceSetSize(preferenceSetSize)
 plot.rhoTracksRanks(CDR.full, SDR)
@@ -44,7 +45,7 @@ plot.BestWorst(input$problems,input$dimension,'OPT',save)
 plot.BestWorst(input$problem,input$dimension,'ALL',save)
 
 source('pref.exhaustive.R'); source('pref.settings.R')
-prefSummary=get.prefSummary(input$problems,input$dimension,'OPT','p',F,bias)
+prefSummary=get.prefSummary(input$problems,input$dimension,'OPT','p',F,input$bias)
 paretoFront=get.paretoFront(prefSummary)
 bestPrefModel=get.bestPrefModel(paretoFront)
 

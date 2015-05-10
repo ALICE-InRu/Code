@@ -16,9 +16,11 @@ get.stepwiseBias <- function(steps,problem,dim,bias){
 
 rho.statistic <- function(dat,variables,useValidationSet=F){
   if(useValidationSet){
-    pids=unique(dat$PID[which(dat$Set=='train')])
-    validation=sample(pids, length(pids)*0.2, replace = F) # 20% of training saved for validation
-    dat$Set[dat$Set=='train' & dat$PID %in% validation]='validation' # 20% of training data saved for validation
+    dat$Set <- factorSet(dat$Set)
+    pids <- unique(dat$PID[which(dat$Set=='train')])
+    NTrain <- quantile(pids,0.8)
+    #validation=sample(pids, length(pids)*0.2, replace = F) # 20% of training saved for validation
+    dat$Set[dat$Set=='train' & dat$PID > NTrain]='validation' # 20% of training data saved for validation
   }
   rho.stats = ddply(dat,c('Problem','Dimension',variables), summarise,
                     Training.Rho = round(mean(Rho[Set=='train']), digits = 5),
