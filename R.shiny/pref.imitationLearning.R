@@ -1,34 +1,50 @@
-getSummaryFileNamesIL <- function(problem,dim,CDR=T,rank='p',probability='equal',timedependent=F){
+fixUnsupIL <- function(){
+  for(dir in list.files('../../Data/PREF/CDR/','IL',full.names = T)){
+    m=regexpr('full.(?<Problem>[j|f].[a-z]+).(?<Dimension>[0-9]+x[0-9]+).[a-z].IL(?<Iter>[0-9]+)',dir,perl=T)
+    file=paste(dir,paste(getAttribute(dir,m,'Problem'),getAttribute(dir,m,'Dimension'),'train','csv',sep='.'),sep='/')
+    dat=read_csv(file)
+    iter=getAttribute(dir,m,'Iter',F)
+    maxPID = ifelse(grepl('EXT',file),iter+1,1)*ifelse(getAttribute(dir,m,'Dimension')=='6x5',500,300)
+    if(nrow(dat)>maxPID){
+      print(paste('Limiting',file,'to',maxPID))
+      dat=dat[1:maxPID,]
+      write.csv(dat,file,row.names = F, quote = F)
+    } else if (nrow(dat)<maxPID){
+      print(paste(file,'is',nrow(dat),'which is less than',maxPID))
+    }
+  }
+}
+
+getFileNamesIL <- function(problem,dim,CDR=T,rank='p',probability='equal',timedependent=F){
   times=ifelse(timedependent,'timedependent','timeindependent')
-  files=list.files(paste0(DataDir,'PREF/summary'),paste('(full|exhaust)',problem,dim,rank,'*',probability,'weights',times,'csv',sep='.'))
+  files=list.files(paste0(DataDir,'PREF/CDR'),paste('(full|exhaust)',problem,dim,rank,'*',probability,'weights',times,sep='.'))
   files=files[grep('OPT|IL',files)]
   return(files)
 }
 
-plot.imitationLearning.boxplot <- function(problem,dim){
-  files = getSummaryFileNamesIL(problem,dim)
+get.CDR.IL <- function(problems,dim){
+  files = getFileNamesIL(problems,dim)
   if(length(files)<=1) return(NULL)
-  CDR=get.CDR(files,16,1,c('train','test'))
+  return(get.CDR(files,16,1,c('train','test')))
+}
 
-  p=pref.boxplot(CDR,NULL,'Supervision','Track','Imitation learning',F,ifelse(any(CDR$Extended),'Extended',NA))
+stats.imitationLearning <- function(CDR){
+  stat <- rho.statistic(CDR,c('Track','Extended','Supervision','Iter'))
+  stat <- arrange(stat, Training.Rho, Test.Rho) # order w.r.t. lowest mean
+  return(stat)
+}
 
-  #CDR$CDR=interaction(CDR$Track,CDR$Iter,substr(CDR$Supervision,1,1))
-  #  ks.train=ks.matrix(subset(CDR,Set=='train'),'Rho','CDR')
-  #  ks.test=ks.matrix(subset(CDR,Set=='test'),'Rho','CDR')
-
+plot.imitationLearning.boxplot <- function(CDR){
+  p <- pref.boxplot(CDR,NULL,'Supervision','Track','Imitation learning',F,ifelse(any(CDR$Extended),'Extended',NA))
   return(p)
 }
 
 plot.imitationLearning.weights <- function(problem,dim){
-  files = getSummaryFileNamesIL(problem,dim)
-  if(length(files)<=1) return(NULL)
-  w=NULL
-  for (file in files){
-    tmp=get.prefWeights(file,F)
-    tmp=subset(tmp,NrFeat==16)
-    tmp$Track=file
-    w=rbind(w,tmp)
-  }
+  file_list = getFileNamesIL(problem,dim)
+  if(length(file_list)<=1) return(NULL)
+
+  w <- do.call(rbind, lapply(file_list, function(X) { data.frame(Track = basename(X), subset(get.prefWeights(X,F),NrFeat==16)) } ))
+
   w$Track=getAttribute(w$Track,regexpr('(?<Track>[A-Z]{2}[A-Z0-9]+)',w$Track,perl=T),'Track')
   w=factorTrack(w)
   w$Feature = factorFeature(w$Feature,F)
@@ -71,13 +87,3 @@ plot.imitationLearning.weights <- function(problem,dim){
   return(p)
 }
 
-stats.imitationLearning <- function(problem,dim){
-  files = getSummaryFileNamesIL(problem,dim)
-  if(length(files)==0) return(NULL)
-  stat=get.files(paste0(DataDir,'PREF/summary/'),files,T)
-  stat=subset(stat,Model==1 & NrFeat==16)
-  stat$Track=getAttribute(stat$File,regexpr('(?<Track>[A-Z]{2}[A-Z0-9]+)',stat$File,perl=T),'Track')
-  stat=factorTrack(stat)
-  if(!('Iter' %in% names(stat))){ return(NULL)}
-  return(stat[order(stat$Iter,stat$Supervision),c(1,6:11,13:15)])
-}
