@@ -18,13 +18,8 @@ DataDir = '../../Data/'
 sdrs=c('SPT','LPT','LWR','MWR','RND');
 rhoLabel=expression("Deviation from optimality," * ~ rho * ~ " (%)")
 
-redoOPT = any(as.Date(file.info(list.files('../../Data/OPT/',full.names = T))$mtime) > as.Date(file.info('startUp.Rdata')$mtime))
-
-if(file.exists('startUp.Rdata') & !redoOPT){ load('startUp.Rdata') } else {
-  dataset.OPT=get.files.OPT()
-  dataset.SDR=get.files.SDR()
-  save(list=c('dataset.OPT','dataset.SDR'),file='startUp.Rdata')
-}
+dataset.OPT=get.files.OPT()
+dataset.SDR=get.files.SDR()
 
 
 
