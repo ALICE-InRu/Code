@@ -121,6 +121,8 @@ get.CDR <- function(file_list,nrFeat=NULL,modelID=NULL,sets=c('train','test')){
 
   dat <- factorFromName(dat)
   dat$Rho <- factorRho(dat)
+  dat <- subset(dat, !is.na(Rho))
+
   dat <- factorTrack(dat)
 
   ix=which(dat$Dimension=='10x10' & dat$PID>300 & dat$Extended==F & dat$Set=='train')
