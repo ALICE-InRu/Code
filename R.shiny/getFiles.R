@@ -31,9 +31,6 @@ get.files.SDR <- function(){
   return(sdr)
 }
 
-Ntrain10x10=300
-Ntrain6x5=500
-
 get.files.TRDAT <- function(problems,dim,tracks,rank='p',useDiff=F,Global=F){
   fileEnd = ifelse(useDiff,paste0('.diff.',rank),'')
   fileEnd = paste0(ifelse(Global,'Global','Local'),fileEnd,'.csv')
@@ -77,35 +74,28 @@ get.files.TRDAT <- function(problems,dim,tracks,rank='p',useDiff=F,Global=F){
     # make sure to shift them to lower pid (for validation split later on)
     trdat=ddply(trdat,~Problem+Track,mutate,PID=PID-min(PID)+1)
   }
-  if(dim=='10x10'){
-    trdat=subset(trdat,PID<=Ntrain10x10 | (Track=='OPT' & Extended==T))
-  } else {
-    trdat=subset(trdat,PID<=Ntrain6x5 | (Track=='OPT' & Extended==T))
-  }
   print(summary(trdat$Track))
   return(trdat)
 }
 
-
-get.PREFCDR <- function(problems,dim,tracks=c(sdrs,'OPT','RND','ALL'),
-                        ranks=c('a','b','f','p'),
-                        timedependent=F, bias='equal'){
+get.CDR.file_list <- function(problems,dim,tracks,ranks,timedependent,bias){
   if(length(problems)>1) problems=paste0('(',paste(problems,collapse='|'),')')
+  ix=grepl('IL',tracks)
+  if(any(ix)){ tracks[ix]=paste0(substr(tracks[ix],1,2),'[0-9]+',substr(tracks[ix],3,100)) }
   if(length(tracks)>1) tracks=paste0('(',paste(tracks,collapse='|'),')')
   if(length(ranks)>1) ranks=paste0('(',paste(ranks,collapse='|'),')')
+  file_list=list.files(paste0(DataDir,'PREF/CDR/'),paste(problems,dim,ranks,tracks,bias,'weights',ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
+  return(file_list)
+}
 
-  files=list.files(paste0(DataDir,'PREF/CDR/'),paste(problems,dim,ranks,tracks,bias,'weights',ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
-
-  CDR=get.CDR(files,16,1,'train')
-
+get.many.CDR <- function(file_list,sets,NrFeat=16,ModelID=1){
+  CDR <- ldply(sets, function(set) get.CDR(file_list, NrFeat, ModelID, set))
   return(CDR)
 }
 
-
-get.CDR <- function(files,nrFeat,model,sets='train'){
+get.CDR <- function(file_list,nrFeat=NULL,modelID=NULL,sets=c('train','test')){
 
   get.CDR1 <- function(file,set){
-    if(grepl('.csv$',file)){file=substr(file,1,stringr::str_length(file)-4)}
     model.rex="(?<Problem>[a-z].[a-z]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Bias>[a-z0-9]+).weights.time"
     m=regexpr(model.rex,file,perl=T)
     problem = getAttribute(file,m,'Problem')
@@ -123,31 +113,28 @@ get.CDR <- function(files,nrFeat,model,sets='train'){
     return(dat)
   }
 
-  dat=NULL
-  for(set in sets){
-    for(file in files){
-      dat=rbind(dat,get.CDR1(file,set))
-    }
+  dat <- do.call(rbind, lapply(sets, function(set) { ldply(file_list, get.CDR1, set)} ))
+  dat <- factorFromCDR(dat)
+  if(!is.null(nrFeat) & !is.null(modelID)){ # otherwise whole set returned
+    dat <- subset(dat,NrFeat == nrFeat & Model == modelID)
   }
-  if(is.null(dat)){return(NULL)}
 
-  dat = factorFromCDR(dat)
-  dat = factorTrack(dat)
-  dat = subset(dat,NrFeat == nrFeat & Model == model)
-  dat = factorFromName(dat)
-  dat$Rho = factorRho(dat)
+  dat <- factorFromName(dat)
+  dat$Rho <- factorRho(dat)
+  dat <- factorTrack(dat)
 
-  ix=dat$Dimension=='10x10' & dat$Set=='train' & dat$PID > Ntrain10x10
-  if(any(ix)) {dat$Set[ix]='test'}
-  ix=dat$Dimension=='6x5' & dat$Set=='train' & dat$PID > Ntrain6x5
-  if(any(ix)) {dat$Set[ix]='test'}
+  ix=which(dat$Dimension=='10x10' & dat$PID>300 & dat$Extended==F & dat$Set=='train')
+  if(any(ix)){ dat$Set[ix] = 'test' }
+  ix=which(dat$Dimension=='6x5' & dat$PID>500 & dat$Extended==F & dat$Set=='train')
+  if(any(ix)){ dat$Set[ix] = 'test' }
+
   return(dat)
 }
 
-get.prefWeights <- function(file,timedependent,asMatrix=F){
-  m=regexpr("(?<Problem>[jf].[a-z0-9]+).(?<Dimension>[0-9]+x[0-9]+).",file,perl=T)
-  problem=getAttribute(file,m,'Problem')
-  weights=read_csv(paste0(DataDir,'PREF/weights/',file))
+get.prefWeights <- function(model,timedependent,asMatrix=F){
+  m=regexpr("(?<Problem>[jf].[a-z0-9]+).(?<Dimension>[0-9]+x[0-9]+).",model,perl=T)
+  problem=getAttribute(model,m,'Problem')
+  weights=read_csv(paste0(DataDir,'PREF/weights/',model,'.csv'))
   weights=subset(weights,Type=='Weight')
   if(!timedependent){ weights=weights[,c(1:4,6)] } else { weights$mean=NULL };
   if(asMatrix){

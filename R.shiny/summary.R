@@ -81,12 +81,3 @@ subset(d.rho.sum, substr(Track,1,2) != 'IL') %>%  spread(Track, freq)
 subset(d.rho.raw, substr(Track,1,2) == 'IL') %>%  spread(Track, freq)
 subset(d.rho.sum, substr(Track,1,2) == 'IL') %>%  spread(Track, freq)
 
-for(dir in list.files('../../Data/PREF/CDR/','SUPEXT',full.names = T)){
-  m=regexpr('full.(?<Problem>[j|f].[a-z]+).(?<Dimension>[0-9]+x[0-9]+).[a-z].IL(?<Iter>[0-9]+)',dir,perl=T)
-  file=paste(dir,paste(getAttribute(dir,m,'Problem'),getAttribute(dir,m,'Dimension'),'train','csv',sep='.'),sep='/')
-  dat=read.csv(file)
-  iter=getAttribute(dir,m,3,F)
-  maxPID = (iter+1)*ifelse(getAttribute(dir,m,'Dimension')=='6x5',500,300)
-  dat=dat[1:maxPID,]
-  write.csv(dat,file,row.names = F, quote = F)
-}

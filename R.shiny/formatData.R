@@ -83,10 +83,6 @@ factorRho <- function(x, var='Makespan'){
 factorFeature <- function(Feature,simple=T,phis=F){
   # remove 'phi.' from variable name (cleaner)
   if(length(grep('phi',Feature))>0){Feature=substr(Feature,5,100)}
-  #if(any(grepl('macfree',Feature))){ Feature[grepl('macfree',Feature)]='macFree' }
-  #if(any(grepl('totproc',Feature))){ Feature[grepl('totproc',Feature)]='procTotal' }
-  #if(any(grepl('totProc',Feature))){ Feature[grepl('totProc',Feature)]='procTotal' }
-  #if(any(grepl('arrivalTime',Feature))){ Feature[grepl('arrivalTime',Feature)]='arrival' }
 
   lvs=c('proc','startTime','endTime','arrival','procTotal','wait','wrmJob','jobOps','mac','macFree','wrmMac','macOps','slotReduced','slots','slotsTotal','makespan','wrmTotal','step',sdrs,'RNDmean','RNDstd','RNDmin','RNDmax')
   if(phis) return(paste('phi',Feature,sep='.'))

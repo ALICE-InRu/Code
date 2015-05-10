@@ -76,7 +76,7 @@ plot.exhaust.bestBoxplot <- function(bestPrefModel,SDR=NULL,save=NA){
       problem=bestSummary[r,'Problem']
 
       for(var in colnames(bestSummary)[2:ncol(bestSummary)]){
-        m=regexpr('(?<File>[a-zA-Z0-9.]+).csv.(?<NrFeat>[0-9]+).(?<Model>[0-9]+)',
+        m=regexpr('(?<File>[a-zA-Z0-9.]+.weights.[a-z]+).(?<NrFeat>[0-9]+).(?<Model>[0-9]+)',
                   bestSummary[r,var],perl=T)
         File=getAttribute(bestSummary[r,var],m,'File')
         NrFeat=getAttribute(bestSummary[r,var],m,'NrFeat',F)
@@ -183,10 +183,10 @@ rankPareto <- function(x,byVar){
   return(list(Front=front,Ranked=x))
 }
 
-get.prefAccuracy <- function(file,type=NULL,onlyMean=F){
-  m=regexpr(".(?<Dimension>[0-9]+x[0-9]+).",file,perl=T)
-  dim=getAttribute(file,m,'Dimension')
-  acc=read_csv(paste0(DataDir,'PREF/weights/',file))
+get.prefAccuracy <- function(model,type=NULL,onlyMean=F){
+  m=regexpr(".(?<Dimension>[0-9]+x[0-9]+).",model,perl=T)
+  dim=getAttribute(model,m,'Dimension')
+  acc=read_csv(paste0(DataDir,'PREF/weights/',model,'.csv'))
   acc=subset(acc,Type!='Weight'); acc$Feature=NULL
   if(!is.null(type)){ acc = subset(acc,Type==type)}
 
@@ -203,10 +203,10 @@ get.prefAccuracy <- function(file,type=NULL,onlyMean=F){
   return(acc)
 }
 
-get.optAccuracy <- function(file,reportMean=T){
-  m=regexpr(".(?<Dimension>[0-9]+x[0-9]+).",file,perl=T)
-  dim=getAttribute(file,m,'Dimension')
-  fname=paste0(DataDir,'Stepwise/accuracy/',file)
+get.optAccuracy <- function(model,reportMean=T){
+  m=regexpr(".(?<Dimension>[0-9]+x[0-9]+).",model,perl=T)
+  dim=getAttribute(model,m,'Dimension')
+  fname=paste0(DataDir,'Stepwise/accuracy/',paste0(model,'.csv'))
   if(!file.exists(fname)){ return(NULL)}
   acc = read_csv(fname)
   if(!grepl(fname,'MATLAB')){
@@ -231,40 +231,48 @@ get.optAccuracy <- function(file,reportMean=T){
   return(acc)
 }
 
-get.prefSummary <- function(problems,dim,tracks='OPT',rank='p',bias='equal',timedependent=F){
+get.prefSummary <- function(problems,dim,track,rank,timedependent,bias){
 
-  get.prefSummary1 <- function(file,Set='Validation'){
-    rho.stats = rho.statistic(file)
+  get.CDR.Exhaust  <- function(model){
+    CDR <- get.CDR(model,'train')
+    minNum=choose(16,1)+choose(16,2)+choose(16,3)+choose(16,16)
+    num=length(unique(CDR$CDR))
+    if(num<minNum) {
+      return(NULL)
+    }
+    return(CDR)
+  }
+
+  get.prefSummary1 <- function(model,Set='Validation'){
+    CDR <- get.CDR.Exhaust(model)
+    vars = c('Bias','CDR','NrFeat','Model')
+    if(length(levels(CDR$Bias))>1) {vars = c('Bias',vars)}
+    rho.stats = rho.statistic(CDR,vars,T)
     if(is.null(rho.stats)){return(NULL)}
     rho.stats = rho.stats[,c('Problem','NrFeat','Model','Bias',paste(Set,'Rho',sep='.'),paste0('N',Set))]
 
-    acc.pref = get.prefAccuracy(file,paste(Set,'Accuracy',sep='.'),onlyMean = T)
+    acc.pref = get.prefAccuracy(model,paste(Set,'Accuracy',sep='.'),onlyMean = T)
     if(is.null(acc.pref)){return(NULL)}
 
     pref=join(rho.stats, acc.pref, by = c('NrFeat','Model'))
 
     # Make a distinction between mean cross-validation accuracy and stepwise training accuracy
-    acc.opt = get.optAccuracy(file,T)
+    acc.opt = get.optAccuracy(model,T)
     if(is.null(acc.opt)){return(NULL)}
     acc.opt=acc.opt[,c('NrFeat','Model',paste(Set,'Accuracy',sep='.'))]
     pref=merge(pref, acc.opt, by = c('NrFeat','Model'),suffixes = c('.Classification','.Optimality'))
 
     pref=rankPareto(pref,paste(Set,'Accuracy.Optimality',sep='.'))$Ranked
-    pref$File=file
+    pref$File=model
     return(pref)
   }
 
-  ix=grepl('IL',tracks)
-  if(any(ix)){ tracks[ix]=paste0(substr(tracks[ix],1,2),'[0-9]+',substr(tracks[ix],3,100)) }
-  pat=paste('exhaust',
-            paste0('(',paste(problems,collapse = '|'),')'),dim,rank,
-            paste0('(',paste(tracks,collapse = '|'),')'),
-            paste0('(',paste(bias,collapse='|'),')'),'weights',
-            ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.')
-  files=list.files(paste0(DataDir,'PREF/summary'),pat)
-  prefSummary=NULL
-  for(file in files){ prefSummary=rbind(prefSummary,get.prefSummary1(file)); }
-  if(is.null(prefSummary)){return(NULL)}
+  file_list <- get.CDR.file_list(problems, dim, track, rank, timedependent, bias)
+  file_list = file_list[grep('exhaust',file_list)]
+
+  prefSummary <- ldply(file_list, get.prefSummary1)
+
+  if(nrow(prefSummary)==0){return(NULL)}
   prefSummary$Problem=factorProblem(prefSummary)
   return(prefSummary)
 }
@@ -273,7 +281,17 @@ get.bestPrefModel <- function(paretoFront){
   if(is.null(paretoFront)) return(NULL)
 
   paretoFront$BestInfo=interaction(paretoFront$File,paretoFront$NrFeat,paretoFront$Model)
-  Summary = ddply(paretoFront,~Problem,summarise,Max.Accuracy.Optimality=BestInfo[Validation.Accuracy.Optimality==max(Validation.Accuracy.Optimality)],Min.Rho=BestInfo[Validation.Rho==min(Validation.Rho)])
+
+  #best <- list(
+  #  'Max.Accuracy.Optimality'=merge(
+  #    aggregate(Validation.Accuracy.Optimality ~ Problem, paretoFront, max), paretoFront),
+  #  'Min.Rho'=merge(
+  #    aggregate(Validation.Rho ~ Problem, paretoFront, min), paretoFront))
+
+  Summary = ddply(paretoFront,~Problem,summarise,
+                  Max.Accuracy.Optimality=BestInfo[
+                    Validation.Accuracy.Optimality==max(Validation.Accuracy.Optimality)],
+                  Min.Rho=BestInfo[Validation.Rho==min(Validation.Rho)])
 
   Stepwise=NULL
   for(i in 1:nrow(Summary))

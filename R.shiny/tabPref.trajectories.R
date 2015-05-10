@@ -42,18 +42,23 @@ output$plot.preferenceSetSize <- renderPlot({
   })
 })
 
-rhoTracksRanks <- reactive({ get.rhoTracksRanks(input$problem,input$dimension) })
+all.rhoTracksRanks <- reactive({
+  file_list <- get.CDR.file_list(input$problems,input$dimension,c(sdrs,'ALL','OPT'),c('a','b','f','p'),
+                                 F,'equal')
+  get.many.CDR(file_list,'train')
+})
+
+rhoTracksRanks <- reactive({ subset(all.rhoTracksRanks(),
+                                    Track %in% input$plotTracks & Rank %in% input$plotRanks) })
 
 output$plot.rhoTracksRanks <- renderPlot({
   withProgress(message = 'Plotting boxplot', value = 0, {
     SDR=switch(input$plotSDR, T=SDR())
-    plot.rhoTracksRanks(subset(rhoTracksRanks(),
-                               Track %in% input$plotTracks & Rank %in% input$plotRanks), SDR)
+    plot.rhoTracksRanks(rhoTracksRanks(), SDR)
   })
 })
 
 output$table.rhoTracksRanks <- renderTable({
   SDR=switch(input$plotSDR, T=SDR())
-  table.rhoTracksRanks(input$problem, subset(rhoTracksRanks(),
-                             Track %in% input$plotTracks & Rank %in% input$plotRanks), SDR)
+  table.rhoTracksRanks(input$problem, rhoTracksRanks(), SDR)
 }, include.rownames = FALSE)

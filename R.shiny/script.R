@@ -11,24 +11,23 @@ print(xtable(dataset.diff$Split), include.rownames = FALSE)
 print(xtable(splitSDR(dataset.diff$Easy)))# first problem
 print(xtable(splitSDR(dataset.diff$Easy)))# first problem
 plot.SDR(SDR,'boxplot', save)
-plot.BDR('10x10',input$problems,'SPT','MWR',40,save)
+plot.BDR(input$dimension,input$problems,'SPT','MWR',40,save)
 
-if(input$dimension=='6x5'){
-  source('gantt.R')
-  gantt=get.gantt(input$problem,input$dimension,'MWR',10)
-  plot.gantt(gantt,'30')
-}
+source('gantt.R')
+gantt=get.gantt(input$problem,input$dimension,'MWR',10)
+plot.gantt(gantt,'30')
 
 source('pref.trajectories.R')
+bias='equal'; timedependent=F
 tracks=c(sdrs,'ALL','OPT'); ranks=c('a','b','f','p')
 trainingDataSize=get.trainingDataSize(input$problems,input$dimension,tracks)
 preferenceSetSize=get.preferenceSetSize(input$problems,input$dimension,tracks,ranks)
-rhoTracksRanks=get.PREFCDR(input$problems,input$dimension,tracks,ranks)
+CDR.full=get.many.CDR(get.CDR.file_list(input$problems,input$dimension,tracks,ranks,timedependent,bias),'train')
 plot.trainingDataSize(trainingDataSize)
 plot.preferenceSetSize(preferenceSetSize)
-plot.rhoTracksRanks(rhoTracksRanks, SDR)
-if(!is.null(rhoTracksRanks))
-  print(xtable(table.rhoTracksRanks(input$problem, rhoTracksRanks, SDR),rownames=F))
+plot.rhoTracksRanks(CDR.full, SDR)
+if(!is.null(CDR.full))
+  print(xtable(table.rhoTracksRanks(input$problem, CDR.full, SDR),rownames=F))
 
 source('opt.uniqueness.R'); smooth=F
 all.StepwiseOptimality=get.StepwiseOptimality(input$problems,input$dimension,'OPT')
@@ -44,26 +43,23 @@ source('opt.bw.R')
 plot.BestWorst(input$problems,input$dimension,'OPT',save)
 plot.BestWorst(input$problem,input$dimension,'ALL',save)
 
-if(input$dimension=='10x10'){
-  source('pref.exhaustive.R'); source('pref.settings.R')
-  bias='equal'
-  prefSummary=get.prefSummary(input$problems,input$dimension,'OPT','p',bias,F)
-  paretoFront=get.paretoFront(prefSummary)
-  bestPrefModel=get.bestPrefModel(paretoFront)
+source('pref.exhaustive.R'); source('pref.settings.R')
+prefSummary=get.prefSummary(input$problems,input$dimension,'OPT','p',F,bias)
+paretoFront=get.paretoFront(prefSummary)
+bestPrefModel=get.bestPrefModel(paretoFront)
 
-  plot.exhaust.paretoFront(prefSummary,paretoFront,T,save)
-  plot.exhaust.acc(prefSummary,save)
-  plot.exhaust.paretoWeights(paretoFront,F,save)
-  plot.exhaust.bestAcc(all.StepwiseOptimality,bestPrefModel)
-  plot.exhaust.bestBoxplot(bestPrefModel,SDR)
-  print(table.exhaust.paretoFront(paretoFront),
-        include.rownames=FALSE, sanitize.text.function=function(x){x})
-  ks=suppressWarnings(get.pareto.ks(paretoFront,input$problem, onlyPareto = F, SDR=NULL))
-  if(!is.null(ks)){
-    print(ks$Rho.train,sanitize.text.function=function(x){x})
-    print(ks$Rho.test,sanitize.text.function=function(x){x})
-    print(ks$Acc,sanitize.text.function=function(x){x})
-  }
+plot.exhaust.paretoFront(prefSummary,paretoFront,T,save)
+plot.exhaust.acc(prefSummary,save)
+plot.exhaust.paretoWeights(paretoFront,F,save)
+plot.exhaust.bestAcc(all.StepwiseOptimality,bestPrefModel)
+plot.exhaust.bestBoxplot(bestPrefModel,SDR)
+print(table.exhaust.paretoFront(paretoFront),
+      include.rownames=FALSE, sanitize.text.function=function(x){x})
+ks=suppressWarnings(get.pareto.ks(paretoFront,input$problem, onlyPareto = F, SDR=NULL))
+if(!is.null(ks)){
+  print(ks$Rho.train,sanitize.text.function=function(x){x})
+  print(ks$Rho.test,sanitize.text.function=function(x){x})
+  print(ks$Acc,sanitize.text.function=function(x){x})
 }
 
 source('feat.R')
@@ -72,9 +68,10 @@ plot.StepwiseFeatures(input$problem,input$dimension,T,F)
 plot.StepwiseFeatures(input$problem,input$dimension,F,T)
 
 source('pref.imitationLearning.R')
-plot.imitationLearning.boxplot(input$problem,input$dimension)
+CDR.IL <- get.CDR.IL(input$problem,input$dimension)
+plot.imitationLearning.boxplot(CDR.IL)
+stats.imitationLearning(CDR.IL)
 plot.imitationLearning.weights(input$problem,input$dimension)
-stats.imitationLearning(input$problem,input$dimension)
 
 if(input$dimension=='6x5'){
   source('cma.R')

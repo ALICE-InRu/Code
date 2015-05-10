@@ -18,21 +18,31 @@ output$tabPref.imitationLearning <- renderUI({
 })
 
 output$progressBoxSup <- renderValueBox({
-  files = getSummaryFileNamesIL(input$problem,input$dimension)
+  files = getFileNamesIL(input$problem,input$dimension)
   valueBox( paste0('#',sum(grepl('[0-9]+SUP',files))), "Decreased supervision", color = "purple", icon = icon("eye"))
 })
 output$progressBoxUnsup <- renderValueBox({
-  files = getSummaryFileNamesIL(input$problem,input$dimension)
+  files = getFileNamesIL(input$problem,input$dimension)
   valueBox( paste0('#',sum(grepl('[0-9]+UNSUP',files))), "Unsupervised", color = "yellow", icon = icon("eye-slash"))
 })
 output$progressBoxFixsup <- renderValueBox({
-  files = getSummaryFileNamesIL(input$problem,input$dimension)
+  files = getFileNamesIL(input$problem,input$dimension)
   valueBox( paste0('#',sum(grepl('[0-9]+FIXSUP',files))), "Fixed supervision", color = "maroon", icon = icon("eyedropper"))
 })
 
+CDR.IL <- reactive({
+  get.CDR.IL(input$problem,input$dimension)
+})
+
+output$compareImitationLearning.stats <- renderDataTable({
+  withProgress(message = 'Summary table', value = 0, {
+    stats.imitationLearning(CDR.IL())
+  })
+},  options = list(paging = FALSE, searching = T))
+
 output$compareImitationLearning.boxplot <- renderPlot({
   withProgress(message = 'Plotting boxplot', value = 0, {
-    plot.imitationLearning.boxplot(input$problem,input$dimension)
+    plot.imitationLearning.boxplot(CDR.IL())
   })
 })
 
@@ -42,8 +52,3 @@ output$compareImitationLearning.weights <- renderPlot({
   })
 })
 
-output$compareImitationLearning.stats <- renderDataTable({
-  withProgress(message = 'Summary table', value = 0, {
-    stats.imitationLearning(input$problem,input$dimension)
-  })
-},  options = list(paging = FALSE, searching = T))

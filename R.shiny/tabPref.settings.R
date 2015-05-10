@@ -9,20 +9,18 @@ output$tabPref.settings <- renderUI({
     ),
     fluidRow(helpText('Using main problem distribution...')),
     fluidRow(
-      box(title = "Settings", status = "primary", solidHeader = TRUE, collapsible = TRUE,
-        selectInput("tracks", "Trajectories:", c("OPT",sdrs,"RND","ALL","ILSUP","ILUNSUP","ILFIXSUP", "OPTEXT","ILUNSUPEXT"), multiple = T, selected = 'OPT'),
-        selectInput("rank", "Ranking:", c("p","f","b","a")),
-        selectInput("bias", "Stepwise bias:", c('equal','opt','wcs','bcs','dbl1st','dbl2nd')),
-        checkboxInput("exhaustive","Exhaustive search for models, i.e., 1,2,3 or all $d$ features"),
-        checkboxInput("timedependent","Stepwise dependent:"),
-        selectInput("liblinearModel", "Action:", c("Estimate", "Create")),
-        actionButton("action", "Submit:")
+      box(title = "Settings", status = "primary", solidHeader = TRUE,
+          selectInput("tracks", "Trajectories:", c("OPT",sdrs,"RND","ALL","ILSUP","ILUNSUP","ILFIXSUP", "OPTEXT","ILUNSUPEXT"), multiple = T, selected = 'OPT'),
+          selectInput("rank", "Ranking:", c("p","f","b","a")),
+          selectInput("bias", "Stepwise bias:", c('equal','opt','wcs','bcs','dbl1st','dbl2nd')),
+          checkboxInput("exhaustive","Exhaustive search for models, i.e., 1,2,3 or all $d$ features"),
+          checkboxInput("timedependent","Stepwise dependent:"),
+          actionButton("create", "Create:")
       ),
-      box(title = "Stepwise bias", collapsible = TRUE,
+      box(title = "Stepwise bias",
           helpText('Features instances are resampled w.r.t. its stepwise bias.'),
-          plotOutput("plot.stepwiseBias", height = 150))
-    ),
-    fluidRow(box(title = "Action output", width = 12, collapsible = TRUE,
+          plotOutput("plot.stepwiseBias", height = 150)),
+      box(title = "LiblineaR Output", width = 6,
           verbatimTextOutput("output.liblinearModel"))
     )
   )
@@ -40,7 +38,7 @@ output$plot.stepwiseBias <- renderPlot({
 })
 
 output$output.liblinearModel <- renderPrint({
-  input$action
+  input$create
   print(Sys.time())
 
   tracks=isolate(input$tracks)
@@ -51,34 +49,31 @@ output$output.liblinearModel <- renderPrint({
   bias=isolate(input$bias)
   timedependent=isolate(input$timedependent)
 
-  if(isolate(input$liblinearModel)=="Estimate") {
-    estimate.prefModels(problem,dimension,ifelse(exhaustive,'exhaust','full'),bias,timedependent,tracks,rank)
-  } else {
-    patTracks=tracks
-    patTracks[grepl('ILSUP',patTracks)]='IL[0-9]+SUP'
-    patTracks[grepl('ILUNSUP',patTracks)]='IL[0-9]+UNSUP'
-    patTracks[grepl('ILFIXSUP',patTracks)]='IL[0-9]+FIXSUP'
-    patTracks=paste0('(',paste(patTracks,collapse='|'),')')
-    fT=list.files(paste0(DataDir,'Training'),paste('^trdat',problem,dimension,patTracks,'Local','diff',rank,'csv',sep='.'))
-    fW=list.files(paste0(DataDir,'PREF/weights'),paste(ifelse(exhaustive,'exhaust','full'),problem,dimension,rank,tracks,bias,'weights',ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.'))
-    if(length(fT)+any(grepl('ALL',tracks))>length(fW)){
+  patTracks=tracks
+  patTracks[grepl('ILSUP',patTracks)]='IL[0-9]+SUP'
+  patTracks[grepl('ILUNSUP',patTracks)]='IL[0-9]+UNSUP'
+  patTracks[grepl('ILFIXSUP',patTracks)]='IL[0-9]+FIXSUP'
+  patTracks=paste0('(',paste(patTracks,collapse='|'),')')
+  fT=list.files(paste0(DataDir,'Training'),paste('^trdat',problem,dimension,patTracks,'Local','diff',rank,'csv',sep='.'))
+  fW=list.files(paste0(DataDir,'PREF/weights'),paste(ifelse(exhaustive,'exhaust','full'),problem,dimension,rank,tracks,bias,'weights',ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.'))
+  if(length(fT)+any(grepl('ALL',tracks))>length(fW)){
 
-      lmax=ifelse(numericDimension(input$dimension)<100,
-                  ifelse(timedependent,5000,100000),
-                  ifelse(timedependent,100000,500000))
+    lmax=ifelse(numericDimension(input$dimension)<100,
+                ifelse(timedependent,5000,100000),
+                ifelse(timedependent,100000,500000))
 
-      for(track in tracks)
-        withProgress(message = paste('Create model for',track), value = 0, {
-          create.prefModel(problem,dimension,track,rank,bias,timedependent,exhaustive,lmax)
-        })
-    } else { return(paste(length(fW),'LIBLINEAR models exist for current setting')) }
-  }
+    for(track in tracks)
+      withProgress(message = paste('Create model for',track), value = 0, {
+        create.prefModel(problem,dimension,track,rank,bias,timedependent,exhaustive,lmax)
+      })
+  } else { return(paste(length(fW),'LIBLINEAR models exist for current setting')) }
 })
 
 pref.files <- reactive({
   list.files(paste0(DataDir,'PREF/weights'),paste(input$problem,input$dimension,'[a-z]{1}','[A-Z0-9]+','[a-z]+','weights','time[dependent|independent]*','csv',sep='.'))
 })
-pref.files.pat = paste('(?<rank>[a-z]{1})','(?<track>[A-Z0-9]+)','(?<prob>[a-z]+)','weights','time[dependent|independent]*','csv',sep='.')
+
+pref.files.pat = paste('(?<Rank>[a-z]{1})','(?<Track>[A-Z0-9]+)','(?<Bias>[a-z]+)','weights','time[dependent|independent]*','csv',sep='.')
 
 output$progressPrefs <- renderValueBox({
   valueBox( paste0('#',length(pref.files())), "models", color = "navy", icon = icon("users"))

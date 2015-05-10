@@ -94,13 +94,13 @@ plot.rhoTracksRanks <- function(rhoTracksRanks,SDR=NULL){
 
 table.rhoTracksRanks <- function(problem,rhoTracksRanks,SDR=NULL,save=NA){
   if(is.null(rhoTracksRanks)) return(NULL)
-  rhoTracksRanks=subset(rhoTracksRanks,Problem==problem)
-  rhoTracksRanks=joinRhoSDR(rhoTracksRanks,SDR)
-  stat=ddply(rhoTracksRanks,~Problem+Model+Track+Rank+Set,function(x) summary(x$Rho))
+  rhoTracksRanks <- subset(rhoTracksRanks,Problem==problem)
+  rhoTracksRanks <- joinRhoSDR(rhoTracksRanks,SDR)
+  stat <- ddply(rhoTracksRanks,~Problem+Model+Track+Rank+Set,function(x) summary(x$Rho))
   stat <- arrange(stat, Mean) # order w.r.t. lowest mean
   # table
-  lbl<-paste0('stat.pref.',problem)
-  tbl=xtable(stat,label=(lbl),caption=paste('Main statistics for',problem))
+  lbl <- paste0('stat.pref.',problem)
+  tbl <- xtable(stat,label=(lbl),caption=paste('Main statistics for',problem))
   if(is.na(save)) { return(tbl)
   } else {
     print(tbl,include.rownames = FALSE,file=paste(lbl,'.txt',sep=''))
