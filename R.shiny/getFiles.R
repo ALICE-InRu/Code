@@ -124,11 +124,11 @@ get.CDR <- function(file_list,nrFeat=NULL,modelID=NULL,sets=c('train','test')){
   dat <- subset(dat, !is.na(Rho))
 
   dat <- factorTrack(dat)
-  dat$Set <- levels(dat$Set)
+  dat$Set <- factorSet(dat$Set)
 
-  ix=which(dat$Dimension=='10x10' & dat$PID>300 & dat$Extended==F & dat$Set=='train')
+  ix=which(dat$Dimension=='10x10' & !dat$Extended & dat$Set=='train' & dat$PID>300)
   if(any(ix)){ dat$Set[ix] = 'test' }
-  ix=which(dat$Dimension=='6x5' & dat$PID>500 & dat$Extended==F & dat$Set=='train')
+  ix=which(dat$Dimension=='6x5' & !dat$Extended & dat$Set=='train' & dat$PID>500)
   if(any(ix)){ dat$Set[ix] = 'test' }
 
   return(dat)
