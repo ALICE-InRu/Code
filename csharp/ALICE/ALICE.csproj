@@ -57,6 +57,7 @@
     <Compile Include="CMAESData.cs" />
     <Compile Include="CSV.cs" />
     <Compile Include="HeuristicData.cs" />
+    <Compile Include="CDRAccuracy.cs" />
     <Compile Include="RawData.cs" />
     <Compile Include="Features.cs" />
     <Compile Include="GurobiJspModel.cs" />

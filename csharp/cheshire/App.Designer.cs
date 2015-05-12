@@ -60,8 +60,10 @@ namespace Cheshire
             this.lblSDR2 = new System.Windows.Forms.Label();
             this.groupBoxPREF = new System.Windows.Forms.GroupBox();
             this.groupBoxTracks = new System.Windows.Forms.GroupBox();
+            this.cancelAsyncButtonTrAcc = new System.Windows.Forms.Button();
+            this.startAsyncButtonTrAcc = new System.Windows.Forms.Button();
             this.cancelAsyncButtonTrSet = new System.Windows.Forms.Button();
-            this.startAsyncButtonGenTrData = new System.Windows.Forms.Button();
+            this.startAsyncButtonTrSet = new System.Windows.Forms.Button();
             this.Tracks = new System.Windows.Forms.CheckedListBox();
             this.groupBoxRanks = new System.Windows.Forms.GroupBox();
             this.Ranks = new System.Windows.Forms.CheckedListBox();
@@ -105,6 +107,7 @@ namespace Cheshire
             this.textHeader = new System.Windows.Forms.RichTextBox();
             this.textContent = new System.Windows.Forms.RichTextBox();
             this.bkgWorkerApply = new System.ComponentModel.BackgroundWorker();
+            this.bkgWorkerTrAcc = new System.ComponentModel.BackgroundWorker();
             this.groupBoxData.SuspendLayout();
             this.groupBoxSet.SuspendLayout();
             this.groupBoxProblem.SuspendLayout();
@@ -389,8 +392,10 @@ namespace Cheshire
             // 
             // groupBoxTracks
             // 
+            this.groupBoxTracks.Controls.Add(this.cancelAsyncButtonTrAcc);
+            this.groupBoxTracks.Controls.Add(this.startAsyncButtonTrAcc);
             this.groupBoxTracks.Controls.Add(this.cancelAsyncButtonTrSet);
-            this.groupBoxTracks.Controls.Add(this.startAsyncButtonGenTrData);
+            this.groupBoxTracks.Controls.Add(this.startAsyncButtonTrSet);
             this.groupBoxTracks.Controls.Add(this.Tracks);
             this.groupBoxTracks.Location = new System.Drawing.Point(5, 15);
             this.groupBoxTracks.Name = "groupBoxTracks";
@@ -399,9 +404,29 @@ namespace Cheshire
             this.groupBoxTracks.TabStop = false;
             this.groupBoxTracks.Text = "Trajectories";
             // 
+            // cancelAsyncButtonTrAcc
+            // 
+            this.cancelAsyncButtonTrAcc.Location = new System.Drawing.Point(71, 174);
+            this.cancelAsyncButtonTrAcc.Name = "cancelAsyncButtonTrAcc";
+            this.cancelAsyncButtonTrAcc.Size = new System.Drawing.Size(60, 25);
+            this.cancelAsyncButtonTrAcc.TabIndex = 25;
+            this.cancelAsyncButtonTrAcc.Text = "Cancel";
+            this.cancelAsyncButtonTrAcc.UseVisualStyleBackColor = true;
+            this.cancelAsyncButtonTrAcc.Click += new System.EventHandler(this.cancelAsyncButton_Click);
+            // 
+            // startAsyncButtonTrAcc
+            // 
+            this.startAsyncButtonTrAcc.Location = new System.Drawing.Point(6, 174);
+            this.startAsyncButtonTrAcc.Name = "startAsyncButtonTrAcc";
+            this.startAsyncButtonTrAcc.Size = new System.Drawing.Size(60, 25);
+            this.startAsyncButtonTrAcc.TabIndex = 24;
+            this.startAsyncButtonTrAcc.Text = "Accuracy";
+            this.startAsyncButtonTrAcc.UseVisualStyleBackColor = true;
+            this.startAsyncButtonTrAcc.Click += new System.EventHandler(this.startAsyncButtonTrAccuracy_Click);
+            // 
             // cancelAsyncButtonTrSet
             // 
-            this.cancelAsyncButtonTrSet.Location = new System.Drawing.Point(72, 174);
+            this.cancelAsyncButtonTrSet.Location = new System.Drawing.Point(71, 145);
             this.cancelAsyncButtonTrSet.Name = "cancelAsyncButtonTrSet";
             this.cancelAsyncButtonTrSet.Size = new System.Drawing.Size(60, 25);
             this.cancelAsyncButtonTrSet.TabIndex = 2;
@@ -409,22 +434,22 @@ namespace Cheshire
             this.cancelAsyncButtonTrSet.UseVisualStyleBackColor = true;
             this.cancelAsyncButtonTrSet.Click += new System.EventHandler(this.cancelAsyncButton_Click);
             // 
-            // startAsyncButtonGenTrData
+            // startAsyncButtonTrSet
             // 
-            this.startAsyncButtonGenTrData.Location = new System.Drawing.Point(7, 174);
-            this.startAsyncButtonGenTrData.Name = "startAsyncButtonGenTrData";
-            this.startAsyncButtonGenTrData.Size = new System.Drawing.Size(60, 25);
-            this.startAsyncButtonGenTrData.TabIndex = 1;
-            this.startAsyncButtonGenTrData.Text = "Optimise";
-            this.startAsyncButtonGenTrData.UseVisualStyleBackColor = true;
-            this.startAsyncButtonGenTrData.Click += new System.EventHandler(this.startAsyncButtonTrSet_Click);
+            this.startAsyncButtonTrSet.Location = new System.Drawing.Point(6, 145);
+            this.startAsyncButtonTrSet.Name = "startAsyncButtonTrSet";
+            this.startAsyncButtonTrSet.Size = new System.Drawing.Size(60, 25);
+            this.startAsyncButtonTrSet.TabIndex = 1;
+            this.startAsyncButtonTrSet.Text = "Optimise";
+            this.startAsyncButtonTrSet.UseVisualStyleBackColor = true;
+            this.startAsyncButtonTrSet.Click += new System.EventHandler(this.startAsyncButtonTrSet_Click);
             // 
             // Tracks
             // 
             this.Tracks.FormattingEnabled = true;
             this.Tracks.Location = new System.Drawing.Point(5, 15);
             this.Tracks.Name = "Tracks";
-            this.Tracks.Size = new System.Drawing.Size(125, 154);
+            this.Tracks.Size = new System.Drawing.Size(125, 124);
             this.Tracks.TabIndex = 23;
             this.Tracks.SelectedIndexChanged += new System.EventHandler(this.ckb_SelectedIndexChanged);
             // 
@@ -451,7 +476,7 @@ namespace Cheshire
             // 
             // cancelAsyncButtonRankTrData
             // 
-            this.cancelAsyncButtonRankTrData.Location = new System.Drawing.Point(72, 85);
+            this.cancelAsyncButtonRankTrData.Location = new System.Drawing.Point(71, 84);
             this.cancelAsyncButtonRankTrData.Name = "cancelAsyncButtonRankTrData";
             this.cancelAsyncButtonRankTrData.Size = new System.Drawing.Size(60, 25);
             this.cancelAsyncButtonRankTrData.TabIndex = 55;
@@ -461,7 +486,7 @@ namespace Cheshire
             // 
             // startAsyncButtonRankTrData
             // 
-            this.startAsyncButtonRankTrData.Location = new System.Drawing.Point(7, 85);
+            this.startAsyncButtonRankTrData.Location = new System.Drawing.Point(6, 84);
             this.startAsyncButtonRankTrData.Name = "startAsyncButtonRankTrData";
             this.startAsyncButtonRankTrData.Size = new System.Drawing.Size(60, 25);
             this.startAsyncButtonRankTrData.TabIndex = 56;
@@ -484,7 +509,7 @@ namespace Cheshire
             // 
             // cancelAsyncButtonRetrace
             // 
-            this.cancelAsyncButtonRetrace.Location = new System.Drawing.Point(72, 59);
+            this.cancelAsyncButtonRetrace.Location = new System.Drawing.Point(71, 59);
             this.cancelAsyncButtonRetrace.Name = "cancelAsyncButtonRetrace";
             this.cancelAsyncButtonRetrace.Size = new System.Drawing.Size(60, 25);
             this.cancelAsyncButtonRetrace.TabIndex = 56;
@@ -494,7 +519,7 @@ namespace Cheshire
             // 
             // startAsyncButtonRetrace
             // 
-            this.startAsyncButtonRetrace.Location = new System.Drawing.Point(7, 59);
+            this.startAsyncButtonRetrace.Location = new System.Drawing.Point(6, 59);
             this.startAsyncButtonRetrace.Name = "startAsyncButtonRetrace";
             this.startAsyncButtonRetrace.Size = new System.Drawing.Size(60, 25);
             this.startAsyncButtonRetrace.TabIndex = 55;
@@ -719,21 +744,18 @@ namespace Cheshire
             // 
             this.Iteration.Location = new System.Drawing.Point(80, 41);
             this.Iteration.Maximum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.Iteration.Minimum = new decimal(new int[] {
-            1,
+            10,
             0,
             0,
             0});
             this.Iteration.Name = "Iteration";
             this.Iteration.Size = new System.Drawing.Size(44, 20);
             this.Iteration.TabIndex = 57;
-            this.Iteration.Value = 1;
-            this.Iteration.Minimum = 0;
-            this.Iteration.Maximum = 10;
+            this.Iteration.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             // 
             // StepwiseBias
             // 
@@ -1067,7 +1089,7 @@ namespace Cheshire
         private GroupBox groupBoxPREF;
         private GroupBox groupBoxTracks;
         private Button cancelAsyncButtonTrSet;
-        private Button startAsyncButtonGenTrData;
+        private Button startAsyncButtonTrSet;
         private CheckedListBox Tracks;
         private GroupBox groupBoxRanks;
         private CheckedListBox Ranks;
@@ -1118,5 +1140,8 @@ namespace Cheshire
         private Label lblModelIndex;
         private NumericUpDown Iteration;
         private ComboBox ApplyModel;
+        private Button cancelAsyncButtonTrAcc;
+        private Button startAsyncButtonTrAcc;
+        private BackgroundWorker bkgWorkerTrAcc;
     }
 }

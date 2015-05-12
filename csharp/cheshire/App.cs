@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net.Configuration;
 using System.Windows.Forms;
 using ALICE;
 
@@ -46,6 +45,7 @@ namespace Cheshire
             cancelAsyncButtonOptimize.Visible = false;
             cancelAsyncButtonCMA.Visible = false;
             cancelAsyncButtonApply.Visible = false;
+            cancelAsyncButtonTrAcc.Visible = false;
 
             IndependentModel.Select();
             CMAwrtRho.Select();
@@ -188,39 +188,51 @@ namespace Cheshire
 
         private void cancelAsyncButton_Click(object sender, EventArgs e)
         {
-            var bkgWorker = (BackgroundWorker) sender;
-            bkgWorker.CancelAsync();
-
+            BackgroundWorker bkgWorker;
             if (sender == bkgWorkerRetrace)
             {
                 cancelAsyncButtonRetrace.Visible = false;
                 textHeader.AppendText("\nCancelling feature update of training data...");
+                bkgWorker = bkgWorkerRetrace;
             }
-            if (sender == bkgWorkerCMAES)
+            else if (sender == bkgWorkerCMAES)
             {
                 cancelAsyncButtonCMA.Visible = false;
                 textHeader.AppendText("\nCancelling CMA-ES optimisation...");
+                bkgWorker = bkgWorkerCMAES;
             }
-            if (sender == bkgWorkerOptimise)
+            else if (sender == bkgWorkerOptimise)
             {
                 cancelAsyncButtonOptimize.Visible = false;
                 textHeader.AppendText("\nCancelling optimization...");
+                bkgWorker = bkgWorkerOptimise;
             }
-            if (sender == bkgWorkerTrSet)
+            else if (sender == bkgWorkerTrSet)
             {
                 cancelAsyncButtonTrSet.Visible = false;
                 textHeader.AppendText("\nCancelling collection of training data...");
+                bkgWorker = bkgWorkerTrSet;
             }
-            if (sender == bkgWorkerPrefSet)
+            else if (sender == bkgWorkerPrefSet)
             {
                 cancelAsyncButtonRankTrData.Visible = false;
                 textHeader.AppendText("\nCancelling ranking of training data...");
+                bkgWorker = bkgWorkerPrefSet;
             }
-            if (sender == bkgWorkerApply)
+            else if (sender == bkgWorkerApply)
             {
                 cancelAsyncButtonApply.Visible = false;
                 textHeader.AppendText("\nCancelling application of models...");
+                bkgWorker = bkgWorkerApply;
             }
+            else if (sender == bkgWorkerTrAcc)
+            {
+                cancelAsyncButtonTrAcc.Visible = false;
+                textHeader.AppendText("\nCancelling accuracy of models...");
+                bkgWorker = bkgWorkerTrAcc;
+            }
+            else return;
+            bkgWorker.CancelAsync();
         }
 
         #endregion
@@ -270,10 +282,11 @@ namespace Cheshire
             //if any exception is produced, it will be available to you on   
             //the RunWorker completedEventArgs object, method bkgWorkerOptimise_RunWorker completed  
 
+            BackgroundWorker bkgWorker = bkgWorkerOptimise; 
             OPTData[] sets = (OPTData[]) e.Argument;
             e.Result = "";
             int iter = 0;
-            bkgWorkerOptimise.ReportProgress((int) (100.0*iter/sets.Length),
+            bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                 new object[] {0, String.Format("{0} configurations: #{1}", sets.GetType(), sets.Length)});
 
             sets = sets.Where(x => x.AlreadySavedPID < x.NumInstances).ToArray();
@@ -283,18 +296,18 @@ namespace Cheshire
                 DateTime start = DateTime.Now;
                 DateTime autoSave = DateTime.Now;
 
-                bkgWorkerOptimise.ReportProgress((int) (100.0*iter/sets.Length),
+                bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                     new object[] {0, String.Format("Starting optimising {0}", set.FileInfo.Name)});
 
                 for (int pid = set.AlreadySavedPID + 1; pid <= set.NumInstances; pid++)
                 {
                     string info = set.Optimise(pid);
-                    bkgWorkerOptimise.ReportProgress((int) (100.0*pid/set.NumInstances),
+                    bkgWorker.ReportProgress((int)(100.0 * pid / set.NumInstances),
                         new object[] {1, info});
 
-                    if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE | bkgWorkerOptimise.CancellationPending)
+                    if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE | bkgWorker.CancellationPending)
                     {
-                        bkgWorkerOptimise.ReportProgress((int) (100.0*iter/sets.Length),
+                        bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                             new object[]
                             {
                                 0,
@@ -305,14 +318,14 @@ namespace Cheshire
                         autoSave = DateTime.Now;
                     }
 
-                    if (!bkgWorkerOptimise.CancellationPending) continue;
-                    bkgWorkerOptimise.ReportProgress((int) (100.0*pid/set.NumInstances),
+                    if (!bkgWorker.CancellationPending) continue;
+                    bkgWorker.ReportProgress((int)(100.0 * pid / set.NumInstances),
                         new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
                     e.Cancel = true;
                     return;
                 }
                 set.Write();
-                bkgWorkerOptimise.ReportProgress((int) (100.0*++iter/sets.Length),
+                bkgWorker.ReportProgress((int)(100.0 * ++iter / sets.Length),
                     new object[]
                     {
                         0,
@@ -320,7 +333,7 @@ namespace Cheshire
                             (DateTime.Now - start).TotalMinutes)
                     });
             }
-            bkgWorkerOptimise.ReportProgress((int) (100.0*iter/sets.Length),
+            bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                 new object[]
                 {0, String.Format("{0} configurations: #{1} newly completed!", sets.GetType(), sets.Length)});
         }
@@ -363,10 +376,11 @@ namespace Cheshire
 
         private void bkgWorkerTrSet_DoWork(object sender, DoWorkEventArgs e)
         {
+            BackgroundWorker bkgWorker = bkgWorkerTrSet;
             TrainingSet[] sets = (TrainingSet[]) e.Argument;
             e.Result = "";
             int iter = 0;
-            bkgWorkerTrSet.ReportProgress((int) (100.0*iter/sets.Length),
+            bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                 new object[] {0, String.Format("{0} configurations: #{1}", sets.GetType(), sets.Length)});
 
             sets = sets.Where(x => x.AlreadySavedPID < x.NumInstances).ToArray();
@@ -376,18 +390,18 @@ namespace Cheshire
                 DateTime start = DateTime.Now;
                 DateTime autoSave = DateTime.Now;
 
-                bkgWorkerTrSet.ReportProgress((int) (100.0*iter/sets.Length),
+                bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                     new object[] {0, String.Format("Starting collecting and labelling {0}", set.FileInfo.Name)});
 
                 for (int pid = set.AlreadySavedPID + 1; pid <= set.NumInstances; pid++)
                 {
                     string info = set.Apply(pid);
-                    bkgWorkerTrSet.ReportProgress((int) (100.0*(pid%set.NumTraining)/set.NumTraining),
+                    bkgWorker.ReportProgress((int)(100.0 * (pid % set.NumTraining) / set.NumTraining),
                         new object[] {1, info});
 
-                    if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE | bkgWorkerTrSet.CancellationPending)
+                    if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE | bkgWorker.CancellationPending)
                     {
-                        bkgWorkerTrSet.ReportProgress((int) (100.0*iter/sets.Length),
+                        bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                             new object[]
                             {
                                 0,
@@ -398,14 +412,14 @@ namespace Cheshire
                         autoSave = DateTime.Now;
                     }
 
-                    if (!bkgWorkerTrSet.CancellationPending) continue;
-                    bkgWorkerTrSet.ReportProgress((int) (100.0*pid/set.NumInstances),
+                    if (!bkgWorker.CancellationPending) continue;
+                    bkgWorker.ReportProgress((int)(100.0 * pid / set.NumInstances),
                         new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
                     e.Cancel = true;
                     return;
                 }
                 set.Write();
-                bkgWorkerTrSet.ReportProgress((int) (100.0*++iter/sets.Length),
+                bkgWorker.ReportProgress((int)(100.0 * ++iter / sets.Length),
                     new object[]
                     {
                         0,
@@ -414,12 +428,92 @@ namespace Cheshire
                             set.FileInfo.Name, (DateTime.Now - start).TotalMinutes, set.NumFeatures)
                     });
             }
-            bkgWorkerTrSet.ReportProgress((int) (100.0*iter/sets.Length),
+            bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                 new object[]
                 {0, String.Format("{0} configurations: #{1} newly completed!", sets.GetType(), sets.Length)});
         }
 
         #endregion
+
+        #region bkgWorkerTrAcc
+
+        private void startAsyncButtonTrAccuracy_Click(object sender, EventArgs e)
+        {
+            LinearModel[] models = GetModels();
+            if (models == null) return;
+
+            RawData[] datas = (from dim in DimensionApply.CheckedItems.Cast<string>()
+                               from problem in ProblemsApply.CheckedItems.Cast<string>()
+                               from set in Set.CheckedItems.Cast<string>()
+                               select
+                                   new RawData(problem, dim, (RawData.DataSet)Enum.Parse(typeof(RawData.DataSet), set),
+                                       Extended.CheckedItems.Count > 0, DataDir)).ToArray();
+
+            CDRAccuracy[] sets = (from data in datas
+                              from model in models
+                              select
+                                  new CDRAccuracy(data, model)).ToArray();
+            
+            if (sets.Length == 0)
+            {
+                textContent.AppendText("\nCannot collect training set:");
+                if (Problems.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one problem distribution.");
+                if (Dimension.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one problem dimension.");
+                if (Tracks.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one training trajectory.");
+                textContent.AppendText("\n");
+                return;
+            }
+
+            
+
+
+
+
+            throw new NotImplementedException();
+            while (bkgWorkerTrAcc.IsBusy)
+            {
+                /* wait */
+            }
+            bkgWorkerTrAcc.RunWorkerAsync(sets);
+            cancelAsyncButtonTrAcc.Visible = true;
+        }
+
+        private void bkgWorkerTrAcc_DoWork(object sender, DoWorkEventArgs e)
+        {
+            BackgroundWorker bkgWorker = bkgWorkerTrAcc;
+            CDRAccuracy[] sets = (CDRAccuracy[]) e.Argument;
+            e.Result = "";
+            int iter = 0;
+            bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
+                new object[] { 0, String.Format("{0} configurations: #{1}", sets.GetType(), sets.Length) });
+
+            sets = sets.Where(x => x.AlreadySavedPID < x.NumInstances).ToArray();
+
+            foreach (var set in sets)
+            {
+                set.Apply();
+                bkgWorker.ReportProgress((int) (100.0*++iter/sets.Length),
+                    new object[]
+                    {
+                        1,
+                        String.Format("Accuracy for {0}", set.Model.FileInfo.Name)
+                    });
+
+                if (!bkgWorker.CancellationPending) continue;
+                bkgWorker.ReportProgress((int) (100.0*iter/sets.Length),
+                    new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
+                e.Cancel = true;
+                return;
+            }
+
+            bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
+                new object[] { 0, String.Format("{0} configurations: #{1} newly completed!", sets.GetType(), sets.Length) });
+        }
+
+        #endregion 
 
         #region bkgWorkerRetrace
 
@@ -468,10 +562,11 @@ namespace Cheshire
 
         private void bkgWorkerRetrace_DoWork(object sender, DoWorkEventArgs e)
         {
+            BackgroundWorker bkgWorker = bkgWorkerRetrace;
             RetraceSet[] sets = (RetraceSet[]) e.Argument;
             e.Result = "";
             int iter = 0;
-            bkgWorkerRetrace.ReportProgress((int) (100.0*iter/sets.Length),
+            bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                 new object[] {0, String.Format("{0} configurations: #{1}", sets.GetType(), sets.Length)});
 
             sets = sets.Where(x => x.AlreadySavedPID > 0).ToArray();
@@ -479,23 +574,23 @@ namespace Cheshire
             foreach (var set in sets)
             {
                 DateTime start = DateTime.Now;
-                bkgWorkerRetrace.ReportProgress((int) (100.0*iter/sets.Length),
+                bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                     new object[] {0, String.Format("Starting retracing {0}", set.FileInfo.Name)});
 
                 for (int pid = 1; pid <= set.AlreadySavedPID; pid++)
                 {
                     string info = set.Apply(pid);
-                    bkgWorkerRetrace.ReportProgress((int) (100.0*pid/set.AlreadySavedPID),
+                    bkgWorker.ReportProgress((int)(100.0 * pid / set.AlreadySavedPID),
                         new object[] {1, info});
 
-                    if (!bkgWorkerRetrace.CancellationPending) continue;
-                    bkgWorkerRetrace.ReportProgress((int) (100.0*pid/set.AlreadySavedPID),
+                    if (!bkgWorker.CancellationPending) continue;
+                    bkgWorker.ReportProgress((int)(100.0 * pid / set.AlreadySavedPID),
                         new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
                     e.Cancel = true;
                     return;
                 }
                 set.Write();
-                bkgWorkerRetrace.ReportProgress((int) (100.0*++iter/sets.Length),
+                bkgWorker.ReportProgress((int)(100.0 * ++iter / sets.Length),
                     new object[]
                     {
                         0,
@@ -503,7 +598,7 @@ namespace Cheshire
                             (DateTime.Now - start).TotalMinutes)
                     });
             }
-            bkgWorkerRetrace.ReportProgress((int) (100.0*iter/sets.Length),
+            bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                 new object[]
                 {0, String.Format("{0} configurations: #{1} newly completed!", sets.GetType(), sets.Length)});
         }
@@ -553,10 +648,11 @@ namespace Cheshire
 
         private void bkgWorkerPrefSet_DoWork(object sender, DoWorkEventArgs e)
         {
+            BackgroundWorker bkgWorker = bkgWorkerPrefSet;
             PreferenceSet[] sets = (PreferenceSet[]) e.Argument;
             e.Result = "";
             int iter = 0;
-            bkgWorkerPrefSet.ReportProgress((int) (100.0*iter/sets.Length),
+            bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                 new object[] {0, String.Format("{0} configurations: #{1}", sets.GetType(), sets.Length)});
 
             sets = sets.Where(x => x.AlreadySavedPID >= x.NumInstances).ToArray();
@@ -565,10 +661,10 @@ namespace Cheshire
             {
                 DateTime start = DateTime.Now;
 
-                bkgWorkerPrefSet.ReportProgress((int) (100.0*iter/sets.Length),
+                bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                     new object[] {0, String.Format("Starting ranking {0}", set.FileInfo.Name)});
                 set.Apply();
-                bkgWorkerPrefSet.ReportProgress((int) (100.0*++iter/sets.Length),
+                bkgWorker.ReportProgress((int)(100.0 * ++iter / sets.Length),
                     new object[]
                     {
                         0,
@@ -577,14 +673,14 @@ namespace Cheshire
                             set.FileInfo.Name, (DateTime.Now - start).TotalMinutes, set.NumFeatures, set.NumPreferences)
                     });
 
-                if (!bkgWorkerPrefSet.CancellationPending) continue;
-                bkgWorkerPrefSet.ReportProgress(100,
+                if (!bkgWorker.CancellationPending) continue;
+                bkgWorker.ReportProgress(100,
                     new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
                 e.Cancel = true;
                 return;
 
             }
-            bkgWorkerPrefSet.ReportProgress((int) (100.0*iter/sets.Length),
+            bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                 new object[]
                 {0, String.Format("{0} configurations: #{1} newly completed!", sets.GetType(), sets.Length)});
         }
@@ -626,11 +722,12 @@ namespace Cheshire
 
         private void bkgWorkerCMAES_DoWork(object sender, DoWorkEventArgs e)
         {
+            BackgroundWorker bkgWorker = bkgWorkerCMAES;
             CMAESData[] sets = (CMAESData[]) e.Argument;
 
             e.Result = "";
             int iter = 0;
-            bkgWorkerCMAES.ReportProgress((int) (100.0*iter/sets.Length),
+            bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                 new object[] {0, String.Format("{0} configurations: #{1}", sets.GetType(), sets.Length)});
 
             sets = sets.Where(x => !x.OptimistationComplete).ToArray();
@@ -640,18 +737,18 @@ namespace Cheshire
                 DateTime start = DateTime.Now;
                 DateTime autoSave = DateTime.Now;
 
-                bkgWorkerCMAES.ReportProgress((int) (100.0*iter/sets.Length),
+                bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                     new object[] {0, String.Format("Starting optimising with CMA-ES {0}", set.FileInfo.Name)});
 
                 while (!set.OptimistationComplete)
                 {
                     string info = set.Optimise(set.Generation); //do some intense task here.
-                    bkgWorkerCMAES.ReportProgress((int) (100.0*set.CountEval/set.StopEval),
+                    bkgWorker.ReportProgress((int)(100.0 * set.CountEval / set.StopEval),
                         new object[] {1, info});
 
-                    if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE | bkgWorkerCMAES.CancellationPending)
+                    if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE | bkgWorker.CancellationPending)
                     {
-                        bkgWorkerCMAES.ReportProgress((int) (100.0*iter/sets.Length),
+                        bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                             new object[]
                             {
                                 0,
@@ -662,14 +759,14 @@ namespace Cheshire
                         autoSave = DateTime.Now;
                     }
 
-                    if (!bkgWorkerCMAES.CancellationPending) continue;
-                    bkgWorkerCMAES.ReportProgress((int) (100.0*set.CountEval/set.StopEval),
+                    if (!bkgWorker.CancellationPending) continue;
+                    bkgWorker.ReportProgress((int)(100.0 * set.CountEval / set.StopEval),
                         new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
                     e.Cancel = true;
                     return;
                 }
 
-                bkgWorkerCMAES.ReportProgress((int) (100.0*++iter/sets.Length),
+                bkgWorker.ReportProgress((int)(100.0 * ++iter / sets.Length),
                     new object[]
                     {
                         0,
@@ -678,7 +775,7 @@ namespace Cheshire
                             set.FileInfo.Name, (DateTime.Now - start).TotalMinutes, set.Generation, set.CountEval)
                     });
             }
-            bkgWorkerCMAES.ReportProgress((int)(100.0 * iter / sets.Length),
+            bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                 new object[]
                 {0, String.Format("{0} configurations: #{1} newly completed!", sets.GetType(), sets.Length)});
         }
@@ -689,67 +786,7 @@ namespace Cheshire
 
         private void startAsyncButtonApply_Click(object sender, EventArgs e)
         {
-            bool dependentModel = DependentModel.Checked && !IndependentModel.Checked;
-            LinearModel[] models;
-
-            if (ApplyModel.SelectedItem.ToString().Substring(0, 4) == "PREF")
-            {
-                string stepwiseBias = StepwiseBias.SelectedItem.ToString();
-                int iter = Convert.ToInt32(Iteration.Value);
-                int numFeatures = Convert.ToInt32(NumFeatures.Value);
-                int modelID = Convert.ToInt32(ModelIndex.Value);
-
-                if (ApplyModel.SelectedItem.ToString() == "PREF")
-                    models = (from dim in Dimension.CheckedItems.Cast<string>()
-                        from problem in Problems.CheckedItems.Cast<string>()
-                        from track in Tracks.CheckedItems.Cast<string>()
-                        from rank in Ranks.CheckedItems.Cast<string>()
-                        select new LinearModel(problem, dim,
-                            (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
-                            Extended.CheckedItems.Count > 0,
-                            (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank), dependentModel,
-                            DataDir, iter, stepwiseBias, numFeatures, modelID)).ToArray();
-                else
-                {
-                    models = GetAllExhaustiveModels(stepwiseBias);
-                }
-
-                if (models == null || models.Length == 0)
-                {
-                    textContent.AppendText("\nCannot apply PREF models:");
-                    if (Problems.CheckedItems.Count == 0)
-                        textContent.AppendText("\n\tPlease choose at least one problem distribution.");
-                    if (Dimension.CheckedItems.Count == 0)
-                        textContent.AppendText("\n\tPlease choose at least one problem dimension.");
-                    if (Tracks.CheckedItems.Count == 0)
-                        textContent.AppendText("\n\tPlease choose at least one training trajectory.");
-                    if (Ranks.CheckedItems.Count == 0)
-                        textContent.AppendText("\n\tPlease choose at least one ranking scheme.");
-                    textContent.AppendText("\n");
-                    return;
-                }
-            }
-            else
-            {
-                CMAESData.ObjectiveFunction objFun = CMAwrtMakespan.Checked
-                    ? CMAESData.ObjectiveFunction.MinimumMakespan
-                    : CMAESData.ObjectiveFunction.MinimumRho;
-
-                models = (from dim in Dimension.CheckedItems.Cast<string>()
-                    from problem in Problems.CheckedItems.Cast<string>()
-                    select new LinearModel(problem, dim, objFun, dependentModel, DataDir)).ToArray();
-
-                if (models.Length == 0)
-                {
-                    textContent.AppendText("\nCannot apply CMA-ES models:");
-                    if (Problems.CheckedItems.Count == 0)
-                        textContent.AppendText("\n\tPlease choose at least one problem distribution.");
-                    if (Dimension.CheckedItems.Count == 0)
-                        textContent.AppendText("\n\tPlease choose at least one problem dimension.");
-                    textContent.AppendText("\n");
-                    return;
-                }
-            }
+            LinearModel[] models = GetModels();
 
             RawData[] datas = (from dim in DimensionApply.CheckedItems.Cast<string>()
                 from problem in ProblemsApply.CheckedItems.Cast<string>()
@@ -783,6 +820,65 @@ namespace Cheshire
             cancelAsyncButtonApply.Visible = true;
         }
 
+        private LinearModel[] GetModels()
+        {
+            bool dependentModel = DependentModel.Checked && !IndependentModel.Checked;
+            LinearModel[] models;
+
+            if (ApplyModel.SelectedItem.ToString().Substring(0, 4) == "PREF")
+            {
+                string stepwiseBias = StepwiseBias.SelectedItem.ToString();
+                int iter = Convert.ToInt32(Iteration.Value);
+                int numFeatures = Convert.ToInt32(NumFeatures.Value);
+                int modelID = Convert.ToInt32(ModelIndex.Value);
+
+                if (ApplyModel.SelectedItem.ToString() == "PREF")
+                    models = (from dim in Dimension.CheckedItems.Cast<string>()
+                        from problem in Problems.CheckedItems.Cast<string>()
+                        from track in Tracks.CheckedItems.Cast<string>()
+                        from rank in Ranks.CheckedItems.Cast<string>()
+                        select new LinearModel(problem, dim,
+                            (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
+                            Extended.CheckedItems.Count > 0,
+                            (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank), dependentModel,
+                            DataDir, iter, stepwiseBias, numFeatures, modelID)).ToArray();
+                else
+                {
+                    models = GetAllExhaustiveModels(stepwiseBias);
+                }
+
+                if (models != null && models.Length != 0) return models;
+                textContent.AppendText("\nCannot apply PREF models:");
+                if (Problems.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one problem distribution.");
+                if (Dimension.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one problem dimension.");
+                if (Tracks.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one training trajectory.");
+                if (Ranks.CheckedItems.Count == 0)
+                    textContent.AppendText("\n\tPlease choose at least one ranking scheme.");
+                textContent.AppendText("\n");
+                return null;
+            }
+
+            CMAESData.ObjectiveFunction objFun = CMAwrtMakespan.Checked
+                ? CMAESData.ObjectiveFunction.MinimumMakespan
+                : CMAESData.ObjectiveFunction.MinimumRho;
+
+            models = (from dim in Dimension.CheckedItems.Cast<string>()
+                from problem in Problems.CheckedItems.Cast<string>()
+                select new LinearModel(problem, dim, objFun, dependentModel, DataDir)).ToArray();
+
+            if (models.Length != 0) return models;
+            textContent.AppendText("\nCannot apply CMA-ES models:");
+            if (Problems.CheckedItems.Count == 0)
+                textContent.AppendText("\n\tPlease choose at least one problem distribution.");
+            if (Dimension.CheckedItems.Count == 0)
+                textContent.AppendText("\n\tPlease choose at least one problem dimension.");
+            textContent.AppendText("\n");
+            return null;
+        }
+
         private LinearModel[] GetAllExhaustiveModels(string stepwiseBias)
         {
             foreach (var models in from problem in Problems.CheckedItems.Cast<string>()
@@ -806,11 +902,12 @@ namespace Cheshire
 
         private void bkgWorkerApply_DoWork(object sender, DoWorkEventArgs e)
         {
+            BackgroundWorker bkgWorker = bkgWorkerApply;
             CDRData[] sets = (CDRData[]) e.Argument;
 
             e.Result = "";
             int iter = 0;
-            bkgWorkerApply.ReportProgress((int) (100.0*iter/sets.Length),
+            bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                 new object[] {0, String.Format("{0} configurations: #{1}", sets.GetType(), sets.Length)});
 
             sets = sets.Where(x => x.AlreadySavedPID < x.NumInstances).ToArray();
@@ -818,21 +915,21 @@ namespace Cheshire
             foreach (var set in sets)
             {
                 set.Apply();
-                bkgWorkerApply.ReportProgress((int) (100.0*++iter/sets.Length),
+                bkgWorker.ReportProgress((int)(100.0 * ++iter / sets.Length),
                     new object[]
                     {
                         1,
                         String.Format("Applied {0}\n\tto {1}", set.Model.FileInfo.Name, set.FileInfo.Name)
                     });
 
-                if (!bkgWorkerApply.CancellationPending) continue;
-                bkgWorkerApply.ReportProgress((int) (100.0*iter/sets.Length),
+                if (!bkgWorker.CancellationPending) continue;
+                bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                     new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
                 e.Cancel = true;
                 return;
             }
 
-            bkgWorkerApply.ReportProgress((int)(100.0 * iter / sets.Length),
+            bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                 new object[]
                 {0, String.Format("{0} configurations: #{1} newly completed!", sets.GetType(), sets.Length)});
         }

@@ -9,6 +9,16 @@ namespace ALICE
 {
     public class LinearModel
     {
+        public enum Model
+        {
+            NotSet, 
+            SDR,
+            CMAES,
+            PREF
+        }
+
+        public readonly Model Type;
+
         public readonly string Name;
         public readonly FileInfo FileInfo;
         private readonly int _numFeatures;
@@ -25,8 +35,7 @@ namespace ALICE
         public readonly int Iteration;
 
         protected LinearModel(FileInfo file, Features.Mode featureMode, int numFeatures, int modelID,
-            bool timeIndependent,
-            string distribution, string dimension)
+            bool timeIndependent, string distribution, string dimension, Model type)
         {
             FileInfo = file;
             FeatureMode = featureMode;
@@ -36,12 +45,12 @@ namespace ALICE
             TimeIndependent = timeIndependent;
             Distribution = distribution;
             Dimension = dimension;
+            Type = type;
         }
 
         protected LinearModel(FileInfo file, Features.Mode featureMode, int timeDependentSteps, int numFeatures,
-            int modelID,
-            string distribution, string dimension)
-            : this(file, featureMode, numFeatures, modelID, timeDependentSteps == 1, distribution, dimension)
+            int modelID, string distribution, string dimension, Model type)
+            : this(file, featureMode, numFeatures, modelID, timeDependentSteps == 1, distribution, dimension, type)
         {
             switch (featureMode)
             {
@@ -57,7 +66,7 @@ namespace ALICE
         }
 
         public LinearModel(SDRData.SDR sdr, string distribution, string dimension)
-            : this(null, Features.Mode.Local, 1, 1, (int) sdr, distribution, dimension)
+            : this(null, Features.Mode.Local, 1, 1, (int) sdr, distribution, dimension, Model.SDR)
         {
             Name = String.Format("{0}Equiv", sdr);
             switch (sdr)
@@ -83,10 +92,10 @@ namespace ALICE
             : this(
                 file,
                 Regex.IsMatch(file.Name, Features.Mode.Global.ToString()) ? Features.Mode.Global : Features.Mode.Local,
-                numFeatures, modelID, Regex.IsMatch(file.Name, "timeindependent"), distribution, dimension)
+                numFeatures, modelID, Regex.IsMatch(file.Name, "timeindependent"), distribution, dimension, Model.PREF)
         {
             FileInfo = file;
-            LinearModel[] loggedWeights = ReadLoggedLinearWeights(file, distribution, dimension);
+            LinearModel[] loggedWeights = ReadLoggedLinearWeights(file, distribution, dimension, Model.PREF);
 
             foreach (var w in loggedWeights.Where(w => w._numFeatures == numFeatures && w._modelID == _modelID))
             {
@@ -98,7 +107,7 @@ namespace ALICE
 
         public LinearModel(string distribution, string dimension, CMAESData.ObjectiveFunction objFun,
             bool timedependent, DirectoryInfo dataDir)
-            : this(null, Features.Mode.Local, 16, 1, !timedependent, distribution, dimension)
+            : this(null, Features.Mode.Local, 16, 1, !timedependent, distribution, dimension, Model.CMAES)
         {
             string pat = String.Format("full.{0}.{1}.{2}.weights.{3}",
                 distribution, dimension, objFun, timedependent ? "timedependent" : "timeindependent");
@@ -112,14 +121,14 @@ namespace ALICE
 
             FileInfo = files[0];
 
-            LinearModel[] w = ReadLoggedLinearWeights(files[0], distribution, dimension);
+            LinearModel[] w = ReadLoggedLinearWeights(files[0], distribution, dimension, Model.CMAES);
             LocalWeights = w[0].LocalWeights;
         }
 
         public LinearModel(string distribution, string dimension, TrainingSet.Trajectory track, bool extended,
             PreferenceSet.Ranking rank, bool timedependent, DirectoryInfo dataDir, int iter = -1,
             string stepwiseBias = "equal", int numFeatures = 16, int modelID = 1)
-            : this(null, Features.Mode.Local, numFeatures, modelID, !timedependent, distribution, dimension)
+            : this(null, Features.Mode.Local, numFeatures, modelID, !timedependent, distribution, dimension, Model.PREF)
         {
             switch (track)
             {
@@ -144,7 +153,7 @@ namespace ALICE
                     if (files.Count <= 0)
                         throw new Exception(String.Format("Cannot find any weights belonging to {0}!", pat));
 
-                    LinearModel[] loggedWeights = ReadLoggedLinearWeights(files[0], distribution, dimension);
+                    LinearModel[] loggedWeights = ReadLoggedLinearWeights(files[0], distribution, dimension, Model.PREF);
                     FileInfo = files[0];
 
                     foreach (var w in loggedWeights.Where(w => w._numFeatures == _numFeatures && w._modelID == _modelID)
@@ -214,7 +223,7 @@ namespace ALICE
         public LinearModel(double[][] localWeights, int generation, string distribution, string dimension)
             : this(
                 null, Features.Mode.Local, localWeights[0].Length, Features.LocalCount, generation, distribution,
-                dimension)
+                dimension, Model.CMAES)
         {
             LocalWeights = localWeights;
         }
@@ -231,10 +240,10 @@ namespace ALICE
             Regex reg = new Regex(pat);
             var files = dir.GetFiles("*.csv").Where(path => reg.IsMatch(path.ToString())).ToList();
 
-            return files.Count < 1 ? null : ReadLoggedLinearWeights(files[0], distribution, dimension);
+            return files.Count < 1 ? null : ReadLoggedLinearWeights(files[0], distribution, dimension, Model.PREF);
         }
 
-        private static LinearModel[] ReadLoggedLinearWeights(FileInfo file, string distribution, string dimension)
+        private static LinearModel[] ReadLoggedLinearWeights(FileInfo file, string distribution, string dimension, Model model)
         {
             if (!file.Exists)
                 throw new Exception(String.Format("File {0} doesn't exist! Cannot read weights.", file.Name));
@@ -272,7 +281,7 @@ namespace ALICE
                     nrFeat = Convert.ToInt32(line[NRFEAT]);
                     var idModel = Convert.ToInt32(line[MODEL]);
                     linearWeights = new LinearModel(file, featureMode, uniqueTimeSteps, nrFeat, idModel, distribution,
-                        dimension);
+                        dimension, model);
                     featFound = 0;
                 }
 
