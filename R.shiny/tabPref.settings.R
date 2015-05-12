@@ -50,9 +50,10 @@ output$output.liblinearModel <- renderPrint({
   timedependent=isolate(input$timedependent)
 
   patTracks=tracks
-  patTracks[grepl('ILSUP',patTracks)]='IL[0-9]+SUP'
-  patTracks[grepl('ILUNSUP',patTracks)]='IL[0-9]+UNSUP'
-  patTracks[grepl('ILFIXSUP',patTracks)]='IL[0-9]+FIXSUP'
+  ix=grep('IL',patTracks)
+  if(any(ix)){
+    patTracks[ix]=paste0('IL[0-9]+',stringr::str_sub(patTracks[ix],3))
+  }
   patTracks=paste0('(',paste(patTracks,collapse='|'),')')
   fT=list.files(paste0(DataDir,'Training'),paste('^trdat',problem,dimension,patTracks,'Local','diff',rank,'csv',sep='.'))
   fW=list.files(paste0(DataDir,'PREF/weights'),paste(ifelse(exhaustive,'exhaust','full'),problem,dimension,rank,tracks,bias,'weights',ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.'))
