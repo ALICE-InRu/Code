@@ -30,12 +30,12 @@ get.evolutionCMA <- function(problems,dim,Timedependent=T,Timeindependent=T,mean
     if(Timedependent) stat=rbind(stat,get.evolutionCMA2(problem,T))
     if(Timeindependent) stat=rbind(stat,get.evolutionCMA2(problem,F))
   }
+  if(is.null(stat)) {return(NULL)}
   info=ddply(stat,~Problem+ObjFun+Timedependent,summarise,Generation=max(Generation),CountEval=max(CountEval))
   info=merge(tidyr::spread(info[,-4],'ObjFun','CountEval'),
              tidyr::spread(info[,-5],'ObjFun','Generation'),
              by=c('Problem','Timedependent'),
              suffixes = c(".CountEval",".Generation"))
-  print(info)
   return(stat)
 }
 
@@ -68,10 +68,10 @@ plot.evolutionCMA.Fitness <- function(evolutionCMA){
 }
 
 plot.CMAPREF.timedependentWeights <- function(problem,dim='6x5',
-                                      track='OPT',rank='p',probability='equal'){
+                                      track='OPT',rank='p',bias='equal'){
 
   getPrefWeight <- function(){
-    file=paste('full',problem,dim,rank,track,probability,'weights.timedependent.csv',sep='.')
+    file=paste('full',problem,dim,rank,track,bias,'weights.timedependent.csv',sep='.')
     w=read_csv(paste0(DataDir,'PREF/weights/',file))
     w=subset(w[,-5],Type=='Weight');
     w=tidyr::gather(w,'Step','value',grep('Step',names(w)))
