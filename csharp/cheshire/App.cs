@@ -440,11 +440,12 @@ namespace Cheshire
         private void startAsyncButtonTrAccuracy_Click(object sender, EventArgs e)
         {
             LinearModel[] models = GetModels();
-            if (models == null) return;
+            if (models == null || models.Length < 1) return;
+            
+            CDRAccuracy set = new CDRAccuracy(models[0], DataDir);
 
             CDRAccuracy[] sets = (from model in models.Where(m => m.Type == LinearModel.Model.PREF)
-                select
-                    new CDRAccuracy(model, DataDir)).ToArray();
+                select set.Clone(model, DataDir)).ToArray();
             
             if (sets.Length == 0)
             {

@@ -8,7 +8,7 @@ namespace ALICE
 {
     public class CDRAccuracy : RetraceSet
     {
-        private readonly int[] _isOptimal;
+        private int[] _isOptimal;
 
         public CDRAccuracy(LinearModel model, DirectoryInfo data)
             : base(model.Distribution, model.Dimension, Trajectory.OPT, 0, false, Features.Mode.Local, data)
@@ -21,6 +21,15 @@ namespace ALICE
             _isOptimal = new int[NumDimension];
 
             Read();
+        }
+
+        public CDRAccuracy Clone(LinearModel model, DirectoryInfo data)
+        {
+            CDRAccuracy clone = (CDRAccuracy) MemberwiseClone();
+            clone.Model = model;
+            clone._isOptimal = new int[NumDimension];
+            clone.Read();
+            return clone;
         }
 
         public new void Apply()
@@ -56,8 +65,7 @@ namespace ALICE
             List<string> header;
             List<string[]> content = CSV.Read(FileInfo, out header);
             int iHeader = header.FindIndex(p => p.Equals("CDR"));
-            if (!content.Any(line => line[iHeader].Equals(Model.Name))) return;
-            NumApplied = NumInstances;
+            NumApplied = content.Any(line => line[iHeader].Equals(Model.Name)) ? NumInstances : 0;
         }
 
         public new int Write()
