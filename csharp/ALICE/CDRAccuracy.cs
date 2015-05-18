@@ -32,9 +32,10 @@ namespace ALICE
             return clone;
         }
 
-        public new void Apply()
+        public new string Apply()
         {
             ApplyAll(Retrace, Accuracy, null, Write);
+            return Model.Name;
         }
 
         public new string Apply(int pid)

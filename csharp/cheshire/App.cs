@@ -174,16 +174,20 @@ namespace Cheshire
 
             if (sender == bkgWorkerRetrace)
                 cancelAsyncButtonRetrace.Visible = false;
-            if (sender == bkgWorkerCMAES)
+            else if (sender == bkgWorkerCMAES)
                 cancelAsyncButtonCMA.Visible = false;
-            if (sender == bkgWorkerOptimise)
+            else if (sender == bkgWorkerOptimise)
                 cancelAsyncButtonOptimize.Visible = false;
-            if (sender == bkgWorkerTrSet)
+            else if (sender == bkgWorkerTrSet)
                 cancelAsyncButtonTrSet.Visible = false;
-            if (sender == bkgWorkerPrefSet)
+            else if (sender == bkgWorkerPrefSet)
                 cancelAsyncButtonRankTrData.Visible = false;
-            if (sender == bkgWorkerApply)
-                cancelAsyncButtonApply.Visible = false; 
+            else if (sender == bkgWorkerApply)
+                cancelAsyncButtonApply.Visible = false;
+            else if (sender == bkgWorkerTrAcc)
+                cancelAsyncButtonTrAcc.Visible = false;
+            else 
+                throw new NotSupportedException();
         }
 
         private void cancelAsyncButton_Click(object sender, EventArgs e)
@@ -231,7 +235,7 @@ namespace Cheshire
                 textHeader.AppendText("\nCancelling accuracy of models...");
                 bkgWorker = bkgWorkerTrAcc;
             }
-            else return;
+            else throw new NotSupportedException();
             bkgWorker.CancelAsync();
         }
 
