@@ -10,3 +10,4 @@ C:\Users\helga\alice\Code\csharp\cheshire\obj\x64\Release\Cheshire.Properties.Re
 C:\Users\helga\alice\Code\csharp\cheshire\obj\x64\Release\Cheshire.csproj.GenerateResource.Cache
 C:\Users\helga\alice\Code\csharp\cheshire\obj\x64\Release\ALICE application.exe
 C:\Users\helga\alice\Code\csharp\cheshire\obj\x64\Release\ALICE application.pdb
+C:\Users\helga\alice\Code\csharp\cheshire\obj\x64\Release\Cheshire.csprojResolveAssemblyReference.cache
