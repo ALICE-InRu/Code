@@ -189,43 +189,43 @@ namespace Cheshire
         private void cancelAsyncButton_Click(object sender, EventArgs e)
         {
             BackgroundWorker bkgWorker;
-            if (sender == bkgWorkerRetrace)
+            if (sender == cancelAsyncButtonRetrace)
             {
                 cancelAsyncButtonRetrace.Visible = false;
                 textHeader.AppendText("\nCancelling feature update of training data...");
                 bkgWorker = bkgWorkerRetrace;
             }
-            else if (sender == bkgWorkerCMAES)
+            else if (sender == cancelAsyncButtonCMA)
             {
                 cancelAsyncButtonCMA.Visible = false;
                 textHeader.AppendText("\nCancelling CMA-ES optimisation...");
                 bkgWorker = bkgWorkerCMAES;
             }
-            else if (sender == bkgWorkerOptimise)
+            else if (sender == cancelAsyncButtonOptimize)
             {
                 cancelAsyncButtonOptimize.Visible = false;
                 textHeader.AppendText("\nCancelling optimization...");
                 bkgWorker = bkgWorkerOptimise;
             }
-            else if (sender == bkgWorkerTrSet)
+            else if (sender == cancelAsyncButtonTrSet)
             {
                 cancelAsyncButtonTrSet.Visible = false;
                 textHeader.AppendText("\nCancelling collection of training data...");
                 bkgWorker = bkgWorkerTrSet;
             }
-            else if (sender == bkgWorkerPrefSet)
+            else if (sender == cancelAsyncButtonRankTrData)
             {
                 cancelAsyncButtonRankTrData.Visible = false;
                 textHeader.AppendText("\nCancelling ranking of training data...");
                 bkgWorker = bkgWorkerPrefSet;
             }
-            else if (sender == bkgWorkerApply)
+            else if (sender == cancelAsyncButtonApply)
             {
                 cancelAsyncButtonApply.Visible = false;
                 textHeader.AppendText("\nCancelling application of models...");
                 bkgWorker = bkgWorkerApply;
             }
-            else if (sender == bkgWorkerTrAcc)
+            else if (sender == cancelAsyncButtonTrAcc)
             {
                 cancelAsyncButtonTrAcc.Visible = false;
                 textHeader.AppendText("\nCancelling accuracy of models...");
@@ -477,12 +477,12 @@ namespace Cheshire
 
             foreach (var set in sets)
             {
-                set.Apply();
+                string model = set.Apply();
                 bkgWorker.ReportProgress((int) (100.0*++iter/sets.Length),
                     new object[]
                     {
                         1,
-                        String.Format("Accuracy for {0}", set.FileInfo.Name)
+                        String.Format("Accuracy for {0} {1}", set.FileInfo.Name, model)
                     });
 
                 if (!bkgWorker.CancellationPending) continue;
