@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace ALICE
 {
@@ -118,9 +119,9 @@ namespace ALICE
 
                     break;
                 case Trajectory.CMA:
-                    Model = null;
+                    strTrack = GetCMAESModel(out Model);
                     _trajectory = ChooseWeightedJob;
-                    throw new NotImplementedException();
+                    break;
                 case Trajectory.OPT:
                     Model = null;
                     _trajectory = ChooseOptJob;
@@ -178,6 +179,15 @@ namespace ALICE
 
             return String.Format("IL{0}{1}", currentIter, Track.ToString().Substring(2));
         }
+
+        private string GetCMAESModel(out LinearModel model, CMAESData.ObjectiveFunction objFun = CMAESData.ObjectiveFunction.MinimumRho)
+        {
+            model = new LinearModel(Distribution, Dimension, objFun, false,
+                new DirectoryInfo(String.Format(@"{0}\..", FileInfo.DirectoryName)));
+
+            return string.Format("CMAESMIN{0}", objFun == CMAESData.ObjectiveFunction.MinimumMakespan ? "CMAX" : "RHO");
+        }
+
 
         public void Write()
         {
