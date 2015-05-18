@@ -10,7 +10,7 @@ output$tabPref.settings <- renderUI({
     fluidRow(helpText('Using main problem distribution...')),
     fluidRow(
       box(title = "Settings", status = "primary", solidHeader = TRUE,
-          selectInput("tracks", "Trajectories:", c("OPT",sdrs,"RND","ALL","ILSUP","ILUNSUP","ILFIXSUP", "OPTEXT","ILUNSUPEXT"), multiple = T, selected = 'OPT'),
+          selectInput("tracks", "Trajectories:", c("OPT",sdrs,"RND","ALL","ILSUP","ILUNSUP","ILFIXSUP", "OPTEXT","ILUNSUPEXT","LOCOPT"), multiple = T, selected = 'OPT'),
           selectInput("rank", "Ranking:", c("p","f","b","a")),
           selectInput("bias", "Stepwise bias:", c('equal','opt','wcs','bcs','dbl1st','dbl2nd')),
           checkboxInput("exhaustive","Exhaustive search for models, i.e., 1,2,3 or all $d$ features"),

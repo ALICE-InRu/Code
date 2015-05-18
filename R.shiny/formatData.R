@@ -66,6 +66,12 @@ factorTrack <- function(x){
     x$Supervision=factor(x$Supervision, levels=c('FIXSUP','SUP','UNSUP'),
                          labels = c('Fixed','Decreasing','Unsupervised'))
   }
+  ix=grepl('LOCOPT', x$Track)
+  if(any(ix)){
+    x$Track[ix]='Perturbed\nLeader'
+    lvs=c(lvs,'Perturbed\nLeader')
+  }
+
   x$Track=factor(x$Track, levels=lvs)
   droplevels(x)
 }

@@ -23,6 +23,7 @@ namespace ALICE
             ILUNSUP,
             ILSUP,
             ILFIXSUP,
+            LOCOPT,
             ALL
         }
 
@@ -123,6 +124,10 @@ namespace ALICE
                 case Trajectory.OPT:
                     Model = null;
                     _trajectory = ChooseOptJob;
+                    break;
+                case Trajectory.LOCOPT:
+                    Model = null;
+                    _trajectory = ChooseLocalOptJob;
                     break;
                 default: // SDR  
                     Model = new LinearModel((SDRData.SDR) Track, distribution, Dimension);
@@ -314,6 +319,24 @@ namespace ALICE
             return optimums.Count == 1
                 ? optimums[0].Dispatch.Job
                 : optimums[Random.Next(0, optimums.Count)].Dispatch.Job;
+        }
+
+        private int ChooseLocalOptJob(Schedule jssp, List<Preference> prefs)
+        {
+            const double EPSILON = 0.1;
+            if (Random.NextDouble() > EPSILON)
+                return ChooseOptJob(jssp, prefs);
+
+            int minMakespan = prefs.Min(p => p.ResultingOptMakespan);
+            List<Preference> epsGreedy = prefs.Where(p => p.ResultingOptMakespan > minMakespan).ToList();
+            if (epsGreedy.Count == 0)
+                return ChooseOptJob(jssp, prefs);
+
+            int nextBest = epsGreedy.Min(p => p.ResultingOptMakespan);
+            epsGreedy = epsGreedy.Where(p => p.ResultingOptMakespan == nextBest).ToList();
+            return epsGreedy.Count == 1
+                ? epsGreedy[0].Dispatch.Job
+                : epsGreedy[Random.Next(0, epsGreedy.Count)].Dispatch.Job;
         }
 
         private int ChooseWeightedJob(Schedule jssp, List<Preference> prefs)

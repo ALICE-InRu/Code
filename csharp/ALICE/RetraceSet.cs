@@ -67,7 +67,8 @@ namespace ALICE
                 Write(FileMode.Create, Preferences);
         }
 
-        internal void ApplyAll(Func<int, Func<int, int, Schedule, int>, string> applyFunc, Func<int, int, Schedule, int> innerFunc, List<Preference>[,] writeData,
+        internal void ApplyAll(Func<int, Func<int, int, Schedule, int>, string> applyFunc,
+            Func<int, int, Schedule, int> innerFunc, List<Preference>[,] writeData,
             Func<int> overwriteWriteFunc = null)
         {
             for (int pid = 1; pid <= AlreadySavedPID; pid++)
@@ -78,7 +79,7 @@ namespace ALICE
 
             if (overwriteWriteFunc != null)
                 overwriteWriteFunc();
-            else
+            else if (writeData != null)
                 Write(FileMode.Create, writeData);
         }
 
