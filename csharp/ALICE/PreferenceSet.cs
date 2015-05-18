@@ -51,7 +51,7 @@ namespace ALICE
                     break;
             }
 
-            ApplyAll(Retrace, null);
+            ApplyAll(Retrace, null, null);
             _diffData = new List<Preference>[NumInstances, NumDimension];
             for (int pid = 1; pid <= AlreadySavedPID; pid++)
                 for (int step = 0; step < NumDimension; step++)
@@ -66,7 +66,7 @@ namespace ALICE
 
         public new void Apply()
         {
-            ApplyAll(Apply, _diffData);
+            ApplyAll(CreatePreferencePairs, null, _diffData);
         }
 
         public new string Apply(int pid)
@@ -75,7 +75,7 @@ namespace ALICE
             return CreatePreferencePairs(pid);
         }
 
-        internal string CreatePreferencePairs(int pid)
+        internal string CreatePreferencePairs(int pid, Func<int, int, Schedule, int> dummy = null)
         {
             int currentNumPreferences = 0;
             for (var step = 0; step < NumDimension; step++)

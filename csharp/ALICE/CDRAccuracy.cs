@@ -1,36 +1,93 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 
 namespace ALICE
 {
-    public class CDRAccuracy : CDRData
+    public class CDRAccuracy : RetraceSet
     {
-        public CDRAccuracy(RawData data, LinearModel model)
-            : base(data, model)
+        private readonly int[] _isOptimal;
+
+        public CDRAccuracy(LinearModel model, DirectoryInfo data)
+            : base(model.Distribution, model.Dimension, Trajectory.OPT, 0, false, Features.Mode.Local, data)
         {
+            Model = model;
+
             FileInfo =
-                new FileInfo(String.Format(@"{0}\acc\{1}", FileInfo.Directory, FileInfo.Name));
+                new FileInfo(String.Format(@"{0}\Stepwise\accuracy\{1}", data.FullName, Model.FileInfo.Name));
+
+            _isOptimal = new int[NumDimension];
+
+            Read();
         }
 
         public new void Apply()
         {
-            ApplyAll(Apply, Write);
+            ApplyAll(Retrace, Accuracy, null, Write);
         }
-        
-        private Schedule Apply(int pid)
+
+        public new string Apply(int pid)
         {
-            throw new NotImplementedException();
-            string name = GetName(pid);
-            Schedule jssp = GetEmptySchedule(name);
-            jssp.ApplyCDR(Model);
-            AddMakespan(name, jssp.Makespan);
-            return jssp;
+            NumApplied++;
+            return Retrace(pid, Accuracy);
+        }
+
+        private int Accuracy(int pid, int step, Schedule jssp)
+        {
+            foreach (var p in Preferences[pid - 1, step])
+                p.Priority = Model.PriorityIndex(p.Feature);     
+     
+            Preference best = Preferences[pid - 1, step].Find(p => p.Followed);
+            Preference chosen =
+                Preferences[pid - 1, step].Find(
+                    p => Math.Abs(p.Priority - Preferences[pid - 1, step].Max(q => q.Priority)) < 0.001);
+            
+            if (best.ResultingOptMakespan == chosen.ResultingOptMakespan)
+                _isOptimal[step]++;
+
+            return Preferences[pid - 1, step].Count;
+        }
+
+        private void Read()
+        {
+            if (!FileInfo.Exists) return;
+            List<string> header;
+            List<string[]> content = CSV.Read(FileInfo, out header);
+            int iHeader = header.FindIndex(p => p.Equals("CDR"));
+            if (!content.Any(line => line[iHeader].Equals(Model.Name))) return;
+            NumApplied = NumInstances;
         }
 
         public new int Write()
         {
-            throw new NotImplementedException();
-            return AlreadySavedPID;
+            if (NumApplied != AlreadySavedPID) return -1; 
+
+            if (FileInfo.Directory != null && !FileInfo.Directory.Exists)
+                FileInfo.Directory.Create();
+
+            var fs = new FileStream(FileInfo.FullName, FileMode.Append, FileAccess.Write);
+            using (var st = new StreamWriter(fs))
+            {
+                if (fs.Length == 0) // header is missing 
+                {
+                    var header = "CDR";
+                    for (int step = 0; step < NumDimension; step++)
+                        header += String.Format(",Step.{0}", step + 1);
+                    st.WriteLine(header);
+                }
+
+                string info = String.Format("{0}", Model.Name);
+                for (int step = 0; step < NumDimension; step++)
+                    info += String.Format(CultureInfo.InvariantCulture, ",{0:0.00}",
+                        _isOptimal[step]/(double) NumInstances);
+
+                st.WriteLine(info);
+                st.Close();
+            }
+            fs.Close();
+            return AlreadySavedPID = NumInstances;
         }
     }
 }

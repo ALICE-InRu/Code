@@ -38,7 +38,7 @@ namespace ALICE
         internal readonly List<Preference>[,] Preferences;
         internal Random Random = new Random();
 
-        internal readonly LinearModel Model;
+        internal LinearModel Model;
         private readonly double _beta; // only used in imitation learning 
 
         internal class Preference
@@ -50,6 +50,8 @@ namespace ALICE
 
             public Schedule.Dispatch Dispatch;
             public int SimplexIterations;
+
+            public double Priority; 
 
             public Preference(Schedule.Dispatch dispatch, Features features)
             {
@@ -251,7 +253,7 @@ namespace ALICE
             return CollectAndLabel(pid);
         }
 
-        protected string CollectAndLabel(int pid)
+        internal string CollectAndLabel(int pid)
         {
             string name = GetName(pid);
             DataRow instance = Data.Rows.Find(name);

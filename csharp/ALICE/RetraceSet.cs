@@ -7,7 +7,7 @@ namespace ALICE
 {
     public class RetraceSet : TrainingSet
     {
-        internal int NumApplied;
+        public int NumApplied;
 
         public RetraceSet(string distribution, string dimension, Trajectory track, int iter, bool extended,
             Features.Mode featureMode, DirectoryInfo data)
@@ -67,31 +67,38 @@ namespace ALICE
                 Write(FileMode.Create, Preferences);
         }
 
-        internal void ApplyAll(Func<int, string> applyFunc, List<Preference>[,] writeData)
+        internal void ApplyAll(Func<int, Func<int, int, Schedule, int>, string> applyFunc, Func<int, int, Schedule, int> innerFunc, List<Preference>[,] writeData,
+            Func<int> overwriteWriteFunc = null)
         {
             for (int pid = 1; pid <= AlreadySavedPID; pid++)
-                applyFunc(pid);
-            if (writeData != null)
+            {
+                applyFunc(pid, innerFunc);
+                NumApplied++;
+            }
+
+            if (overwriteWriteFunc != null)
+                overwriteWriteFunc();
+            else
                 Write(FileMode.Create, writeData);
         }
 
         public new void Apply()
         {
-            ApplyAll(Apply, Preferences);
+            ApplyAll(Retrace, null, Preferences);
         }
 
         public new string Apply(int pid)
         {
             NumApplied++;
-            return Retrace(pid, FeatureMode == Features.Mode.Local);
+            return Retrace(pid, FeatureMode == Features.Mode.Local, null);
         }
 
-        internal string Retrace(int pid)
+        internal string Retrace(int pid, Func<int, int, Schedule, int> applyFunc)
         {
-            return Retrace(pid, false);
+            return Retrace(pid, false, applyFunc);
         }
 
-        private string Retrace(int pid, bool canCollectAndLabel)
+        private string Retrace(int pid, bool canCollectAndLabel, Func<int, int, Schedule, int> applyFunc)
         {
             if (pid > AlreadySavedPID)
                 throw new Exception(String.Format("PID {0} exeeds what has already been created. Cannot retrace!", pid));
@@ -115,35 +122,40 @@ namespace ALICE
 
                 currentNumFeatures += Preferences[pid - 1, step].Count;
 
-                #region update features of possible jobs
-
                 int dispatchedJob;
                 if (Preferences[pid - 1, step].Count > 0)
                 {
-                    foreach (var p in Preferences[pid - 1, step])
-                    {
-                        var lookahead = jssp.Clone();
-                        p.Feature = lookahead.Dispatch1(p.Dispatch.Job, FeatureMode);
-                    }
+                    UpdateFeatures(pid, step, jssp);
+                    
+                    if (applyFunc != null)
+                        applyFunc(pid, step, jssp);
+
                     var followed = Preferences[pid - 1, step].Find(p => p.Followed);
-                    dispatchedJob = followed == null ? jssp.JobChosenBySDR((SDRData.SDR) Track) : followed.Dispatch.Job;
+                    dispatchedJob = followed == null ? jssp.JobChosenBySDR((SDRData.SDR)Track) : followed.Dispatch.Job;
                 }
                 else
                 {
                     dispatchedJob = jssp.ReadyJobs.Count > 1
-                        ? jssp.JobChosenBySDR((SDRData.SDR) Track)
+                        ? jssp.JobChosenBySDR((SDRData.SDR)Track)
                         : jssp.ReadyJobs[0];
                 }
-
-                #endregion
-
                 jssp.Dispatch1(dispatchedJob, Features.Mode.None);
             }
             NumFeatures += currentNumFeatures;
             return String.Format("{0}:{1} #{2} phi", FileInfo.Name, pid, currentNumFeatures);
         }
 
-        private bool ValidDispatches(ref List<Preference> prefs, Schedule jssp)
+        internal int UpdateFeatures(int pid, int step, Schedule jssp)
+        {
+            foreach (var p in Preferences[pid - 1, step])
+            {
+                var lookahead = jssp.Clone();
+                p.Feature = lookahead.Dispatch1(p.Dispatch.Job, FeatureMode);
+            }
+            return Preferences[pid - 1, step].Count;
+        }
+
+        internal bool ValidDispatches(ref List<Preference> prefs, Schedule jssp)
         {
             if (prefs.Count > jssp.ReadyJobs.Count)
             {
@@ -154,7 +166,7 @@ namespace ALICE
 
             if (prefs.Count == 0 && jssp.Sequence.Count >= NumDimension - 1)
                 return true;
-            
+
             if (prefs.Count != jssp.ReadyJobs.Count)
                 return false;
 

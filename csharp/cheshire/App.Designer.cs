@@ -1060,8 +1060,16 @@ namespace Cheshire
                 new System.ComponentModel.RunWorkerCompletedEventHandler(bkgWorker_RunWorkerCompleted);
             this.bkgWorkerApply.ProgressChanged +=
                 new System.ComponentModel.ProgressChangedEventHandler(bkgWorker_ProgressChanged);
-
-
+            // 
+            // bkgWorkerTrAcc
+            // 
+            this.bkgWorkerTrAcc.WorkerReportsProgress = true;
+            this.bkgWorkerTrAcc.WorkerSupportsCancellation = true;
+            this.bkgWorkerTrAcc.DoWork += new System.ComponentModel.DoWorkEventHandler(bkgWorkerTrAcc_DoWork);
+            this.bkgWorkerTrAcc.RunWorkerCompleted +=
+                new System.ComponentModel.RunWorkerCompletedEventHandler(bkgWorker_RunWorkerCompleted);
+            this.bkgWorkerTrAcc.ProgressChanged +=
+                new System.ComponentModel.ProgressChangedEventHandler(bkgWorker_ProgressChanged);
         }
 
         #endregion

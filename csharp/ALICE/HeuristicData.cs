@@ -80,15 +80,15 @@ namespace ALICE
             fs.Close();
         }
 
-        internal void ApplyAll(Func<int, Schedule> apply1, Func<int> write = null)
+        internal void ApplyAll(Func<int, Schedule> apply1, Func<int> overwriteWriteFunc = null)
         {
             for (int pid = AlreadySavedPID + 1; pid <= NumInstances; pid++)
                 apply1(pid);
 
-            if (write == null)
-                Write();
+            if (overwriteWriteFunc != null)
+                overwriteWriteFunc();
             else
-                write();
+                Write();
         }
     }
 }

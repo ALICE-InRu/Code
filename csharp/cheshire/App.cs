@@ -442,37 +442,19 @@ namespace Cheshire
             LinearModel[] models = GetModels();
             if (models == null) return;
 
-            RawData[] datas = (from dim in DimensionApply.CheckedItems.Cast<string>()
-                               from problem in ProblemsApply.CheckedItems.Cast<string>()
-                               from set in Set.CheckedItems.Cast<string>()
-                               select
-                                   new RawData(problem, dim, (RawData.DataSet)Enum.Parse(typeof(RawData.DataSet), set),
-                                       Extended.CheckedItems.Count > 0, DataDir)).ToArray();
-
-            CDRAccuracy[] sets = (from data in datas
-                              from model in models
-                              select
-                                  new CDRAccuracy(data, model)).ToArray();
+            CDRAccuracy[] sets = (from model in models.Where(m => m.Type == LinearModel.Model.PREF)
+                select
+                    new CDRAccuracy(model, DataDir)).ToArray();
             
             if (sets.Length == 0)
             {
                 textContent.AppendText("\nCannot collect training set:");
                 if (Problems.CheckedItems.Count == 0)
-                    textContent.AppendText("\n\tPlease choose at least one problem distribution.");
-                if (Dimension.CheckedItems.Count == 0)
-                    textContent.AppendText("\n\tPlease choose at least one problem dimension.");
-                if (Tracks.CheckedItems.Count == 0)
-                    textContent.AppendText("\n\tPlease choose at least one training trajectory.");
+                    textContent.AppendText("\n\tPlease select preference model.");
                 textContent.AppendText("\n");
                 return;
             }
-
             
-
-
-
-
-            throw new NotImplementedException();
             while (bkgWorkerTrAcc.IsBusy)
             {
                 /* wait */
@@ -490,7 +472,7 @@ namespace Cheshire
             bkgWorker.ReportProgress((int)(100.0 * iter / sets.Length),
                 new object[] { 0, String.Format("{0} configurations: #{1}", sets.GetType(), sets.Length) });
 
-            sets = sets.Where(x => x.AlreadySavedPID < x.NumInstances).ToArray();
+            sets = sets.Where(x => x.NumApplied < x.NumInstances).ToArray();
 
             foreach (var set in sets)
             {
@@ -499,7 +481,7 @@ namespace Cheshire
                     new object[]
                     {
                         1,
-                        String.Format("Accuracy for {0}", set.Model.FileInfo.Name)
+                        String.Format("Accuracy for {0}", set.FileInfo.Name)
                     });
 
                 if (!bkgWorker.CancellationPending) continue;
