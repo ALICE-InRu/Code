@@ -11,7 +11,7 @@ fixUnsupIL <- function(){
       write.csv(dat,file,row.names = F, quote = F)
     } else if (nrow(dat)<maxPID){
       print(paste(file,'is',nrow(dat),'which is less than',maxPID))
-    } else { print(paste(file,'is',nrow(dat))) }
+    }
   }
 }
 
