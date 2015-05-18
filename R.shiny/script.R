@@ -80,4 +80,6 @@ if(input$dimension=='6x5'){
   plot.evolutionCMA.Weights(evolutionCMA,input$problem)
   plot.evolutionCMA.Fitness(evolutionCMA)
   plot.CMAPREF.timedependentWeights(input$problem, input$dimension)
+  CDR.CMA <- get.CDR.CMA(input$problems,input$dimension)
+  plot.CMABoxplot(CDR.CMA)
 }

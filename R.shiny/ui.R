@@ -29,7 +29,8 @@ sidebar <- dashboardSidebar(
              menuSubItem("SDR", tabName = "optSDR", icon = icon("university")),
              menuSubItem("Best and worst case scenario", tabName = "optBW", icon = icon("university"))
              ),
-    menuItem("Features", tabName = "feat", icon = icon("binoculars"),
+    menuItem("Features", tabName = "feat", icon = icon("binoculars")),
+    menuItem("CMA-ES", tabName = "cmaes", icon = icon("globe"),
              badgeLabel = "new", badgeColor = "green"),
     menuItem("DataTable", tabName = "table", icon = icon("table")),
     menuItem("Save", icon = icon("save"),
@@ -50,6 +51,7 @@ body <- dashboardBody(
     tabItem(tabName = "optSDR", uiOutput("tabOpt.SDR")),
     tabItem(tabName = "optBW", uiOutput("tabOpt.bw")),
     tabItem(tabName = "feat", uiOutput("tabFEAT")),
+    tabItem(tabName = "cmaes", uiOutput("tabCMAES")),
     tabItem(tabName = "table", uiOutput("tabTable")),
     tabItem(tabName = "prefSettings", uiOutput("tabPref.settings")),
     tabItem(tabName = "prefTrajectories", uiOutput("tabPref.trajectories")),

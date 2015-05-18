@@ -104,5 +104,27 @@ plot.CMAPREF.timedependentWeights <- function(problem,dim='6x5',
   return(p)
 }
 
+get.CDR.CMA <- function(problems,dim,timedependent){
 
+  get.CDR1 <- function(problem,objFun) {
+    dir=paste0(DataDir,'CMAES/CDR/',paste('full',problem,dim,objFun,'weights',ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
+    files=list.files(dir,paste(problem,dim,sep='.'))
+    CDR = get.files(dir,files)
+    CDR$ObjFun = objFun
+    return(CDR)
+  }
 
+  CDR <- do.call(rbind, lapply(c('MinimumMakespan','MinimumRho'),
+                               function(objFun) { ldply(problems, get.CDR1, objFun)} ))
+
+  CDR <- factorFromName(CDR)
+  CDR$ObjFun <- as.factor(CDR$ObjFun)
+  CDR$Rho <- factorRho(CDR)
+
+  return(CDR)
+
+}
+
+plot.CMABoxplot <- function(CDR.CMA,SDR=NULL){
+  pref.boxplot(CDR.CMA,SDR,'ObjFun',xText = 'CMA-ES objective function')
+}
