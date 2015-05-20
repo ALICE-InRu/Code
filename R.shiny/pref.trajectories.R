@@ -1,4 +1,4 @@
-get.trainingDataSize <- function(problems,dim,tracks='ALL'){
+get.trainingDataSize <- function(problems,dim,tracks=c('ALL','CMAESMINRHO')){
   get.trainingDataSize1 <- function(problem){
     fname=paste(paste0(DataDir,'Stepwise/size'),'trainingSet',problem,dim,'csv',sep='.')
     if(file.exists(fname)){ stat=read_csv(fname)
