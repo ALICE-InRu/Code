@@ -28,7 +28,7 @@ plot.trainingDataSize <- function(trainingDataSize){
   return(p)
 }
 
-get.preferenceSetSize <- function(problems,dim,tracks='ALL',ranks=c('a','b','f','p')){
+get.preferenceSetSize <- function(problems,dim,tracks=c('ALL','CMAESMINRHO'),ranks=c('a','b','f','p')){
   get.preferenceSetSize1 <- function(problem,rank){
     fname=paste(paste0(DataDir,'Stepwise/size'),'prefSet',problem,dim,rank,'csv',sep='.')
     if(file.exists(fname)){ stat=read_csv(fname)
@@ -69,6 +69,9 @@ joinRhoSDR <- function(rhoTracksRanks,SDR){
     SDR$Rank=NA
     SDR$Track=SDR$SDR
     SDR$Model='SDR'
+    ix=grepl('CMA',SDR$Track)
+    if(any(ix)){ SDR$Model[ix]='CMA-ES' }
+
     cols=intersect(names(rhoTracksRanks),names(SDR))
     rhoTracksRanks=rbind(rhoTracksRanks[,cols],SDR[,cols])
   }
@@ -79,9 +82,9 @@ plot.rhoTracksRanks <- function(rhoTracksRanks,SDR=NULL){
 
   if(is.null(rhoTracksRanks)){ return(NULL) }
   #pref.boxplot(rhoTracksRanks,all.dataset.SDR,'Rank','Track',xText = 'Ranking')
-  rhoTracksRanks=joinRhoSDR(rhoTracksRanks,SDR)
-  rhoTracksRanks$Rank = factorRank(rhoTracksRanks$Rank,F)
-  rhoTracksRanks = factorTrack(rhoTracksRanks)
+  rhoTracksRanks <- joinRhoSDR(rhoTracksRanks,SDR)
+  rhoTracksRanks$Rank <- factorRank(rhoTracksRanks$Rank,F)
+  rhoTracksRanks <- factorTrack(rhoTracksRanks)
 
   p <- ggplot(data=rhoTracksRanks , aes(y=Rho, x=Track , fill=Rank)) + geom_boxplot() +
     facet_grid(Problem ~ Track, scale='free')+

@@ -71,6 +71,11 @@ factorTrack <- function(x){
     x$Track[ix]='Perturbed\nLeader'
     lvs=c(lvs,'Perturbed\nLeader')
   }
+  ix=grepl('CMA', x$Track)
+  if(any(ix)){
+    x$Track[ix]='CMA-ES'
+    lvs=c(lvs,'CMA-ES')
+  }
 
   x$Track=factor(x$Track, levels=lvs)
   droplevels(x)
