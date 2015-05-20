@@ -19,7 +19,8 @@ namespace ALICE
             SPT,
             LPT,
             OPT,
-            CMA,
+            CMAESMINCMAX,
+            CMAESMINRHO,
             RND,
             ILUNSUP,
             ILSUP,
@@ -118,8 +119,12 @@ namespace ALICE
                     }
 
                     break;
-                case Trajectory.CMA:
-                    strTrack = GetCMAESModel(out Model);
+                case Trajectory.CMAESMINCMAX:
+                    GetCMAESModel(out Model, CMAESData.ObjectiveFunction.MinimumMakespan);
+                    _trajectory = ChooseWeightedJob;
+                    break;
+                case Trajectory.CMAESMINRHO:
+                    GetCMAESModel(out Model, CMAESData.ObjectiveFunction.MinimumRho);
                     _trajectory = ChooseWeightedJob;
                     break;
                 case Trajectory.OPT:
@@ -180,14 +185,11 @@ namespace ALICE
             return String.Format("IL{0}{1}", currentIter, Track.ToString().Substring(2));
         }
 
-        private string GetCMAESModel(out LinearModel model, CMAESData.ObjectiveFunction objFun = CMAESData.ObjectiveFunction.MinimumRho)
+        private void GetCMAESModel(out LinearModel model, CMAESData.ObjectiveFunction objFun)
         {
             model = new LinearModel(Distribution, Dimension, objFun, false,
                 new DirectoryInfo(String.Format(@"{0}\..", FileInfo.DirectoryName)));
-
-            return string.Format("CMAESMIN{0}", objFun == CMAESData.ObjectiveFunction.MinimumMakespan ? "CMAX" : "RHO");
         }
-
 
         public void Write()
         {
