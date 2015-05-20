@@ -70,7 +70,7 @@ joinRhoSDR <- function(rhoTracksRanks,SDR){
     SDR$Track=SDR$SDR
     SDR$Model='SDR'
     ix=grepl('CMA',SDR$Track)
-    if(any(ix)){ SDR$Model[ix]='CMA-ES' }
+    if(any(ix)){ SDR$Model[ix]='MinRho' }
 
     cols=intersect(names(rhoTracksRanks),names(SDR))
     rhoTracksRanks=rbind(rhoTracksRanks[,cols],SDR[,cols])
