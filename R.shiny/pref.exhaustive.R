@@ -286,51 +286,34 @@ get.bestPrefModel <- function(paretoFront){
 
   paretoFront$BestInfo=interaction(paretoFront$File,paretoFront$NrFeat,paretoFront$Model)
 
-  #best <- list(
-  #  'Max.Accuracy.Optimality'=merge(
-  #    aggregate(Validation.Accuracy.Optimality ~ Problem, paretoFront, max), paretoFront),
-  #  'Min.Rho'=merge(
-  #    aggregate(Validation.Rho ~ Problem, paretoFront, min), paretoFront))
-
-  Summary = ddply(paretoFront,~Problem,summarise,
-                  Max.Accuracy.Optimality=BestInfo[
-                    Validation.Accuracy.Optimality==max(Validation.Accuracy.Optimality)],
-                  Min.Rho=BestInfo[Validation.Rho==min(Validation.Rho)])
+  best <- list(
+    'Max.Accuracy.Optimality'=merge(
+      aggregate(Validation.Accuracy.Optimality ~ Problem, paretoFront, max), paretoFront),
+    'Min.Rho'=merge(
+      aggregate(Validation.Rho ~ Problem, paretoFront, min), paretoFront))
 
   Stepwise=NULL
-  for(i in 1:nrow(Summary))
-  {
-    tmp=subset(paretoFront, Problem==Summary$Problem[i] & BestInfo==Summary$Max.Accuracy.Optimality[i])
-    acc=subset(get.optAccuracy(tmp$File,F),NrFeat==tmp$NrFeat & Model==tmp$Model)
-    acc=acc[,c('Step','validation.isOptimal')];colnames(acc)[2]='value'
-    acc$Problem=tmp$Problem;
-    acc$CDR=tmp$CDR
-    acc$variable='Max.Accuracy.Optimality'
-    acc$Accuracy='Optimality'
-    Stepwise=rbind(Stepwise,acc)
-    acc=subset(get.prefAccuracy(tmp$File,'Validation.Accuracy'),NrFeat==tmp$NrFeat & Model==tmp$Model)
-    acc=acc[,c('Step','value')]
-    acc$Problem=tmp$Problem;
-    acc$CDR=tmp$CDR
-    acc$variable='Max.Accuracy.Optimality'
-    acc$Accuracy='Classification'
-    Stepwise=rbind(Stepwise,acc)
+  for(var in names(best)){
+    for(problem in unique(best[var][[1]]$Problem)){
+      tmp=rankPareto(subset(best[var][[1]],Problem==problem),'Validation.Accuracy.Classification')$Front
 
-    tmp=subset(paretoFront, Problem==Summary$Problem[i] & BestInfo==Summary$Min.Rho[i])
-    rho=subset(get.optAccuracy(tmp$File,F),NrFeat==tmp$NrFeat & Model==tmp$Model)
-    rho=rho[,c('Step','validation.isOptimal')];colnames(rho)[2]='value'
-    rho$Problem=tmp$Problem
-    rho$CDR=tmp$CDR
-    rho$variable='Min.Rho'
-    rho$Accuracy='Optimality'
-    Stepwise=rbind(Stepwise,rho)
-    rho=subset(get.prefAccuracy(tmp$File,'Validation.Accuracy'),NrFeat==tmp$NrFeat & Model==tmp$Model)
-    rho=rho[,c('Step','value')]
-    rho$Problem=tmp$Problem
-    rho$CDR=tmp$CDR
-    rho$variable='Min.Rho'
-    rho$Accuracy='Classification'
-    Stepwise=rbind(Stepwise,rho)
+      acc=subset(get.optAccuracy(tmp$File,F),NrFeat==tmp$NrFeat & Model==tmp$Model)
+      acc=acc[,c('Step','validation.isOptimal')];colnames(acc)[2]='value'
+      acc$Problem=tmp$Problem;
+      acc$CDR=tmp$CDR
+      acc$variable=var
+      acc$Accuracy='Optimality'
+      Stepwise=rbind(Stepwise,acc)
+
+      acc=subset(get.prefAccuracy(tmp$File,'Validation.Accuracy'),NrFeat==tmp$NrFeat & Model==tmp$Model)
+      acc=acc[,c('Step','value')]
+      acc$Problem=tmp$Problem;
+      acc$CDR=tmp$CDR
+      acc$variable=var
+      acc$Accuracy='Classification'
+      Stepwise=rbind(Stepwise,acc)
+
+    }
   }
 
   return(list('Summary'=Summary,'Stepwise'=Stepwise))
