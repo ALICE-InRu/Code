@@ -43,7 +43,7 @@ output$plot.preferenceSetSize <- renderPlot({
 })
 
 all.rhoTracksRanks <- reactive({
-  file_list <- get.CDR.file_list(input$problems,input$dimension,c(sdrs,'ALL','OPT','CMAESMINRHO'),
+  file_list <- get.CDR.file_list(input$problem,input$dimension,c(sdrs,'ALL','OPT','CMAESMINRHO'),
                                  c('a','b','f','p'),F,'equal')
   get.many.CDR(file_list,'train')
 })
@@ -55,7 +55,7 @@ comparison <- reactive({
   if(!input$plotSDR) return(NULL)
   SDR=SDR()
   if(any(grepl('CMA-ES',rhoTracksRanks()$Track))){
-    CMA <- get.CDR.CMA(input$problems, input$dimension, F, 'MinimumRho')
+    CMA <- get.CDR.CMA(input$problem, input$dimension, F, 'MinimumRho')
     CMA$SDR = 'CMA-ES'
     SDR <- rbind(SDR,CMA[,names(CMA) %in% names(SDR)])
   }
