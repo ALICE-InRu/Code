@@ -16,7 +16,10 @@ server <- function(input, output, session) {
 
   observe({
     lvs = levels(droplevels(subset(dataset.OPT,Dimension==input$dimension))$Problem)
-    updateSelectInput(session, "problems", choices =  lvs, selected = lvs[1])
+    updateSelectInput(session, "problems", choices =  lvs, selected = lvs)
+  })
+  observe({
+    updateSelectInput(session, "problem", choices =  input$problems)
   })
 
 }
