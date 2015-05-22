@@ -3,7 +3,7 @@ output$tabSDR <- renderUI({
     fluidRow(
       box(title="Settings", width=3,
           radioButtons("sdr.plot", "Plot type", c("Box plot"="boxplot","Density plot"="density"))),
-      box(title="Plot", width=9, plotOutput("plot.SDR")) # Figure A.1
+      box(title="Plot", width=9, plotOutput("plot.SDR", height=600)) # Figure A.1
     )
   )
 })
