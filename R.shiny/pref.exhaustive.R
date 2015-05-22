@@ -48,6 +48,9 @@ plot.exhaust.paretoWeights <- function(paretoFront,timedependent=F,save=NA){
 plot.exhaust.bestAcc <- function(StepwiseOptimality,bestPrefModel,save=NA){
   if(is.null(bestPrefModel)|is.null(StepwiseOptimality)) { return(NULL) }
 
+  StepwiseOptimality$Stats = subset(StepwiseOptimality$Stats,Problem %in% bestPrefModel$Summary$Problem)
+  StepwiseOptimality$Raw = subset(StepwiseOptimality$Raw,Problem %in% bestPrefModel$Summary$Problem)
+
   p0=plot.stepwiseOptimality(StepwiseOptimality,T,F)
 
   p=p0+facet_wrap(~Problem)+
@@ -74,18 +77,10 @@ plot.exhaust.bestBoxplot <- function(bestPrefModel,SDR=NULL,save=NA){
 
     for(r in 1:nrow(bestSummary)){
       problem=bestSummary[r,'Problem']
-
-      for(var in colnames(bestSummary)[2:ncol(bestSummary)]){
-        m=regexpr('(?<File>[a-zA-Z0-9.]+.weights.[a-z]+).(?<NrFeat>[0-9]+).(?<Model>[0-9]+)',
-                  bestSummary[r,var],perl=T)
-        File=getAttribute(bestSummary[r,var],m,'File')
-        NrFeat=getAttribute(bestSummary[r,var],m,'NrFeat',F)
-        Model=getAttribute(bestSummary[r,var],m,'Model',F)
-        dat=get.CDR(File,NrFeat,Model)
-        if(!is.null(dat)){
-          dat$Best=factor(var)
-          CDR <- rbind(CDR,dat)
-        }
+      dat=get.CDR(bestSummary[r,'File'],bestSummary[r,'NrFeat'],bestSummary[r,'Model'])
+      if(!is.null(dat)){
+        dat$Best=factor(bestSummary[r,'variable'])
+        CDR <- rbind(CDR,dat)
       }
     }
     return(CDR)
@@ -283,8 +278,7 @@ get.prefSummary <- function(problems,dim,track,rank,timedependent,bias){
 
 get.bestPrefModel <- function(paretoFront){
   if(is.null(paretoFront)) return(NULL)
-
-  paretoFront$BestInfo=interaction(paretoFront$File,paretoFront$NrFeat,paretoFront$Model)
+  paretoFront = subset(paretoFront, Pareto.front==T)
 
   best <- list(
     'Max.Accuracy.Optimality'=merge(
@@ -294,9 +288,8 @@ get.bestPrefModel <- function(paretoFront){
 
   Stepwise=NULL
   for(var in names(best)){
-    for(problem in unique(best[var][[1]]$Problem)){
-      tmp=rankPareto(subset(best[var][[1]],Problem==problem),'Validation.Accuracy.Classification')$Front
-
+    for(r in 1:nrow(best[var][[1]])){
+      tmp=best[var][[1]][r]
       acc=subset(get.optAccuracy(tmp$File,F),NrFeat==tmp$NrFeat & Model==tmp$Model)
       acc=acc[,c('Step','validation.isOptimal')];colnames(acc)[2]='value'
       acc$Problem=tmp$Problem;
@@ -314,7 +307,11 @@ get.bestPrefModel <- function(paretoFront){
       Stepwise=rbind(Stepwise,acc)
 
     }
+    best[var][[1]] = subset(best[var][[1]],Problem %in% Stepwise$Problem & CDR %in% Stepwise$CDR)
   }
+
+  Summary <- rbind(data.frame(best$Min.Rho,'variable'='Min.Rho'),
+                   data.frame(best$Max.Accuracy.Optimality,'variable'='Max.Accuracy.Optimality'))
 
   return(list('Summary'=Summary,'Stepwise'=Stepwise))
 }
