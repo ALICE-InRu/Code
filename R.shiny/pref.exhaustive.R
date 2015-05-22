@@ -89,7 +89,7 @@ plot.exhaust.bestBoxplot <- function(bestPrefModel,SDR=NULL,save=NA){
   CDR = getBestCDR(bestPrefModel$Summary)
   if(is.null(CDR)){return(NULL)}
 
-
+  if(!is.null(SDR)){   SDR <- subset(SDR, Set %in% CDR$Set) }
   p=pref.boxplot(CDR,SDR,'Best')
 
   if(!is.na(save)){
@@ -289,7 +289,7 @@ get.bestPrefModel <- function(paretoFront){
   Stepwise=NULL
   for(var in names(best)){
     for(r in 1:nrow(best[var][[1]])){
-      tmp=best[var][[1]][r]
+      tmp=best[var][[1]][r,]
       acc=subset(get.optAccuracy(tmp$File,F),NrFeat==tmp$NrFeat & Model==tmp$Model)
       acc=acc[,c('Step','validation.isOptimal')];colnames(acc)[2]='value'
       acc$Problem=tmp$Problem;
