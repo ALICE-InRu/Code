@@ -16,11 +16,9 @@ namespace ALICE
         private readonly int[] _optMakespans;
 
         private readonly Func<double[], double> _objFun;
-
-        public bool OptimistationComplete { get; private set; }
-
-        public int Generation { get; private set; }
         
+        public bool OptimistationComplete { get { return CountEval >= StopEval || FitnessSatisfied(); } }
+        public int Generation { get; private set; }
         public int CountEval { get; private set; }
         public int StopEval { get; private set; } // stop after stopeval number of function evaluations
         private double sigma; // coordinate wise standard deviation (step size)
@@ -88,7 +86,7 @@ namespace ALICE
             if (FileInfo.Exists)
             {
                 //throw new WarningException(String.Format("Optimistation already completed, see results in {0}", FileInfo.Name));
-                OptimistationComplete = true;
+                CountEval = StopEval;
                 return;
             }
 
@@ -276,7 +274,7 @@ namespace ALICE
                 #endregion
 
                 // Break, if fitness is good enough or condition exceeds 1e14, better termination methods are advisable 
-                if (_population[0].Fitness <= _stopFitness || D.Max() > 1e7*D.Min())
+                if (FitnessSatisfied())
                     break;
 
                 if (tryOnce)
@@ -284,8 +282,6 @@ namespace ALICE
             }
 
             #endregion
-
-            OptimistationComplete = true;
 
             #region ------------- Final Message and Plotting Figures --------------------
 
@@ -297,6 +293,13 @@ namespace ALICE
 
             #endregion
 
+            Write();
+        }
+
+        private bool FitnessSatisfied()
+        {
+            if (_population[0] == null) return false;
+            return _population[0].Fitness <= _stopFitness || D.Max() > 1e7 * D.Min();
         }
 
         private void GenerationLoop()

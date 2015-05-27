@@ -752,6 +752,7 @@ namespace Cheshire
                     e.Cancel = true;
                     return;
                 }
+                set.Write();
 
                 bkgWorker.ReportProgress((int)(100.0 * ++iter / sets.Length),
                     new object[]
