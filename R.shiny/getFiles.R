@@ -96,7 +96,7 @@ get.many.CDR <- function(file_list,sets,NrFeat=16,ModelID=1){
 get.CDR <- function(file_list,nrFeat=NULL,modelID=NULL,sets=c('train','test')){
 
   get.CDR1 <- function(file,set){
-    model.rex="(?<Problem>[a-z].[a-z]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Bias>[a-z0-9]+).weights.time"
+    model.rex="(?<Problem>[a-z].[a-z_1]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Bias>[a-z0-9]+).weights.time"
     m=regexpr(model.rex,file,perl=T)
     problem = getAttribute(file,m,'Problem')
     dim=getAttribute(file,m,'Dimension')

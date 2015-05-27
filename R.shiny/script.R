@@ -1,7 +1,7 @@
 source('global.R')
 save=NA
 input=list(dimension='10x10',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd'))
-#input=list(dimension='6x5',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc'))
+#input=list(dimension='6x5',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc','j.rnd_pj1doubled','j.rnd_p1mdoubled'))
 SDR=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension)
 input$bias='equal'
 input$timedependent=F
@@ -20,7 +20,7 @@ gantt=get.gantt(input$problem,input$dimension,'MWR',10)
 plot.gantt(gantt,'30')
 
 source('pref.trajectories.R')
-tracks=c(sdrs,'ALL','OPT'); ranks=c('a','b','f','p')
+tracks=c(sdrs,'ALL','OPT','CMAESMINRHO'); ranks=c('a','b','f','p')
 trainingDataSize=get.trainingDataSize(input$problems,input$dimension,tracks)
 preferenceSetSize=get.preferenceSetSize(input$problems,input$dimension,tracks,ranks)
 CDR.full=get.many.CDR(get.CDR.file_list(input$problems,input$dimension,tracks,ranks,input$timedependent,input$bias),'train')
