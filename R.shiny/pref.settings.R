@@ -38,19 +38,26 @@ rho.statistic <- function(dat,variables,useValidationSet=F){
   return(rho.stats)
 }
 
-create.prefModel <- function(problem,dim,track,rank,bias,timedependent,exhaustive,lmax,scale=F){
-  library('LiblineaR')
-
+formatTrack <- function(track,problem,dim,rank){
   if(substr(track,1,2)=='IL')
   {
     supstr=substr(track,3,100)
     track=paste0('IL',length(list.files(path = paste0(DataDir,'Training'),paste('trdat',problem,dim,paste0('IL[0-9]+',supstr),'Local','diff',rank,'csv',sep='.'))),supstr)
   }
+  return(track)
+}
+
+create.prefModel <- function(problem,dim,track,rank,bias,timedependent,exhaustive,lmax,trdat=NULL){
+  library('LiblineaR')
+
+  track = formatTrack(track,problem,dim,rank)
 
   logFile <- function(exhaustive){
     file = paste(problem,dim,rank,track,bias,'weights',
-                 ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.')
-    if(scale){file=paste('sc',file,sep='.')}
+                 ifelse(timedependent,'timedependent','timeindependent'),sep='.')
+    if(!is.null(trdat)){ file=paste0(file,'_lmax',ifelse(lmax>0,lmax,length(trdat$Y))) }
+    file=paste0(file,'.csv')
+    #if(scale){file=paste('sc',file,sep='.')}
     file = paste0(DataDir,'PREF/weights/',ifelse(exhaustive,'exhaust.','full.'),file)
     return(file)
   }
@@ -61,42 +68,15 @@ create.prefModel <- function(problem,dim,track,rank,bias,timedependent,exhaustiv
   }
   print(fileName)
 
-  getTrainingData <- function(){
+  if(is.null(trdat)){trdat = liblinear.pref.TRDAT(problem,dim,track,rank)}
+  if(is.null(trdat)){return('Data is null! Check if trainingdata exists for chosen trajectory.')}
 
-    useDiff=T
-    dat <- get.files.TRDAT(problem,dim,track,rank,useDiff)
-    if(is.null(dat)){ return(NULL) }
+  linearWeights <- function(trdat){
 
-    if(useDiff) { label = sign(dat$ResultingOptMakespan) } else { label = as.numeric(dat$Rho == 0); }
-
-    features=dat[,grep('phi',colnames(dat))];
-    remove=NULL
-    for(col in 1:ncol(features)) { if(max(features[,col])==min(features[,col])) { remove = c(remove,col)}}
-    if(!is.null(remove)) { features = features[,-remove]}
-
-    if(scale) {
-      ## Rescale each column to range between 0 and 1
-      features=apply(features, MARGIN = 2, FUN = function(X) 2*(X - min(X))/diff(range(X))-1)
-    }
-
-    info = paste('Distribution',problem,'and dimension',dim,'and with',ifelse(useDiff,'preference pairs','direct classification'),'\n------------\n')
-    for(lbl in unique(label)){ info=paste(info,paste('Label',lbl,':',sum(label==lbl)),sep='\n') }
-    info = paste(info,'Features:',sep='\n')
-    info=paste(info, paste(format(stringr::str_split_fixed(colnames(features),'phi.',2)[,2], justfy=F),' ',collapse=''), sep='\n')
-    print(cat(info))
-
-    return(list(Y=label,X=features,PID=dat$PID,STEP=dat$Step, Dimension=dim,Problem=problem,Info=info))
-  }
-
-  dat = getTrainingData()
-  if(is.null(dat)){return('Data is null! Check if trainingdata exists for chosen trajectory.')}
-
-  linearWeights <- function(dat){
-
-    Ntrain=round(quantile(unique(dat$PID),0.8),digit=0) # 20% saved for validation
+    Ntrain=round(quantile(unique(trdat$PID),0.8),digit=0) # 20% saved for validation
     print(paste('Ntrain=',Ntrain))
-    print(paste('(train=',round(100*mean(unique(dat$PID)<=Ntrain),digit=1),'% validation=',round(100*mean(unique(dat$PID)>Ntrain),digit=1),'%)',sep=''))
-    print(paste('(#',length(unique(dat$PID)),' => train=#',sum(unique(dat$PID)<=Ntrain),' validation=#',sum(unique(dat$PID)>Ntrain),')',sep=''))
+    print(paste('(train=',round(100*mean(unique(trdat$PID)<=Ntrain),digit=1),'% validation=',round(100*mean(unique(trdat$PID)>Ntrain),digit=1),'%)',sep=''))
+    print(paste('(#',length(unique(trdat$PID)),' => train=#',sum(unique(trdat$PID)<=Ntrain),' validation=#',sum(unique(trdat$PID)>Ntrain),')',sep=''))
 
     liblinearModel <- function(xTrain, yTrain, prob, lmax){
       # Logistic Regression
@@ -104,12 +84,11 @@ create.prefModel <- function(problem,dim,track,rank,bias,timedependent,exhaustiv
 
       if(is.null(ncol(xTrain))) { xTrain=cbind(xTrain,rep(0,length(xTrain))) }
 
-      if(is.null(lmax)){lmax=nrow(xTrain)}
-
-      smpl=sample(nrow(xTrain), lmax, replace=T, prob=prob)
-
-      xTrain=xTrain[smpl,]
-      yTrain=yTrain[smpl]
+      if(lmax>0){
+        smpl=sample(nrow(xTrain), lmax, replace=T, prob=prob)
+        xTrain=xTrain[smpl,]
+        yTrain=yTrain[smpl]
+      }
 
       # Train PREF model
       model = LiblineaR(xTrain,yTrain, type=t, cost=1, epsilon = 0.005, bias = F)
@@ -206,12 +185,12 @@ create.prefModel <- function(problem,dim,track,rank,bias,timedependent,exhaustiv
       }
     }
 
-    dat$Bias = get.stepwiseBias(dat$STEP, problem, dim, bias)
-    phiCol = grep('phi',colnames(dat$X));
+    trdat$Bias = get.stepwiseBias(trdat$STEP, problem, dim, bias)
+    phiCol = grep('phi',colnames(trdat$X));
 
     # use all features
     combo=list(Info=data.frame(rbind(phiCol),validation.acc.mu=NA,training.acc.mu=NA,row.names=1))
-    m = full.model(dat,phiCol)
+    m = full.model(trdat,phiCol)
     combo=addModelInfo(combo,1,m)
     allResults = list(FeatureAll=combo)
     logExhaustive(allResults$FeatureAll,length(phiCol))
@@ -222,7 +201,7 @@ create.prefModel <- function(problem,dim,track,rank,bias,timedependent,exhaustiv
     combo=list(Info=data.frame('X1'=phiCol,validation.acc.mu=NA,training.acc.mu=NA))
     rownames(combo$Info)=c(1:nrow(combo$Info))
     for(r in phiCol){
-      m=full.model(dat,c(r,r))
+      m=full.model(trdat,c(r,r))
       combo=addModelInfo(combo,r,m)
     }
     allResults = append(allResults,list(Feature1=combo))
@@ -233,7 +212,7 @@ create.prefModel <- function(problem,dim,track,rank,bias,timedependent,exhaustiv
     combo$Info = combo$Info[combo$Info$X1 < combo$Info$X2,]
     rownames(combo$Info)=c(1:nrow(combo$Info))
     for(r in 1:nrow(combo$Info)){
-      m=full.model(dat,as.numeric(combo$Info[r,1:2]))
+      m=full.model(trdat,as.numeric(combo$Info[r,1:2]))
       combo=addModelInfo(combo,r,m)
     }
     allResults = append(allResults,list(Feature2=combo))
@@ -244,7 +223,7 @@ create.prefModel <- function(problem,dim,track,rank,bias,timedependent,exhaustiv
     combo$Info = combo$Info[combo$Info$X1 < combo$Info$X2 & combo$Info$X2<combo$Info$X3,]
     rownames(combo$Info)=c(1:nrow(combo$Info))
     for(r in 1:nrow(combo$Info)){
-      m=full.model(dat,as.numeric(combo$Info[r,1:3]))
+      m=full.model(trdat,as.numeric(combo$Info[r,1:3]))
       combo=addModelInfo(combo,r,m)
     }
     allResults = append(allResults,list(Feature3=combo))
@@ -253,7 +232,46 @@ create.prefModel <- function(problem,dim,track,rank,bias,timedependent,exhaustiv
 
   }
 
-  allResults=linearWeights(dat)
-  return(paste('Trained on',round(100*lmax/nrow(dat$X)),'% of the total preference set'))
+  allResults=linearWeights(trdat)
+  return(paste('Trained on',round(100*lmax/nrow(trdat$X)),'% of the total preference set'))
 }
 
+liblinear.pref.TRDAT <- function(problem,dim,track,rank,scale=F){
+
+  useDiff=T
+  trdat <- get.files.TRDAT(problem,dim,track,rank,useDiff)
+  if(is.null(trdat)){ return(NULL) }
+
+  if(useDiff) { label = sign(trdat$ResultingOptMakespan) } else { label = as.numeric(trdat$Rho == 0); }
+
+  features=trdat[,grep('phi',colnames(trdat))];
+  remove=NULL
+  for(col in 1:ncol(features)) { if(max(features[,col])==min(features[,col])) { remove = c(remove,col)}}
+  if(!is.null(remove)) { features = features[,-remove]}
+
+  if(scale) {
+    ## Rescale each column to range between 0 and 1
+    features=apply(features, MARGIN = 2, FUN = function(X) 2*(X - min(X))/diff(range(X))-1)
+  }
+
+  info = paste('Distribution',problem,'and dimension',dim,'and with',ifelse(useDiff,'preference pairs','direct classification'),'\n------------\n')
+  for(lbl in unique(label)){ info=paste(info,paste('Label',lbl,':',sum(label==lbl)),sep='\n') }
+  info = paste(info,'Features:',sep='\n')
+  info=paste(info, paste(format(stringr::str_split_fixed(colnames(features),'phi.',2)[,2], justfy=F),' ',collapse=''), sep='\n')
+  print(cat(info))
+
+  return(list(Y=label,X=features,PID=trdat$PID,STEP=trdat$Step, Dimension=dim,Problem=problem,Info=info))
+}
+
+create.prefModel.varyLMAX <- function(problem,dim,track,rank,stepSize=50000){
+  all.trdat <- liblinear.pref.TRDAT(problem,dim,formatTrack(track,problem,dim,rank),rank)
+  for(lmax in seq(stepSize,length(all.trdat$Y),stepSize)){
+    smpl=1:lmax
+    trdat=all.trdat
+    trdat$X=all.trdat$X[smpl,]
+    trdat$Y=all.trdat$Y[smpl]
+    trdat$PID=all.trdat$PID[smpl]
+    trdat$STEP=all.trdat$STEP[smpl]
+    create.prefModel(problem,dim,track,rank,'equal',F,F,0,trdat)
+  }
+}
