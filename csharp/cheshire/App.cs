@@ -775,7 +775,7 @@ namespace Cheshire
         private void startAsyncButtonApply_Click(object sender, EventArgs e)
         {
             LinearModel[] models = GetModels();
-
+            
             RawData[] datas = (from dim in DimensionApply.CheckedItems.Cast<string>()
                 from problem in ProblemsApply.CheckedItems.Cast<string>()
                 from set in Set.CheckedItems.Cast<string>()
@@ -783,12 +783,12 @@ namespace Cheshire
                     new RawData(problem, dim, (RawData.DataSet) Enum.Parse(typeof (RawData.DataSet), set),
                         Extended.CheckedItems.Count > 0, DataDir)).ToArray();
 
-            CDRData[] sets = (from data in datas
+            CDRData[] sets = models==null ? null : (from data in datas
                 from model in models
                 select
                     new CDRData(data, model)).ToArray();
 
-            if (sets.Length == 0)
+            if (sets == null || sets.Length == 0)
             {
                 textContent.AppendText("\nCannot apply sets to models:");
                 if (ProblemsApply.CheckedItems.Count == 0)
@@ -820,19 +820,27 @@ namespace Cheshire
                 int numFeatures = Convert.ToInt32(NumFeatures.Value);
                 int modelID = Convert.ToInt32(ModelIndex.Value);
 
-                if (ApplyModel.SelectedItem.ToString() == "PREF")
-                    models = (from dim in Dimension.CheckedItems.Cast<string>()
-                        from problem in Problems.CheckedItems.Cast<string>()
-                        from track in Tracks.CheckedItems.Cast<string>()
-                        from rank in Ranks.CheckedItems.Cast<string>()
-                        select new LinearModel(problem, dim,
-                            (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
-                            Extended.CheckedItems.Count > 0,
-                            (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank), dependentModel,
-                            DataDir, iter, stepwiseBias, numFeatures, modelID)).ToArray();
-                else
+                switch (ApplyModel.SelectedItem.ToString())
                 {
-                    models = GetAllExhaustiveModels(stepwiseBias);
+                    case "PREF":
+                        models = (from dim in Dimension.CheckedItems.Cast<string>()
+                            from problem in Problems.CheckedItems.Cast<string>()
+                            from track in Tracks.CheckedItems.Cast<string>()
+                            from rank in Ranks.CheckedItems.Cast<string>()
+                            select new LinearModel(problem, dim,
+                                (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
+                                Extended.CheckedItems.Count > 0,
+                                (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank), dependentModel,
+                                DataDir, iter, stepwiseBias, numFeatures, modelID)).ToArray();
+                        break;
+                    case "PREF-exhaust":
+                        models = GetAllPrefModels(stepwiseBias, iter, LinearModel.GetAllExhaustiveModels);
+                        break;
+                    case "PREF-varyLMAX":
+                        models = GetAllPrefModels(stepwiseBias, iter, LinearModel.GetAllVaryLmaxModels);
+                        break;
+                    default:
+                        throw new NotImplementedException();
                 }
 
                 if (models != null && models.Length != 0) return models;
@@ -867,14 +875,17 @@ namespace Cheshire
             return null;
         }
 
-        private LinearModel[] GetAllExhaustiveModels(string stepwiseBias)
+        private LinearModel[] GetAllPrefModels(string stepwiseBias, int iter,
+            Func
+                <string, string, TrainingSet.Trajectory, int, bool, PreferenceSet.Ranking, bool, DirectoryInfo, string,
+                    LinearModel[]> getModelsFunc)
         {
             foreach (var models in from problem in Problems.CheckedItems.Cast<string>()
                 from dim in Dimension.CheckedItems.Cast<string>()
                 from rank in Ranks.CheckedItems.Cast<string>()
                 from track in Tracks.CheckedItems.Cast<string>()
-                select LinearModel.GetAllExhaustiveModels(problem, dim,
-                    (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
+                select getModelsFunc(problem, dim,
+                    (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track), iter,
                     Extended.CheckedItems.Count > 0,
                     (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank),
                     false, DataDir, stepwiseBias)

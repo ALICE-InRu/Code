@@ -227,20 +227,68 @@ namespace ALICE
         {
             LocalWeights = localWeights;
         }
-
+        
         public static LinearModel[] GetAllExhaustiveModels(string distribution, string dimension,
-            TrainingSet.Trajectory track, bool extended, PreferenceSet.Ranking rank, bool timedependent,
+            TrainingSet.Trajectory track, int iter, bool extended, PreferenceSet.Ranking rank, bool timedependent,
             DirectoryInfo dataDir, string stepwiseBias)
         {
-            string pat = String.Format("exhaust.{0}.{1}.{2}.{3}{4}.{5}.weights.{6}.csv",
-                distribution, dimension, (char) rank,
-                track, extended ? "EXT" : "", stepwiseBias, timedependent ? "timedependent" : "timeindependent");
+            string pat = String.Format("exhaust.{0}.{1}.{2}.{3}.{4}.weights.{5}.csv",
+                distribution, dimension, (char) rank, Trajectory2String(track, iter, extended),
+                stepwiseBias, timedependent ? "timedependent" : "timeindependent");
 
             DirectoryInfo dir = new DirectoryInfo(String.Format(@"{0}\PREF\weights", dataDir.FullName));
             Regex reg = new Regex(pat);
             var files = dir.GetFiles("*.csv").Where(path => reg.IsMatch(path.ToString())).ToList();
 
             return files.Count < 1 ? null : ReadLoggedLinearWeights(files[0], distribution, dimension, Model.PREF);
+        }
+
+        public static LinearModel[] GetAllVaryLmaxModels(string distribution, string dimension,
+            TrainingSet.Trajectory track, int iter, bool extended, PreferenceSet.Ranking rank, bool timedependent,
+            DirectoryInfo dataDir, string stepwiseBias)
+        {
+            string pat = String.Format("full.{0}.{1}.{2}.{3}.{4}.weights.{5}_lmax[0-9]+.csv",
+                distribution, dimension, (char) rank, Trajectory2String(track, iter, extended),
+                stepwiseBias, timedependent ? "timedependent" : "timeindependent");
+
+            DirectoryInfo dir = new DirectoryInfo(String.Format(@"{0}\PREF\weights", dataDir.FullName));
+            Regex reg = new Regex(pat);
+            var files = dir.GetFiles("*.csv").Where(path => reg.IsMatch(path.ToString())).ToList();
+            if (files.Count < 1) return null;
+
+            LinearModel[] models = new LinearModel[0];
+            foreach (
+                var model in
+                    files.Select(file => ReadLoggedLinearWeights(file, distribution, dimension, Model.PREF))
+                        .Where(model => model != null))
+            {
+                Array.Resize(ref models, models.Length + model.Length);
+                Array.Copy(model, 0, models, models.Length - model.Length, model.Length);
+            }
+            return models;
+        }
+
+        private static string Trajectory2String(TrainingSet.Trajectory track, int iter, bool extended)
+        {
+            string str;
+            switch (track)
+            {
+                case TrainingSet.Trajectory.ILSUP:
+                case TrainingSet.Trajectory.ILUNSUP:
+                case TrainingSet.Trajectory.ILFIXSUP:
+                    str = iter > 0
+                        ? String.Format("IL{0}{1}", iter, track.ToString().Substring(2))
+                        : String.Format("{0}", TrainingSet.Trajectory.OPT);
+                    break;
+                default:
+                    str = String.Format("{0}", track);
+                    break;
+            }
+
+            if (extended)
+                str += "EXT";
+
+            return str;
         }
 
         private static LinearModel[] ReadLoggedLinearWeights(FileInfo file, string distribution, string dimension, Model model)

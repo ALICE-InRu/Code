@@ -725,7 +725,8 @@ namespace Cheshire
             this.ApplyModel.Items.AddRange(new object[] {
             "PREF",
             "CMAES",
-            "PREF-exhaust"});
+            "PREF-exhaust",
+            "PREF-varyLMAX"});
             this.ApplyModel.Location = new System.Drawing.Point(65, 71);
             this.ApplyModel.Name = "ApplyModel";
             this.ApplyModel.Size = new System.Drawing.Size(60, 21);
