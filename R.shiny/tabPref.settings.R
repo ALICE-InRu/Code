@@ -60,9 +60,7 @@ output$output.liblinearModel <- renderPrint({
   fW=list.files(paste0(DataDir,'PREF/weights'),paste(ifelse(exhaustive,'exhaust','full'),problem,dimension,rank,tracks,bias,'weights',ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.'))
   if(length(fT)+any(grepl('ALL',tracks))>length(fW)){
 
-    lmax=ifelse(numericDimension(input$dimension)<100,
-                ifelse(timedependent,5000,100000),
-                ifelse(timedependent,100000,500000))
+    lmax=sizePreferenceSet(dimension,timedependent)
 
     for(track in tracks)
       withProgress(message = paste('Create model for',track), value = 0, {

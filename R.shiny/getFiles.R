@@ -78,13 +78,14 @@ get.files.TRDAT <- function(problems,dim,tracks,rank='p',useDiff=F,Global=F){
   return(trdat)
 }
 
-get.CDR.file_list <- function(problems,dim,tracks,ranks,timedependent,bias){
+get.CDR.file_list <- function(problems,dim,tracks,ranks,timedependent,bias,lmax=F){
   if(length(problems)>1) problems=paste0('(',paste(problems,collapse='|'),')')
   ix=grepl('IL',tracks)
   if(any(ix)){ tracks[ix]=paste0(substr(tracks[ix],1,2),'[0-9]+',substr(tracks[ix],3,100)) }
   if(length(tracks)>1) tracks=paste0('(',paste(tracks,collapse='|'),')')
   if(length(ranks)>1) ranks=paste0('(',paste(ranks,collapse='|'),')')
   file_list=list.files(paste0(DataDir,'PREF/CDR/'),paste(problems,dim,ranks,tracks,bias,'weights',ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
+  file_list=file_list[grep('lmax',file_list,invert = !lmax)]
   return(file_list)
 }
 
@@ -103,6 +104,7 @@ get.CDR <- function(file_list,nrFeat=NULL,modelID=NULL,sets=c('train','test')){
     Rank=getAttribute(file,m,'Rank')
     Track=getAttribute(file,m,'Track')
     Bias=getAttribute(file,m,'Bias')
+    lmax=grepl('lmax',file)
 
     fname=paste(DataDir,'PREF/CDR/',file,paste(problem,dim,set,'csv',sep='.'),sep='/')
     if(!file.exists(fname)){return(NULL)}
@@ -110,6 +112,8 @@ get.CDR <- function(file_list,nrFeat=NULL,modelID=NULL,sets=c('train','test')){
     dat$Bias=Bias
     dat$Rank=Rank
     dat$Track=Track
+    if(lmax){ dat$lmax=getAttribute(file,regexpr('_lmax(?<lmax>[0-9]+)',file,perl=T),'lmax',F) }
+
     return(dat)
   }
 
