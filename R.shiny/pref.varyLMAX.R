@@ -2,14 +2,19 @@ create.prefModel.varyLMAX <- function(problem,dim,track,rank,stepSize=50000){
   bias='equal'
   timedependent=F
   all.trdat <- liblinear.pref.TRDAT(problem,dim,formatTrack(track,problem,dim,rank),rank)
+  Bias = get.stepwiseBias(all.trdat$STEP, problem, dim, bias)
 
-  for(lmax in c(seq(stepSize,length(all.trdat$Y),stepSize),length(all.trdat$Y))){
-    smpl=1:lmax
+  fullSet <- length(all.trdat$Y)
+  for(lmax in c(seq(stepSize,fullSet,stepSize),fullSet)){
+    smpl=sample(fullSet, lmax, replace=T, prob=Bias)
+    print(paste('lmax',length(smpl),':',round(length(unique(smpl))/length(smpl)*100,0),'% uniqueness'))
     trdat=all.trdat
-    trdat$X=all.trdat$X[smpl,]
-    trdat$Y=all.trdat$Y[smpl]
-    trdat$PID=all.trdat$PID[smpl]
-    trdat$STEP=all.trdat$STEP[smpl]
+    if(lmax<fullSet){
+      trdat$X=all.trdat$X[smpl,]
+      trdat$Y=all.trdat$Y[smpl]
+      trdat$PID=all.trdat$PID[smpl]
+      trdat$STEP=all.trdat$STEP[smpl]
+    }
     create.prefModel(problem,dim,track,rank,bias,timedependent,F,0,trdat)
   }
 }
@@ -30,7 +35,7 @@ plot.prefModel.varyLMAX <- function(CDR){
 }
 
 stats.prefModel.varyLMAX <- function(CDR){
-  stat <- rho.statistic(CDR,c('Track','lmax','Default'))
+  stat <- rho.statistic(CDR,c('Track','Extended','Supervision','Iter','lmax','Default'))
   stat <- arrange(stat, Training.Rho, Test.Rho) # order w.r.t. lowest mean
   return(stat)
 }

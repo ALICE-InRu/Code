@@ -19,6 +19,7 @@ getFileNamesIL <- function(problem,dim,CDR=T,rank='p',probability='equal',timede
   times=ifelse(timedependent,'timedependent','timeindependent')
   files=list.files(paste0(DataDir,'PREF/CDR'),paste('(full|exhaust)',problem,dim,rank,'*',probability,'weights',times,sep='.'))
   files=files[grep('OPT|IL',files)]
+  files=files[grep('lmax',files,invert = T)]
   return(files)
 }
 
