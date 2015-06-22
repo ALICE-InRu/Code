@@ -274,7 +274,7 @@ create.prefModel.varyLMAX <- function(problem,dim,track,rank,stepSize=50000){
   timedependent=F
   all.trdat <- liblinear.pref.TRDAT(problem,dim,formatTrack(track,problem,dim,rank),rank)
 
-  for(lmax in seq(stepSize,length(all.trdat$Y),stepSize)){
+  for(lmax in c(seq(stepSize,length(all.trdat$Y),stepSize),length(all.trdat$Y))){
     smpl=1:lmax
     trdat=all.trdat
     trdat$X=all.trdat$X[smpl,]
