@@ -348,13 +348,25 @@ namespace ALICE
                     select lookahead.Dispatch1(j, model.FeatureMode)
                     into feat
                     select model.PriorityIndex(feat));
-                var job = ReadyJobs[priority.FindIndex(p => Math.Abs(p - priority.Max()) < 0.001)];
+
+                List<int> ix = priority.Select((x, i) => new {x, i})
+                    .Where(x => Math.Abs(x.x - priority.Max()) < 1e-10)
+                    .Select(x => x.i).ToList();
+
+                var highestPriority = ReadyJobs.Select((x, i) => new { x, i })
+                    .Where(x => ix.Contains(x.i))
+                    .Select(x => x.x).ToList();
+
+                // break ties randomly 
+                var job = highestPriority[_random.Next(0, highestPriority.Count())];
+
                 Dispatch1(job, Features.Mode.None);
             }
         }
 
         public int JobChosenBySDR(SDRData.SDR sdr)
         {
+            List<int> ix;
             switch (sdr)
             {
                 case SDRData.SDR.LWR:
@@ -362,9 +374,14 @@ namespace ALICE
                     List<int> wrm = new List<int>(ReadyJobs.Count);
                     wrm.AddRange(ReadyJobs.Select(job => _jobs[job].WorkRemaining));
 
-                    return sdr == SDRData.SDR.LWR
-                        ? ReadyJobs[wrm.FindIndex(w => w == wrm.Min())]
-                        : ReadyJobs[wrm.FindIndex(w => w == wrm.Max())];
+                    ix =
+                        wrm.Select((x, i) => new {x, i})
+                            .Where(x => x.x == (sdr == SDRData.SDR.LWR
+                                ? wrm.Min()
+                                : wrm.Max()))
+                            .Select(x => x.i).ToList();
+
+                    break;
 
                 case SDRData.SDR.LPT:
                 case SDRData.SDR.SPT:
@@ -372,13 +389,26 @@ namespace ALICE
                     times.AddRange(from job in ReadyJobs
                         let mac = _prob.Sigma[job, _jobs[job].MacCount]
                         select _prob.Procs[job, mac]);
-                    return sdr == SDRData.SDR.SPT
-                        ? ReadyJobs[times.FindIndex(w => w == times.Min())]
-                        : ReadyJobs[times.FindIndex(w => w == times.Max())];
 
+                    ix =
+                        times.Select((x, i) => new {x, i})
+                            .Where(x => x.x == (sdr == SDRData.SDR.SPT
+                                ? times.Min()
+                                : times.Max()))
+                            .Select(x => x.i).ToList();
+
+                    break;
                 default: // unknown, choose at random 
                     return ReadyJobs[_random.Next(0, ReadyJobs.Count())];
             }
+
+            var highestPriority = ReadyJobs.Select((x, i) => new {x, i})
+                .Where(x => ix.Contains(x.i))
+                .Select(x => x.x).ToList();
+
+            return highestPriority.Count == 1
+                ? highestPriority[0]
+                : highestPriority[_random.Next(0, highestPriority.Count())]; // break ties randomly 
         }
 
         public static double RhoMeasure(int trueMakespan, int resultingMakespan)
