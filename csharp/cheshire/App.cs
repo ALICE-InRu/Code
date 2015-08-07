@@ -19,7 +19,7 @@ namespace Cheshire
         {
             InitializeComponent();
             InitializeBackgroundWorker();
-            Icon ico = new Icon(String.Format(@"C:\users\helga\alice\Code\csharp\cheshire\Resources\cheshirecat.ico"));
+            Icon ico = new Icon(String.Format(@"C:\users\helga\alice2\Code\csharp\cheshire\Resources\cheshirecat.ico"));
             Icon = ico;
 
             TimeLimit.Value = AUTOSAVE;

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 
 namespace ALICE
 {
@@ -216,6 +215,12 @@ namespace ALICE
                         case Features.Mode.Local:
                             for (var i = 0; i < Features.LocalCount; i++)
                                 header += string.Format(",phi.{0}", (Features.Local) i);
+
+                            if (dispatch)
+                            {
+                                for (var i = 0; i < Features.ExplanatoryCount; i++)
+                                    header += string.Format(",xi.{0}", (Features.Explanatory) i);
+                            }
                             break;
                     }
                     st.WriteLine(header);
@@ -247,6 +252,11 @@ namespace ALICE
                                 case Features.Mode.Local:
                                     for (var i = 0; i < Features.LocalCount; i++)
                                         info += string.Format(",{0:0}", pref.Feature.PhiLocal[i]);
+
+                                    if (!dispatch) break;
+                             
+                                    for (var i = 0; i < Features.ExplanatoryCount; i++)
+                                        info += string.Format(",{0:0}", pref.Feature.PhiExplanatory[i]);
                                     break;
                             }
                             st.WriteLine(info);

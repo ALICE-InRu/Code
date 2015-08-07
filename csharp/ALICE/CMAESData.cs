@@ -468,21 +468,14 @@ namespace ALICE
                 for (int iFeat = 0; iFeat < Features.LocalCount; iFeat++)
                 {
                     Features.Local feat = (Features.Local) iFeat;
-                    switch (feat)
-                    {
-                        case Features.Local.step:
-                        case Features.Local.procTotal:
-                            continue;
-                        default:
-                            string info = String.Format("Weight,{0},1,phi.{1},NA", NUM_FEATURES - 2, feat);
+                    string info = String.Format("Weight,{0},1,phi.{1},NA", NUM_FEATURES - 2, feat);
 
-                            for (int step = 0; step < numSteps; step++)
-                                info += String.Format(CultureInfo.InvariantCulture, ",{0:R9}",
-                                    linearModel.LocalWeights[iFeat][step]);
+                    for (int step = 0; step < numSteps; step++)
+                        info += String.Format(CultureInfo.InvariantCulture, ",{0:R9}",
+                            linearModel.LocalWeights[iFeat][step]);
 
-                            st.WriteLine(info);
-                            break;
-                    }
+                    st.WriteLine(info);
+                    break;
                 }
                 st.Close();
             }

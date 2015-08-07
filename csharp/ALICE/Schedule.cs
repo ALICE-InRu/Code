@@ -13,6 +13,7 @@ namespace ALICE
         public List<int> ReadyJobs;
         private readonly Jobs[] _jobs;
         private readonly Macs[] _macs;
+        private readonly int _totProcTime; 
 
         public int Makespan;
         private readonly ProblemInstance _prob;
@@ -36,14 +37,15 @@ namespace ALICE
                 for (int a = 0; a < _prob.NumMachines; a++)
                     totalWork += _prob.Procs[job, a];
                 _jobs[job] = new Jobs(job, totalWork, _prob.NumMachines);
+                _totProcTime += totalWork; // total work for all jobs (is equivalent to total work for all machines)
             }
 
             for (int mac = 0; mac < _prob.NumMachines; mac++)
             {
-                int wrm = 0;
+                int totalWork = 0;
                 for (int j = 0; j < _prob.NumJobs; j++)
-                    wrm += _prob.Procs[j, mac];
-                _macs[mac] = new Macs(mac, wrm);
+                    totalWork += _prob.Procs[j, mac];
+                _macs[mac] = new Macs(mac, totalWork);
             }
 
             _slotAllocation = slotAllocation.Substring(0, 5).ToLower().Equals("first")
@@ -95,7 +97,7 @@ namespace ALICE
         public class Jobs
         {
             public readonly int Index;
-            public int TotProcTime;
+            public readonly int TotProcTime;
             public int WorkRemaining;
             public int MacCount;
             public int Free;
@@ -111,9 +113,8 @@ namespace ALICE
 
             public Jobs Clone()
             {
-                Jobs clone = new Jobs(Index, WorkRemaining, XTime.Length)
+                Jobs clone = new Jobs(Index, TotProcTime, XTime.Length)
                 {
-                    TotProcTime = TotProcTime,
                     WorkRemaining = WorkRemaining,
                     MacCount = MacCount,
                     Free = Free
@@ -136,6 +137,7 @@ namespace ALICE
         {
             public readonly int Index;
             public int JobCount;
+            public readonly int TotProcTime;
             public int WorkRemaining;
             public int Makespan;
             public int TotSlack;
@@ -143,16 +145,18 @@ namespace ALICE
             public int[] STime = new int[0];
             public int[] Slacks = new int[0];
 
-            public Macs(int index, int workRemaining)
+            public Macs(int index, int totProcTime)
             {
                 Index = index;
-                WorkRemaining = workRemaining;
+                TotProcTime = totProcTime;
+                WorkRemaining = totProcTime;
             }
 
             public Macs Clone()
             {
-                Macs clone = new Macs(Index, WorkRemaining)
+                Macs clone = new Macs(Index, TotProcTime)
                 {
+                    WorkRemaining = WorkRemaining,
                     JobCount = JobCount,
                     Makespan = Makespan,
                     TotSlack = TotSlack,
@@ -309,7 +313,7 @@ namespace ALICE
                 case Features.Mode.Local:
                     phi.GetLocalPhi(_jobs[job], _macs[dispatch.Mac], _prob.Procs[job, dispatch.Mac],
                         _jobs.Sum(p => p.WorkRemaining), _macs.Sum(p => p.TotSlack), Makespan, Sequence.Count,
-                        dispatch.StartTime, arrivalTime, slotReduced);
+                        dispatch.StartTime, arrivalTime, slotReduced, _totProcTime);
                     return phi;
                 //case FeatureType.None:
                 default:

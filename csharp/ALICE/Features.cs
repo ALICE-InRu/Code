@@ -23,16 +23,12 @@ namespace ALICE
             endTime, // end time 
             jobOps, // number of jobs 
             arrival, // arrival time of job
-            //wrm, // work remaining for job
-            //mwrm, // most work remaining for schedule (could be other job)
-            procTotal, // total processing times
             wait, // wait for job
 
             #endregion
 
             #region mac-related
 
-            mac,
             macOps, // number of macs
             macFree, // current makespan for mac 
             makespan, // current makespan for schedule
@@ -41,7 +37,6 @@ namespace ALICE
 
             #region slack related
 
-            step, // current step 
             slotReduced, // slack reduced from job assignment 
             slots, // total slack on mac
             slotsTotal, // total slacks for schedule
@@ -57,6 +52,15 @@ namespace ALICE
 
             #endregion
 
+        }
+
+        public enum Explanatory
+        {
+            mac,
+            step, // current step 
+            totProcTime, // total processing times
+            macTotProcTime, // total processing times for mac
+            jobTotProcTime, // total processing times for job            
         }
 
         public static int LocalCount
@@ -90,9 +94,15 @@ namespace ALICE
             get { return Enum.GetNames(typeof (Global)).Length; }
         }
 
+        public static int ExplanatoryCount
+        {
+            get { return Enum.GetNames(typeof(Explanatory)).Length; }            
+        }
+
 
         // ReSharper disable once InconsistentNaming
         private int[] RND = new int[100];
+        public int[] PhiExplanatory = new int[ExplanatoryCount];
         public int[] PhiLocal = new int[LocalCount];
         public double[] PhiGlobal = new double[GlobalCount];
         public bool[] Equiv = new bool[SDRData.SDRCount];
@@ -115,7 +125,7 @@ namespace ALICE
         }
 
         public void GetLocalPhi(Schedule.Jobs job, Schedule.Macs mac, int proc, int wrmTotal, int slotsTotal,
-            int makespan, int step, int startTime, int arrivalTime, int reduced)
+            int makespan, int step, int startTime, int arrivalTime, int reduced, int totProcTime)
         {
             #region job related
 
@@ -130,18 +140,25 @@ namespace ALICE
 
             #region machine related
 
-            PhiLocal[(int)Local.mac] = mac.Index;
             PhiLocal[(int)Local.macFree] = mac.Makespan;
             PhiLocal[(int)Local.macOps] = mac.JobCount;
 
             #endregion
 
+            #region explanatory for features, static per step
+
+            PhiExplanatory[(int)Explanatory.mac] = mac.Index;
+            PhiExplanatory[(int)Explanatory.totProcTime] = totProcTime;
+            PhiExplanatory[(int)Explanatory.macTotProcTime] = mac.TotProcTime;
+            PhiExplanatory[(int)Explanatory.jobTotProcTime] = job.TotProcTime;
+            PhiExplanatory[(int)Explanatory.step] = step;
+            
+            #endregion 
+
             #region schedule related
 
-            PhiLocal[(int)Local.procTotal] = job.TotProcTime;
             PhiLocal[(int)Local.makespan] = makespan;
-            PhiLocal[(int)Local.step] = step;
-
+            
             #endregion
 
             #region work remaining
