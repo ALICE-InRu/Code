@@ -364,8 +364,9 @@ namespace ALICE
             }
             if (linearWeights != null) models.Add(linearWeights);
 
+            int d = Features.LocalCount;
             int minNum = Regex.IsMatch(file.Name, "exhaust")
-                ? NChooseK(16, 1) + NChooseK(16, 2) + NChooseK(16, 3) + NChooseK(16, 16)
+                ? NChooseK(d, 1) + NChooseK(d, 2) + NChooseK(d, 3) + NChooseK(d, d)
                 : 1;
 
             return models.Count == minNum
