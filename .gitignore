@@ -29,6 +29,7 @@ csharp/cheshire/bin/x64/Debug/
 *.suo
 *.pdb
 *.cache
+*.log
 
 # Code: MATLAB
 MATLAB/liblinear-1.94
