@@ -256,7 +256,7 @@ namespace ALICE
                                     if (!dispatch) break;
                              
                                     for (var i = 0; i < Features.ExplanatoryCount; i++)
-                                        info += string.Format(",{0:0}", pref.Feature.PhiExplanatory[i]);
+                                        info += string.Format(",{0:0}", pref.Feature.XiExplanatory[i]);
                                     break;
                             }
                             st.WriteLine(info);

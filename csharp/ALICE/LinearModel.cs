@@ -72,10 +72,10 @@ namespace ALICE
             switch (sdr)
             {
                 case SDRData.SDR.MWR:
-                    LocalWeights[(int) Features.Local.wrmJob][0] = +1;
+                    LocalWeights[(int) Features.Local.jobWrm][0] = +1;
                     return;
                 case SDRData.SDR.LWR:
-                    LocalWeights[(int) Features.Local.wrmJob][0] = -1;
+                    LocalWeights[(int) Features.Local.jobWrm][0] = -1;
                     return;
                 case SDRData.SDR.SPT:
                     LocalWeights[(int) Features.Local.proc][0] = -1;

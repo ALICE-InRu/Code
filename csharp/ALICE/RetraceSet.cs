@@ -91,7 +91,7 @@ namespace ALICE
         public new string Apply(int pid)
         {
             NumApplied++;
-            return Retrace(pid, FeatureMode == Features.Mode.Local, null);
+            return Retrace(pid, NumDimension < 100 && FeatureMode == Features.Mode.Local, null);
         }
 
         internal string Retrace(int pid, Func<int, int, Schedule, int> applyFunc)

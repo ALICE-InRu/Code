@@ -21,7 +21,6 @@ namespace ALICE
             proc = 0, // processing time
             startTime, // start time 
             endTime, // end time 
-            jobOps, // number of jobs 
             arrival, // arrival time of job
             wait, // wait for job
 
@@ -29,7 +28,6 @@ namespace ALICE
 
             #region mac-related
 
-            macOps, // number of macs
             macFree, // current makespan for mac 
             makespan, // current makespan for schedule
 
@@ -37,18 +35,22 @@ namespace ALICE
 
             #region slack related
 
-            slotReduced, // slack reduced from job assignment 
-            slots, // total slack on mac
-            slotsTotal, // total slacks for schedule
-            //slotCreated, // true if slotReduced < 0
+            reducedSlack, // slack reduced from job assignment 
+            macSlack, // total slack on mac
+            allSlack, // total slacks for schedule
 
             #endregion
 
-            #region work remaining
+            #region mac / job counterparts
 
-            wrmMac, // work remaining for mac
-            wrmJob, // work remaining for job
-            wrmTotal // work remaining for total
+            jobOps, // number of jobs 
+            macOps, // number of macs
+
+            jobWrm, // work remaining for job
+            macWrm, // work remaining for mac
+
+            jobTotProcTime, // total processing times for job            
+            macTotProcTime, // total processing times for mac
 
             #endregion
 
@@ -56,11 +58,9 @@ namespace ALICE
 
         public enum Explanatory
         {
-            mac,
             step, // current step 
-            totProcTime, // total processing times
-            macTotProcTime, // total processing times for mac
-            jobTotProcTime, // total processing times for job            
+            totProcTime, // total processing times for schedule
+            totWrm // work remaining for schedule
         }
 
         public static int LocalCount
@@ -102,7 +102,7 @@ namespace ALICE
 
         // ReSharper disable once InconsistentNaming
         private int[] RND = new int[100];
-        public int[] PhiExplanatory = new int[ExplanatoryCount];
+        public int[] XiExplanatory = new int[ExplanatoryCount];
         public int[] PhiLocal = new int[LocalCount];
         public double[] PhiGlobal = new double[GlobalCount];
         public bool[] Equiv = new bool[SDRData.SDRCount];
@@ -147,11 +147,10 @@ namespace ALICE
 
             #region explanatory for features, static per step
 
-            PhiExplanatory[(int)Explanatory.mac] = mac.Index;
-            PhiExplanatory[(int)Explanatory.totProcTime] = totProcTime;
-            PhiExplanatory[(int)Explanatory.macTotProcTime] = mac.TotProcTime;
-            PhiExplanatory[(int)Explanatory.jobTotProcTime] = job.TotProcTime;
-            PhiExplanatory[(int)Explanatory.step] = step;
+            XiExplanatory[(int)Explanatory.totProcTime] = totProcTime;
+            PhiLocal[(int)Local.macTotProcTime] = mac.TotProcTime;
+            PhiLocal[(int)Local.jobTotProcTime] = job.TotProcTime;
+            XiExplanatory[(int)Explanatory.step] = step;
             
             #endregion 
 
@@ -166,18 +165,17 @@ namespace ALICE
             /* add current processing time in order for <w,phi> can be equivalent to MWR/LWR 
             * (otherwise it would find the job with most/least work remaining in the next step,
             * i.e. after the one-step lookahead */
-            PhiLocal[(int)Local.wrmMac] = mac.WorkRemaining + proc;
-            PhiLocal[(int)Local.wrmJob] = job.WorkRemaining + proc;
-            PhiLocal[(int)Local.wrmTotal] = wrmTotal + proc;
+            PhiLocal[(int)Local.macWrm] = mac.WorkRemaining + proc;
+            PhiLocal[(int)Local.jobWrm] = job.WorkRemaining + proc;
+            XiExplanatory[(int)Explanatory.totWrm] = wrmTotal + proc;
 
             #endregion
 
             #region flow related
 
-            PhiLocal[(int)Local.slotReduced] = reduced;
-            PhiLocal[(int)Local.slots] = mac.TotSlack;
-            PhiLocal[(int)Local.slotsTotal] = slotsTotal;
-            //local[(int)LocalFeature.slotCreated] = reduced > 0 ? 0 : 1;
+            PhiLocal[(int)Local.reducedSlack] = reduced;
+            PhiLocal[(int)Local.macSlack] = mac.TotSlack;
+            PhiLocal[(int)Local.allSlack] = slotsTotal;
 
             #endregion
 
