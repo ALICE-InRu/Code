@@ -95,7 +95,11 @@ factorFeature <- function(Feature,simple=T,phis=F){
   # remove 'phi.' from variable name (cleaner)
   if(length(grep('phi',Feature))>0){Feature=substr(Feature,5,100)}
 
-  lvs=c('proc','startTime','endTime','arrival','procTotal','wait','wrmJob','jobOps','mac','macFree','wrmMac','macOps','slotReduced','slots','slotsTotal','makespan','wrmTotal','step',sdrs,'RNDmean','RNDstd','RNDmin','RNDmax')
+  lvs=c('proc','startTime','endTime','arrival','wait',
+        'jobTotProcTime','jobWrm','jobOps','macFree',
+        'macTotProcTime','macWrm','macOps',
+        'reducedSlack','macSlack','allSlack','makespan',
+        sdrs,'RNDmean','RNDstd','RNDmin','RNDmax')
   if(phis) return(paste('phi',Feature,sep='.'))
 
   Feature=factor(Feature, levels = lvs)
@@ -103,6 +107,20 @@ factorFeature <- function(Feature,simple=T,phis=F){
       levels(Feature)=paste(1:length(lvs),lvs,sep=') ')
   }
   return(droplevels(Feature))
+}
+
+factorExplanatory <- function(Explanatory,simple=T,xis=F){
+  # remove 'xi.' from variable name (cleaner)
+  if(length(grep('xi',Explanatory))>0){Explanatory=substr(Explanatory,4,100)}
+
+  lvs=c('step','totProcTime','totWrm')
+  if(xis) return(paste('xi',Explanatory,sep='.'))
+
+  Explanatory=factor(Explanatory, levels = lvs)
+  if(!simple){
+    levels(Explanatory)=paste(1:length(lvs),lvs,sep=') ')
+  }
+  return(droplevels(Explanatory))
 }
 
 factorCDR <- function(x,useProb=F){
