@@ -104,6 +104,7 @@ plot.exhaust.bestBoxplot <- function(bestPrefModel,SDR=NULL,save=NA,tiltText=T){
   if(is.null(CDR)){return(NULL)}
 
   if(!is.null(SDR)){   SDR <- subset(SDR, Set %in% CDR$Set) }
+  p=pref.boxplot(CDR,SDR,'Best',tiltText = tiltText)
 
   if(!is.na(save)){
     dim=ifelse(length(levels(CDR$Dimension))==1,as.character(CDR$Dimension[1]),'ALL')
