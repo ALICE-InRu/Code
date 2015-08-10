@@ -13,7 +13,7 @@ table.exhaust.paretoFront = function(paretoFront,onlyPareto=F){
   return(xtable(tmp))#,include.rownames=FALSE,sanitize.text.function=function(x){x})
 }
 
-plot.exhaust.paretoWeights <- function(paretoFront,timedependent=F,save=NA){
+plot.exhaust.paretoWeights <- function(paretoFront,timedependent=F,save=NA,tiltText=T){
   if(is.null(paretoFront$File)){return(NULL)}
 
   weights=NULL
@@ -38,9 +38,11 @@ plot.exhaust.paretoWeights <- function(paretoFront,timedependent=F,save=NA){
                          high = scales::muted("blue"), midpoint = 0, space = "rgb",
                          na.value = "grey50", guide = "colourbar")+
     facet_grid(Problem~NrFeat,scales='free_x',space='free_x',labeller = ifelse(is.na(save),'label_both','label_value'))+
-    ylab(expression('Feature'*~phi))+xlab('')+
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
-          legend.position = 'right', legend.direction='vertical')
+    ylab(expression('Feature'*~phi))+xlab('')
+
+  if(tiltText)
+    p <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+               legend.position = 'right', legend.direction='vertical')
 
   if(!is.na(save)){
     problem = ifelse(length(levels(mdat$Problem))>1,'ALL',mdat$Problem[1])
@@ -81,7 +83,7 @@ plot.exhaust.bestAcc <- function(StepwiseOptimality,bestPrefModel,save=NA){
   return(p)
 }
 
-plot.exhaust.bestBoxplot <- function(bestPrefModel,SDR=NULL,save=NA){
+plot.exhaust.bestBoxplot <- function(bestPrefModel,SDR=NULL,save=NA,tiltText=T){
   if(is.null(bestPrefModel)){return(NULL)}
 
   getBestCDR=function(bestSummary){
@@ -102,7 +104,6 @@ plot.exhaust.bestBoxplot <- function(bestPrefModel,SDR=NULL,save=NA){
   if(is.null(CDR)){return(NULL)}
 
   if(!is.null(SDR)){   SDR <- subset(SDR, Set %in% CDR$Set) }
-  p=pref.boxplot(CDR,SDR,'Best')
 
   if(!is.na(save)){
     dim=ifelse(length(levels(CDR$Dimension))==1,as.character(CDR$Dimension[1]),'ALL')
