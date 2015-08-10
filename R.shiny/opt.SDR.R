@@ -51,14 +51,14 @@ plot.StepwiseSDR.wrtTrack <- function(StepwiseOptimality,StepwiseExtremal,dim,sm
 
   plot.StepwiseSDR.wrtOPT <- function(){
 
-    SDR=subset(StepwiseExtremal$Raw, Feature=='proc' | Feature=='wrmJob')
+    SDR=subset(StepwiseExtremal$Raw, Feature=='proc' | Feature=='jobWrm')
     SDR$SDR[SDR$Feature=='proc' & SDR$Extremal=='min']='SPT'
     SDR$SDR[SDR$Feature=='proc' & SDR$Extremal=='max']='LPT'
-    SDR$SDR[SDR$Feature=='wrmJob' & SDR$Extremal=='min']='LWR'
-    SDR$SDR[SDR$Feature=='wrmJob' & SDR$Extremal=='max']='MWR'
+    SDR$SDR[SDR$Feature=='jobWrm' & SDR$Extremal=='min']='LWR'
+    SDR$SDR[SDR$Feature=='jobWrm' & SDR$Extremal=='max']='MWR'
     SDR$SDR=factorSDR(SDR$SDR)
 
-    p=plot.stepwiseOptimality(StepwiseOptimality,T,smooth) # random guessing
+    p=plot.stepwiseOptimality(StepwiseOptimality,dim,T,smooth) # random guessing
 
     if(smooth){
       p=p+geom_smooth(data=SDR,aes(y=value,color=SDR,fill=SDR,size='OPT'))+ggplotFill('SDR',length(sdrs))

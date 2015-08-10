@@ -1,7 +1,7 @@
-plot.StepwiseExtremal <- function(StepwiseOptimality,StepwiseExtremal,smooth,save=NA){
+plot.StepwiseExtremal <- function(StepwiseOptimality,StepwiseExtremal,dim,smooth,save=NA){
   if(length(StepwiseOptimality$Stats)==0) return(NULL)
 
-  p=plot.stepwiseOptimality(StepwiseOptimality,T,smooth) # random guessing
+  p=plot.stepwiseOptimality(StepwiseOptimality,dim,T,smooth) # random guessing
 
   if(smooth){
     StepwiseExtremal$Raw$Feature=factorFeature(StepwiseExtremal$Raw$Feature,F)

@@ -16,13 +16,13 @@ all.dataset.StepwiseOptimality <- reactive({
 
 output$plot.stepwiseUniqueness <- renderPlot({
   withProgress(message = 'Ploting stepwise uniqueness', value = 0, {
-    plot.stepwiseUniqueness(all.dataset.StepwiseOptimality(),input$smooth,input$save)
+    plot.stepwiseUniqueness(all.dataset.StepwiseOptimality(),input$dimension,input$smooth,input$save)
   })
 }, height="auto")
 
 output$plot.stepwiseOptimality <- renderPlot({
   withProgress(message = 'Plotting stepwise optimality', value = 0, {
-    plot.stepwiseOptimality(all.dataset.StepwiseOptimality(),F,input$smooth,input$save)
+    plot.stepwiseOptimality(all.dataset.StepwiseOptimality(),input$dimension,F,input$smooth,input$save)
   })
 }, height="auto")
 

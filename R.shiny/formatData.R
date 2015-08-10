@@ -104,7 +104,9 @@ factorFeature <- function(Feature,simple=T,phis=F){
 
   Feature=factor(Feature, levels = lvs)
   if(!simple){
-      levels(Feature)=paste(1:length(lvs),lvs,sep=') ')
+    skip=grep('RND$',lvs)
+    levels(Feature)[1:(skip-1)]=paste(1:(skip-1),lvs[1:(skip-1)],sep=') ')
+    levels(Feature)[(skip+1):length(lvs)]=paste(skip:(length(lvs)-1),lvs[(skip+1):length(lvs)],sep=') ')
   }
   return(droplevels(Feature))
 }

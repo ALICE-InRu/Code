@@ -11,7 +11,7 @@ output$tabFEAT <- renderUI({
 
 output$plot.extremal <- renderPlot({
   withProgress(message = 'Making plot', value = 0, {
-    plot.StepwiseExtremal(dataset.StepwiseOptimality(),dataset.StepwiseExtremal(),F)
+    plot.StepwiseExtremal(dataset.StepwiseOptimality(),dataset.StepwiseExtremal(),input$dimension,F)
   })
 },height="auto")
 

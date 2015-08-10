@@ -7,8 +7,12 @@ plot.SDR <- function(SDR,type='boxplot',save=NA){
     ylab(rhoLabel)+xlab('')+
     facet_wrap(ncol=2,~Problem+Dimension,scales='free_y')+
     guides(fill = guide_legend(order=1, direction = "vertical", title.position = "top"),
-           colour = guide_legend(order=2, direction = "vertical", title.position = "top")
-    )
+           colour = guide_legend(order=2, direction = "vertical", title.position = "top"))
+
+  if(length(levels(droplevels(SDR$Problem))) %% 2 == 1){
+    p <- p + theme(legend.position = c(0.75, 0.25),
+                   legend.direction = "horizontal")
+  }
 
   p=p+switch(type,
              'boxplot'=geom_boxplot(aes(x=SDR,y=Rho)),
@@ -45,6 +49,11 @@ plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.split,save=NA){
     )+
     ggplotColor('Data set',2)+
     ggplotFill('Dispatching rule',3, levels(dat$BDR))
+
+  if(length(levels(droplevels(dat$Problem))) %% 2 == 1){
+    p <- p + theme(legend.position = c(0.75, 0.25),
+                   legend.direction = "horizontal")
+  }
 
   if(!is.na(save)){
     fname=paste(subdir,'boxplotRho.BDR.10x10','.',extension,sep='')

@@ -5,6 +5,7 @@ input=list(dimension='10x10',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd'
 SDR=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension)
 input$bias='equal'
 input$timedependent=F
+input$smooth=F
 
 source('sdr.R')
 dataset.diff=checkDifficulty(subset(SDR, Set=='train' & Dimension==input$dimension & Problem%in%input$problems))
@@ -30,10 +31,10 @@ plot.rhoTracksRanks(CDR.full, SDR)
 if(!is.null(CDR.full))
   print(xtable(table.rhoTracksRanks(input$problem, CDR.full, SDR),rownames=F))
 
-source('opt.uniqueness.R'); smooth=F
+source('opt.uniqueness.R');
 all.StepwiseOptimality=get.StepwiseOptimality(input$problems,input$dimension,'OPT')
-plot.stepwiseUniqueness(all.StepwiseOptimality,smooth,save)
-plot.stepwiseOptimality(all.StepwiseOptimality,F,smooth,save)
+plot.stepwiseUniqueness(all.StepwiseOptimality,input$dimension,input$smooth,save)
+plot.stepwiseOptimality(all.StepwiseOptimality,input$dimension,F,input$smooth,save)
 
 source('opt.SDR.R')
 StepwiseOptimality=get.StepwiseOptimality(input$problem,input$dimension,'OPT')
@@ -64,7 +65,7 @@ if(!is.null(ks)){
 }
 
 source('feat.R')
-plot.StepwiseExtremal(StepwiseOptimality,StepwiseExtremal,F)
+plot.StepwiseExtremal(StepwiseOptimality,StepwiseExtremal,input$dimension,F)
 plot.StepwiseFeatures(input$problem,input$dimension,T,F)
 plot.StepwiseFeatures(input$problem,input$dimension,F,T)
 

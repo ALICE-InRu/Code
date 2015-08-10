@@ -42,7 +42,7 @@ get.StepwiseOptimality <- function(problems,dim,track='OPT'){
 }
 
 
-plot.stepwiseUniqueness <- function(StepwiseOptimality,smooth,save=NA){
+plot.stepwiseUniqueness <- function(StepwiseOptimality,dim,smooth,save=NA){
   if(is.null(StepwiseOptimality)) { return(NULL)}
 
   probs=levels(StepwiseOptimality$Stats$Problem)
@@ -52,7 +52,6 @@ plot.stepwiseUniqueness <- function(StepwiseOptimality,smooth,save=NA){
   } else {
     p=p+geom_line(size=1)
   }
-  dim=StepwiseOptimality$Stats$Dimension[1]
 
   p=p+ggplotColor('Problem',length(probs))+
     ylab('Number of unique optimal dispatches')+
@@ -69,7 +68,7 @@ plot.stepwiseUniqueness <- function(StepwiseOptimality,smooth,save=NA){
   return(p)
 }
 
-plot.stepwiseOptimality <- function(StepwiseOptimality,simple,smooth,save=NA){
+plot.stepwiseOptimality <- function(StepwiseOptimality,dim,simple,smooth,save=NA){
   if(is.null(StepwiseOptimality)) { return(NULL)}
 
   problems=levels(StepwiseOptimality$Stats$Problem)
@@ -85,8 +84,6 @@ plot.stepwiseOptimality <- function(StepwiseOptimality,simple,smooth,save=NA){
   }
   if(!simple)
     p=p+ggplotColor('Problem',length(problems))
-
-  dim=StepwiseOptimality$Stats$Dimension[1]
 
   p=p+ylab('Probability of choosing optimal move')+
     axisStep(dim)+axisProbability

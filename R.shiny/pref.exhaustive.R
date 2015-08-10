@@ -37,10 +37,22 @@ plot.exhaust.paretoWeights <- function(paretoFront,timedependent=F,save=NA){
     scale_fill_gradient2(name='Normalised\nweights', low = scales::muted("red"), mid = "white",
                          high = scales::muted("blue"), midpoint = 0, space = "rgb",
                          na.value = "grey50", guide = "colourbar")+
-    facet_grid(Problem~NrFeat,scales='free_x',space='free_x',labeller = 'label_both')+
+    facet_grid(Problem~NrFeat,scales='free_x',space='free_x',labeller = ifelse(is.na(save),'label_both','label_value'))+
     ylab(expression('Feature'*~phi))+xlab('')+
     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
           legend.position = 'right', legend.direction='vertical')
+
+  if(!is.na(save)){
+    problem = ifelse(length(levels(mdat$Problem))>1,'ALL',mdat$Problem[1])
+    dim=ifelse(length(levels(mdat$Dimension))>1,'ALL',as.character(mdat$Dimension[1]))
+    Bias=ifelse(length(levels(mdat$Bias))>1,'ALL',mdat$Bias[1])
+    fname=paste(paste0(subdir,'/pareto'),dim,Bias,'phi',problem,extension,sep='.')
+    if(save=='full')
+      ggsave(p,filename=fname,width=Width,height=Height.full,units=units,dpi=dpi)
+    else if (save=='half')
+      ggsave(p,filename=fname,width=Width,height=Height.half,units=units,dpi=dpi)
+  }
+
 
   return(p)
 }
@@ -51,16 +63,16 @@ plot.exhaust.bestAcc <- function(StepwiseOptimality,bestPrefModel,save=NA){
   StepwiseOptimality$Stats = subset(StepwiseOptimality$Stats,Problem %in% bestPrefModel$Summary$Problem)
   StepwiseOptimality$Raw = subset(StepwiseOptimality$Raw,Problem %in% bestPrefModel$Summary$Problem)
 
-  p0=plot.stepwiseOptimality(StepwiseOptimality,T,F)
+  dim=ifelse(length(levels(bestPrefModel$Summary$Dimension))>1,'ALL',as.character(bestPrefModel$Summary$Dimension[1]))
+
+  p0=plot.stepwiseOptimality(StepwiseOptimality,dim,T,F)
 
   p=p0+facet_wrap(~Problem)+
     geom_line(data=bestPrefModel$Stepwise,aes(y=value,color=variable,size=Accuracy))+
     ggplotColor("Best",2)+scale_size_discrete(range=c(0.5,1.2))+ylab('Probability of CDR being optimal')
 
   if(!is.na(save)){
-    dim=ifelse(length(levels(StepwiseOptimality$Stats$Dimension))>1,'ALL',StepwiseOptimality$Stats$Dimension[1])
-    Bias=ifelse(levels(bestPrefModels$Bias)>1,'ALL',bestPrefModels$Bias[1])
-    fname=paste(paste(subdir,'trdat',sep='/'),'prob.moveIsOptimal',dim,'OPT',Bias,'best',extension,sep='.')
+    fname=paste(paste(subdir,'trdat',sep='/'),'prob.moveIsOptimal',dim,'OPT','best',extension,sep='.')
     if(save=='full')
       ggsave(p,filename=fname,width=Width,height=Height.full,units=units,dpi=dpi)
     else if (save=='half')
@@ -153,8 +165,8 @@ plot.exhaust.paretoFront <- function(prefSummary,paretoFront,plotAllSolutions=T,
     ) + themeVerticalLegend
 
   if(!is.na(save)){
-    Bias=ifelse(levels(prefSummary$Bias)>1,'ALL',prefSummary$Bias[1])
-    Problem=ifelse(levels(prefSummary$Problem)>1,'ALL',prefSummary$Problem[1])
+    Bias=ifelse(length(levels(prefSummary$Bias))>1,'ALL',prefSummary$Bias[1])
+    Problem=ifelse(length(levels(prefSummary$Problem))>1,'ALL',prefSummary$Problem[1])
     fname=paste(subdir,paste('pareto',Bias,Problem,extension,sep='.'),sep='/')
     if(save=='full')
       ggsave(fname,p,units=units,width=Width,height=Height.full)
@@ -205,10 +217,10 @@ get.optAccuracy <- function(model,reportMean=T){
   if(!file.exists(fname)){ set.optAccuracy(model) }
   acc = read_csv(fname)
 
-  m=regexpr("F(?<NrFeat>[0-9]+).M(?<Model>[0-9]+)", acc$CDR, perl=T)
-  acc$NrFeat=getAttribute(acc$CDR,m,'NrFeat',F)
-  acc$Model=getAttribute(acc$CDR,m,'Model',F)
-  acc$CDR=NULL
+  m=regexpr("F(?<NrFeat>[0-9]+).M(?<Model>[0-9]+)", acc$variable, perl=T)
+  acc$NrFeat=getAttribute(acc$variable,m,'NrFeat',F)
+  acc$Model=getAttribute(acc$variable,m,'Model',F)
+  acc$variable=NULL
   acc=melt(acc,id.vars = c('NrFeat','Model'), variable.name = 'Step', value.name = 'validation.isOptimal')
   acc$Step=as.numeric(substr(acc$Step,6,100))
   acc$test.isOptimal=NA
@@ -321,7 +333,7 @@ get.bestPrefModel <- function(paretoFront){
   paretoFront = subset(paretoFront, Pareto.front==T)
 
   best <- list(
-    'Max.Accuracy.Optimality'=merge(
+    'Max.Acc.Opt'=merge(
       aggregate(Validation.Accuracy.Optimality ~ Problem, paretoFront, max), paretoFront),
     'Min.Rho'=merge(
       aggregate(Validation.Rho ~ Problem, paretoFront, min), paretoFront))
@@ -351,7 +363,7 @@ get.bestPrefModel <- function(paretoFront){
   }
 
   Summary <- rbind(data.frame(best$Min.Rho,'variable'='Min.Rho'),
-                   data.frame(best$Max.Accuracy.Optimality,'variable'='Max.Accuracy.Optimality'))
+                   data.frame(best$Max.Acc.Opt,'variable'='Max.Acc.Opt'))
 
   return(list('Summary'=Summary,'Stepwise'=Stepwise))
 }
