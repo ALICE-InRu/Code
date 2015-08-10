@@ -9,8 +9,9 @@ plot.SDR <- function(SDR,type='boxplot',save=NA){
     guides(fill = guide_legend(order=1, direction = "vertical", title.position = "top"),
            colour = guide_legend(order=2, direction = "vertical", title.position = "top"))
 
-  if(length(levels(droplevels(SDR$Problem))) %% 2 == 1){
-    p <- p + theme(legend.position = c(0.75, 0.25),
+  nrow = length(levels(droplevels(SDR$Problem)))
+  if(nrow %% 2 == 1){
+    p <- p + theme(legend.position = c(0.75, 1/(nrow*2)),
                    legend.direction = "horizontal")
   }
 
