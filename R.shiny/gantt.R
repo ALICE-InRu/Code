@@ -11,15 +11,18 @@ get.gantt <- function(problem,dim,SDR='ALL',plotPID=-1){
   return(trdat)
 }
 
-plot.gantt <- function(gantt,step,plotPhi=F,plotStep=F){
+plot.gantt <- function(gantt,step,plotPhi=F,plotStep=F,TightTime=F){
 
   NumJobs=max(gantt$Job)
   NumMacs=max(gantt$Mac)
-  maxMakespan=max(gantt$phi.makespan)+50 # margin to display Cmax notation
 
   fdat <- subset(gantt,Followed==T & Step<step)
-  cat('vchi_',step,'=(',fdat$Job,')\n')
   pdat <- subset(gantt,Step==step)
+
+  maxMakespan=ifelse(TightTime,max(pdat$phi.makespan),max(gantt$phi.makespan))+25 # margin to display Cmax notation
+
+  cat('vchi_',step,'=(',fdat$Job,')\n')
+
   p=ggplot(fdat,aes(x=x,y=Mac))+
     ggplotFill('Job',NumJobs)+
     scale_y_continuous('Machine', breaks=1:NumMacs, limits = c(0.25, NumMacs+0.5))+
@@ -37,16 +40,21 @@ plot.gantt <- function(gantt,step,plotPhi=F,plotStep=F){
       geom_text(data = cmax, aes(label=x), size=4, hjust=0, vjust=0)
   }
   if(nrow(pdat)>0){
+    overlapping=duplicated(pdat$Mac)
+    if(any(overlapping)){
+      for(mac in unique(pdat$Mac[overlapping])){
+        overlap = pdat$Mac==mac
+        pdat$Mac[overlap]=pdat$Mac[overlap]+seq(0.2,-0.2,length.out = sum(overlap))
+      }
+    }
 
     if(plotPhi){
       phi = ddply(pdat,~Problem+Dimension+Track+Job+Mac,summarise,
                   x=max(phi.endTime),phi.jobWrm=phi.jobWrm,phi.proc=phi.proc)
 
       p=p+
-        geom_text(data = phi, aes(label='proc',y=Mac-0.2), size=3, hjust=1)+
-        geom_text(data = phi, aes(label=phi.proc,y=Mac-0.2), size=3, hjust=0)+
-        geom_text(data = phi, aes(label='jobWrm',y=Mac+0.2), size=3, hjust=1)+
-        geom_text(data = phi, aes(label=phi.jobWrm,y=Mac+0.2), size=3, hjust=0)
+        geom_text(data = phi, aes(label='proc\njobWrm',y=Mac-0.2), size=3, hjust=1)+
+        geom_text(data = phi, aes(label=paste(phi.proc,phi.jobWrm,sep='\n'),y=Mac-0.2), size=3, hjust=0)
 
       ndat=subset(pdat,Followed==T)
       p <- p+geom_rect(data=ndat,
@@ -65,10 +73,8 @@ plot.gantt <- function(gantt,step,plotPhi=F,plotStep=F){
                         xmin=phi.startTime,xmax=phi.endTime,
                         ymin=Mac-0.4,ymax=Mac+0.4),
                     linetype='dashed', color='black',
-                    alpha=0.2, #aes(size=Rho),
-                    position = position_jitter(w = 0, h = 0.1))+
-        #scale_size(guide="none",range=c(1.5,1))+ # stronger line for lower rho
-        geom_text(data=pdat, size=4, aes(label=Job), position=position_jitter(w = 0.1, h = 0.1))
+                    alpha=0.2)+
+        geom_text(data=pdat, size=4, aes(label=Job))
     }
   }
 
