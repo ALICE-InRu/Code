@@ -11,7 +11,7 @@ get.gantt <- function(problem,dim,SDR='ALL',plotPID=-1){
   return(trdat)
 }
 
-plot.gantt <- function(gantt,step,plotPhi=F,plotStep=F,TightTime=F){
+plot.gantt <- function(gantt,step,plotPhi=F,plotStep=F,TightTime=F,xlabel='Time',ylabel='Machine',ncol=2){
 
   NumJobs=max(gantt$Job)
   NumMacs=max(gantt$Mac)
@@ -25,8 +25,8 @@ plot.gantt <- function(gantt,step,plotPhi=F,plotStep=F,TightTime=F){
 
   p=ggplot(fdat,aes(x=x,y=Mac))+
     ggplotFill('Job',NumJobs)+
-    scale_y_continuous('Machine', breaks=1:NumMacs, limits = c(0.25, NumMacs+0.5))+
-    scale_x_continuous('Time', expand=c(0,0), limits = c(0, maxMakespan))+
+    scale_y_continuous(ylabel, breaks=1:NumMacs, limits = c(0.25, NumMacs+0.5))+
+    scale_x_continuous(xlabel, expand=c(0,0), limits = c(0, maxMakespan))+
     theme(legend.position="none")+facet_wrap(~Problem+Dimension+Track,ncol=2)
 
   if(nrow(fdat)>0){
