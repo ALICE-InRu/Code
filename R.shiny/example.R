@@ -40,13 +40,13 @@ gantt.44$Track='J4 J4'
 p0=plot.gantt(gantt.0,
               0,TightTime = T,xlabel='',ylabel='k = 1')+facet_wrap(~Track,nrow=1)
 p1=plot.gantt(rbind(gantt.1,gantt.2,gantt.3,gantt.4),
-              1,TightTime = T,xlabel='',ylabel='k = 2')+facet_wrap(~Track,nrow=1)
+              1,TightTime = T,xlabel='',ylabel='k = 2',cmaxMargin=10)+facet_wrap(~Track,nrow=1)
 p2=plot.gantt(rbind(gantt.41,gantt.42,gantt.43,gantt.44),
-              2,TightTime = T,ylabel='k = 3')+facet_wrap(~Track,nrow=1)
+              2,TightTime = T,ylabel='k = 3',cmaxMargin=10)+facet_wrap(~Track,nrow=1)
 
 require(gridExtra)
 if(save) pdf(paste(subdir,'gametree.pdf',sep='/'),width = Width, height = Height.full)
-grid.arrange(p0, p1, p2, ncol=1)
+grid.arrange(p0+coord_fixed(ratio = 10), p1, p2, ncol=1)
 if(save) dev.off()
 
 subdir=paste(subdir,'animation',sep='/')

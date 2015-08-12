@@ -11,7 +11,8 @@ get.gantt <- function(problem,dim,SDR='ALL',plotPID=-1){
   return(trdat)
 }
 
-plot.gantt <- function(gantt,step,plotPhi=F,plotStep=F,TightTime=F,xlabel='Time',ylabel='Machine',ncol=2){
+plot.gantt <- function(gantt,step,
+                       plotPhi=F,plotStep=F,TightTime=F,xlabel='Time',ylabel='Machine',ncol=2,cmaxMargin=25){
 
   NumJobs=max(gantt$Job)
   NumMacs=max(gantt$Mac)
@@ -19,7 +20,7 @@ plot.gantt <- function(gantt,step,plotPhi=F,plotStep=F,TightTime=F,xlabel='Time'
   fdat <- subset(gantt,Followed==T & Step<step)
   pdat <- subset(gantt,Step==step)
 
-  maxMakespan=ifelse(TightTime,max(pdat$phi.makespan),max(gantt$phi.makespan))+25 # margin to display Cmax notation
+  maxMakespan=ifelse(TightTime,max(pdat$phi.makespan),max(gantt$phi.makespan))+cmaxMargin
 
   cat('vchi_',step,'=(',fdat$Job,')\n')
 
@@ -42,9 +43,13 @@ plot.gantt <- function(gantt,step,plotPhi=F,plotStep=F,TightTime=F,xlabel='Time'
   if(nrow(pdat)>0){
     overlapping=duplicated(pdat$Mac)
     if(any(overlapping)){
-      for(mac in unique(pdat$Mac[overlapping])){
-        overlap = pdat$Mac==mac
-        pdat$Mac[overlap]=pdat$Mac[overlap]+seq(0.2,-0.2,length.out = sum(overlap))
+      for(mac in 1:NumMacs){
+        for(track in unique(pdat$Track)){
+          overlap = pdat$Mac==mac & pdat$Track==track
+          if(sum(overlap)>1){
+            pdat$Mac[overlap]=pdat$Mac[overlap]+seq(0.2,-0.2,length.out = sum(overlap))
+          }
+        }
       }
     }
 
