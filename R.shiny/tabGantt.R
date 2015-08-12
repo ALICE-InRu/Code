@@ -13,7 +13,7 @@ output$tabGantt <- renderUI({
       ),
     fluidRow(
       box(width=12, plotOutput('gantt.schedules', height = 700)),
-      box(checkboxInput("plotPhi", "Display features:"))
+      box(checkboxInput("plotPhi", "Display features."))
       )
   )
 })
