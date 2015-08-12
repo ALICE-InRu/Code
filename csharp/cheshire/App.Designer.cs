@@ -222,6 +222,7 @@ namespace Cheshire
             // 
             this.Dimension.FormattingEnabled = true;
             this.Dimension.Items.AddRange(new object[] {
+            "4x5",
             "6x5",
             "8x8",
             "10x10",

@@ -13,14 +13,14 @@ namespace ALICE
     {
         public enum Trajectory
         {
-            MWR,
-            LWR,
             SPT,
             LPT,
+            MWR,
+            LWR,
+            RND, // must be in same order as SDRs
             OPT,
             CMAESMINCMAX,
             CMAESMINRHO,
-            RND,
             ILUNSUP,
             ILSUP,
             ILFIXSUP,
