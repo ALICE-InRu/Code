@@ -11,17 +11,18 @@ get.gantt <- function(problem,dim,SDR='ALL',plotPID=-1){
   return(trdat)
 }
 
-plot.gantt <- function(gantt,step,plotPhi=F){
+plot.gantt <- function(gantt,step,plotPhi=F,plotStep=F){
 
   NumJobs=max(gantt$Job)
   NumMacs=max(gantt$Mac)
   maxMakespan=max(gantt$phi.makespan)+50 # margin to display Cmax notation
 
   fdat <- subset(gantt,Followed==T & Step<step)
+  cat('vchi_',step,'=(',fdat$Job,')\n')
   pdat <- subset(gantt,Step==step)
   p=ggplot(fdat,aes(x=x,y=Mac))+
     ggplotFill('Job',NumJobs)+
-    scale_y_continuous('Machine', breaks=1:NumMacs)+
+    scale_y_continuous('Machine', breaks=1:NumMacs, limits = c(0.25, NumMacs+0.5))+
     scale_x_continuous('Time', expand=c(0,0), limits = c(0, maxMakespan))+
     theme(legend.position="none")+facet_wrap(~Problem+Dimension+Track,ncol=2)
 
@@ -58,20 +59,23 @@ plot.gantt <- function(gantt,step,plotPhi=F){
 
       pdat <- subset(pdat,Followed==F)
     }
+    if(nrow(pdat)>0){
+      p=p+geom_rect(data=pdat,
+                    aes(fill=as.factor(Job),
+                        xmin=phi.startTime,xmax=phi.endTime,
+                        ymin=Mac-0.4,ymax=Mac+0.4),
+                    linetype='dashed', color='black',
+                    alpha=0.2, #aes(size=Rho),
+                    position = position_jitter(w = 0, h = 0.1))+
+        #scale_size(guide="none",range=c(1.5,1))+ # stronger line for lower rho
+        geom_text(data=pdat, size=4, aes(label=Job), position=position_jitter(w = 0.1, h = 0.1))
+    }
+  }
 
-    p=p+geom_rect(data=pdat,
-                  aes(fill=as.factor(Job),
-                      xmin=phi.startTime,xmax=phi.endTime,
-                      ymin=Mac-0.4,ymax=Mac+0.4),
-                  linetype='dashed', color='black',
-                  alpha=0.2, #aes(size=Rho),
-                  position = position_jitter(w = 0, h = 0.1))+
-      #scale_size(guide="none",range=c(1.5,1))+ # stronger line for lower rho
-      geom_text(data=pdat, size=4, aes(label=Job), position=position_jitter(w = 0.1, h = 0.1))
-    #p=p+ggtitle(paste('Step',step))
-
-
-  } #else { p = p + ggtitle('Complete schedule') }
+  if(plotStep){
+    p <- p+annotate("text", x = 5, y = 0.3, vjust=1, hjust=0, size=4,
+                    label = ifelse(nrow(pdat)>0,paste0("k=",step),'complete schedule'))
+  }
 
   return(p)
 }
@@ -79,12 +83,21 @@ plot.gantt <- function(gantt,step,plotPhi=F){
 gif.gantt <- function(problem,dim,SDR='MWR',plotPID=1){
   gantt=get.gantt(problem,dim,SDR,plotPID)
   ## save images and convert them to a single GIF
-  library(animation)
-  saveGIF({
-    for (step in 0:numericDimension(dim)) {
-      print(plot.gantt(gantt,step))
-    }
-    print(plot.gantt(gantt,step+1))
-  }, interval = 0.5, movie.name = paste(subdir,paste(problem,dim,SDR,'gif',sep='.'),sep='/'), ani.width = 600, ani.height = 250, loop=F)
 
+  #function to iterate over all dispatches
+  gantt.animate <- function(steps) {
+    lapply(steps, function(step) { print(plot.gantt(gantt,step,F,T))
+    })
+  }
+
+  #save all iterations into one GIF
+  library(animation)
+  #ani.options(loop = FALSE) # doesn't seem to work!
+
+  steps=c(seq(0,numericDimension(dim),1),
+          rep(numericDimension(dim),numericDimension(dim)))
+
+  saveGIF(gantt.animate(steps), movie.name='animate.gif', ani.width = 600, ani.height = 250, nmax=length(steps))
+  file.copy(from = 'animate.gif', to = paste(subdir,paste('animate',problem,dim,SDR,'gif',sep='.'),sep='/'))
+  file.remove('animate.gif')
 }
