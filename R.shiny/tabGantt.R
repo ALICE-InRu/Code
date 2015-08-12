@@ -12,7 +12,8 @@ output$tabGantt <- renderUI({
       box(sliderInput("step", "Step during the dispatching process:", min=0, max=30, value=30))
       ),
     fluidRow(
-      box(width=12, plotOutput('gantt.schedules', height = 700))
+      box(width=12, plotOutput('gantt.schedules', height = 700)),
+      box(checkboxInput("plotPhi", "Display features:"))
       )
   )
 })
@@ -25,5 +26,5 @@ all.dat.schedules <- reactive({
 
 dat.schedules <- reactive({ subset(all.dat.schedules(),PID==input$pid) })
 
-output$gantt.schedules <- renderPlot({ plot.gantt(dat.schedules(),input$step) })
+output$gantt.schedules <- renderPlot({ plot.gantt(dat.schedules(),input$step,plotPhi = input$plotPhi) })
 
