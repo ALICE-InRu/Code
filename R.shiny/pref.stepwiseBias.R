@@ -10,7 +10,7 @@ plot.CDR.stepwiseBias <- function(CDR,save=NA){
 
   if(!is.na(save)){
     dim=ifelse(length(levels(CDR$Dimension))==1,as.character(CDR$Dimension[1]),'ALL')
-    fname=paste(subdir,paste('boxplotRho','CDR',dim,extension,sep='.'),sep='/')
+    fname=paste(subdir,paste('bias','boxplotRho','CDR',dim,extension,sep='.'),sep='/')
     if(save=='half'){
       ggsave(p,filename=fname,width=Width,height=Height.half,units=units,dpi=dpi)
     }
