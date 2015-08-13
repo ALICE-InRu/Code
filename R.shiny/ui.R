@@ -18,16 +18,16 @@ sidebar <- dashboardSidebar(
              menuSubItem("BDR", tabName = "bdr", icon = icon("code-fork")),
              menuSubItem("Difficulty", tabName = "sdrDifficulty", icon = icon("trophy"))
              ),
-    menuItem("Preference models", icon = icon("plane"),
-             menuSubItem("LIBLINEAR settings", tabName = "prefSettings", icon = icon("car")),
+    menuItem("Preference models", icon = icon("gears"),
+             menuSubItem("LIBLINEAR settings", tabName = "prefSettings", icon = icon("gear")),
              menuSubItem("Trajectories & ranks", tabName = "prefTrajectories", icon = icon("search")),
-             menuSubItem("Feature reduction", tabName = "prefExhaustive", icon = icon("car")),
-             menuSubItem("Imitation learning", tabName = "prefImitationLearning", icon = icon("university"))
+             menuSubItem("Feature reduction", tabName = "prefExhaustive", icon = icon("angle-double-down")),
+             menuSubItem("Imitation learning", tabName = "prefImitationLearning", icon = icon("copy"))
     ),
     menuItem("Optimality", icon = icon("bold"),
-             menuSubItem("Uniqueness", tabName = "optUniqueness", icon = icon("university")),
-             menuSubItem("SDR", tabName = "optSDR", icon = icon("university")),
-             menuSubItem("Best and worst case scenario", tabName = "optBW", icon = icon("university"))
+             menuSubItem("Uniqueness", tabName = "optUniqueness", icon = icon("star")),
+             menuSubItem("SDR", tabName = "optSDR", icon = icon("star-half-empty")),
+             menuSubItem("Best and worst case scenario", tabName = "optBW", icon = icon("star-o"))
              ),
     menuItem("Features", tabName = "feat", icon = icon("binoculars")),
     menuItem("CMA-ES", tabName = "cmaes", icon = icon("globe"),
