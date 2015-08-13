@@ -44,7 +44,8 @@ get.StepwiseExtremal <- function(problems,dim){
   return(list('Stats'=stats,'Raw'=split))
 }
 
-plot.StepwiseSDR.wrtTrack <- function(StepwiseOptimality,StepwiseExtremal,dim,smooth,save=NA){
+plot.StepwiseSDR.wrtTrack <- function(StepwiseOptimality,StepwiseExtremal,
+                                      dim,smooth,save=NA,onlyWrtOPT=F){
   if(is.null(StepwiseOptimality)|is.null(StepwiseExtremal)) {return(NULL)}
 
   problems <- levels(StepwiseOptimality$Stats$Problem)
@@ -58,7 +59,7 @@ plot.StepwiseSDR.wrtTrack <- function(StepwiseOptimality,StepwiseExtremal,dim,sm
     SDR$SDR[SDR$Feature=='jobWrm' & SDR$Extremal=='max']='MWR'
     SDR$SDR=factorSDR(SDR$SDR)
 
-    p=plot.stepwiseOptimality(StepwiseOptimality,dim,T,smooth) # random guessing
+    p=plot.stepwiseOptimality(StepwiseOptimality,dim,T,smooth,asRND = T) # random guessing
 
     if(smooth){
       p=p+geom_smooth(data=SDR,aes(y=value,color=SDR,fill=SDR,size='OPT'))+ggplotFill('SDR',length(sdrs))
@@ -67,22 +68,26 @@ plot.StepwiseSDR.wrtTrack <- function(StepwiseOptimality,StepwiseExtremal,dim,sm
       p=p+geom_line(data=stat,aes(y=mu,color=SDR,size='OPT'))
     }
 
-    p=p+ggplotColor('SDR',length(sdrs))+
-      facet_grid(Problem~.)+
+    p=p+ggplotColor('SDR',length(sdrs),values=sdrs)+
+      facet_wrap(~Problem,nrow=1)+
       ylab('Probability of SDR being optimal')
+
+    #if(length(problems)>1){ p <- p + cornerLegend(length(problems)) }
 
     return(p)
   }
 
   p=plot.StepwiseSDR.wrtOPT()
 
-  SDR <- do.call(rbind, lapply(sdrs, function(sdr) { data.frame(Track = sdr, get.StepwiseOptimality(problems,dim,sdr)$Stats)} ))
+  if(!onlyWrtOPT){
+    SDR <- do.call(rbind, lapply(sdrs, function(sdr) { data.frame(Track = sdr, get.StepwiseOptimality(problems,dim,sdr)$Stats)} ))
+  } else {SDR=NULL}
 
   if(!is.null(SDR)){
     SDR<- factorTrack(SDR)
     p=p+geom_line(data=SDR,aes(y=rnd.mu,color=Track,size='SDR'))
     p=p+scale_size_manual('Track', values=c(1.2,0.8))
-  } else { p=p+scale_size(guide=F) }
+  } else { p=p+scale_size_discrete(guide=F) }
 
   if(!is.na(save)){
     fname=ifelse(length(problems)>1,

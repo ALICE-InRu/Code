@@ -42,6 +42,12 @@ mytheme <- theme_update(axis.text.y = element_blank(),
 )
 theme_set(mytheme)
 themeVerticalLegend <- theme_set(mytheme) # + theme(legend.position='right', legend.box = 'vertical')
+cornerLegend <- function(n,ncol=2){
+  l <- list(guides(fill = guide_legend(order=1, direction = "vertical", title.position = "top"),
+                   colour = guide_legend(order=2, direction = "vertical", title.position = "top")))
+  if(n%%ncol==0|n==1){ return(l) }
+    list(l, theme(legend.position = c(0.75, 1/(n*ncol)), legend.direction = "horizontal"))
+}
 mytheme <- theme_update(legend.justification='center',legend.position='bottom',legend.box = "horizontal")
 axisCompactY <- list(scale_y_continuous(expand=c(0,0)))
 axisCompactX <- list(scale_x_continuous(expand=c(0,0)))
@@ -53,23 +59,27 @@ axisStep <- function(dim){ list(expand_limits(x = c(1,numericDimension(dim)))) }
 #legend.justification = c(1, 0),legend.position = c(1, 0),legend.box = "horizontal", # lower right hand corner
 
 #ggplot <- function(...) ggplot2::ggplot(...) + scale_fill_brewer(palette=mainPalette) + scale_color_brewer(palette=mainPalette)
-ggplotFill <- function(name,num,labels=NULL){
-  mypalette = mainPalette(num);
+ggplotFill <- function(name,num,labels=NULL,values=NULL){
+  myPalette = mainPalette(num);
+  if('OPT' %in% labels){ myPalette[grep('OPT',labels)]='#000000' }
+  if(!is.null(values)) { names(myPalette) = values }
+
   if(is.null(labels)){
-    return(list(scale_fill_manual(values=mypalette,name=name)))
+    return(list(scale_fill_manual(values=myPalette,name=name)))
   } else {
-    return(list(scale_fill_manual(values=mypalette,name=name,labels=labels)))
+    return(list(scale_fill_manual(values=myPalette,name=name,labels=labels)))
   }
 }
-ggplotColor <- function(name,num,labels=NULL){
+ggplotColor <- function(name,num,labels=NULL,values=NULL){
 
-  mypalette = mainPalette(num);
-  if('OPT' %in% labels){ mypalette[grep('OPT',labels)]='#000000' }
+  myPalette = mainPalette(num);
+  if('OPT' %in% labels){ myPalette[grep('OPT',labels)]='#000000' }
+  if(!is.null(values)) { names(myPalette) = values }
 
   if(is.null(labels)){
-    return(list(scale_color_manual(values=mypalette,name=name)))
+    return(list(scale_color_manual(values=myPalette,name=name)))
   } else {
-    return(list(scale_color_manual(values=mypalette,name=name,labels=labels)))
+    return(list(scale_color_manual(values=myPalette,name=name,labels=labels)))
   }
 }
 

@@ -6,14 +6,7 @@ plot.SDR <- function(SDR,type='boxplot',save=NA){
     ggplotFill("Simple priority dispatching rule",length(sdrs),levels(SDR$Names))+
     ylab(rhoLabel)+xlab('')+
     facet_wrap(ncol=2,~Problem+Dimension,scales='free_y')+
-    guides(fill = guide_legend(order=1, direction = "vertical", title.position = "top"),
-           colour = guide_legend(order=2, direction = "vertical", title.position = "top"))
-
-  nrow = length(levels(droplevels(SDR$Problem)))
-  if(nrow %% 2 == 1){
-    p <- p + theme(legend.position = c(0.75, 1/(nrow*2)),
-                   legend.direction = "horizontal")
-  }
+    cornerLegend(length(levels(droplevels(SDR$Problem))))
 
   p=p+switch(type,
              'boxplot'=geom_boxplot(aes(x=SDR,y=Rho)),
@@ -45,16 +38,11 @@ plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.split,save=NA){
   p = ggplot(dat, aes(x=SDR,y=Rho,fill=SDR,color=Set))+geom_boxplot()+
     facet_wrap(~Problem+Dimension,ncol=2,scales='free_y')+
     ylab(rhoLabel)+xlab('')+
-    guides(fill = guide_legend(order=1, direction = "vertical", title.position = "top"),
-           colour = guide_legend(order=2, direction = "vertical", title.position = "top")
-    )+
     ggplotColor('Data set',2)+
     ggplotFill('Dispatching rule',3, levels(dat$BDR))
 
-  if(length(levels(droplevels(dat$Problem))) %% 2 == 1){
-    p <- p + theme(legend.position = c(0.75, 0.25),
-                   legend.direction = "horizontal")
-  }
+  probs=length(levels(droplevels(dat$Problem)))
+  p <- p + cornerLegend(probs)
 
   if(!is.na(save)){
     fname=paste(subdir,'boxplotRho.BDR.10x10','.',extension,sep='')

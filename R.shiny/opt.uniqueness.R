@@ -68,12 +68,16 @@ plot.stepwiseUniqueness <- function(StepwiseOptimality,dim,smooth,save=NA){
   return(p)
 }
 
-plot.stepwiseOptimality <- function(StepwiseOptimality,dim,simple,smooth,save=NA){
+plot.stepwiseOptimality <- function(StepwiseOptimality,dim,simple,smooth,save=NA,asRND=F){
   if(is.null(StepwiseOptimality)) { return(NULL)}
 
   problems=levels(StepwiseOptimality$Stats$Problem)
   if(simple){
-    p=ggplot(StepwiseOptimality$Stats,aes(x=Step,order=Problem))+geom_line(aes(y=rnd.mu),linetype='dashed',color='black',guide='none')
+    p=ggplot(StepwiseOptimality$Stats,aes(x=Step,order=Problem))
+    if(asRND)
+      p=p+geom_line(aes(y=rnd.mu,color='RND'))
+    else
+      p=p+geom_line(aes(y=rnd.mu),linetype='dotted')
   } else {
     p=ggplot(StepwiseOptimality$Stats,aes(x=Step,y=rnd.mu,color=Problem,fill=Problem))
     if(smooth){
