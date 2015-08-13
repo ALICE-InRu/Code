@@ -222,12 +222,12 @@ namespace Cheshire
             // 
             this.Dimension.FormattingEnabled = true;
             this.Dimension.Items.AddRange(new object[] {
-            "4x5",
             "6x5",
             "8x8",
             "10x10",
             "12x12",
-            "14x14"});
+            "14x14",
+            "4x5"});
             this.Dimension.Location = new System.Drawing.Point(5, 15);
             this.Dimension.Name = "Dimension";
             this.Dimension.Size = new System.Drawing.Size(110, 79);
