@@ -117,10 +117,10 @@ plot.exhaust.bestBoxplot <- function(bestPrefModel,SDR=NULL,save=NA,tiltText=T){
   return(p)
 }
 
-plot.exhaust.acc <- function(prefSummary,save=NA){
+plot.exhaust.acc <- function(prefSummary,save=NA,best=NULL){
   if(is.null(prefSummary)) return(NULL)
 
-  p=ggplot(prefSummary,aes(y=Validation.Rho,shape=Bias))+
+  p=ggplot(prefSummary,aes(y=Validation.Rho))+
     facet_grid(~Problem, scales='free')+
     geom_point(aes(x=Validation.Accuracy.Classification,color='classification'))+
     geom_point(aes(x=Validation.Accuracy.Optimality,color='optimality'))+
@@ -128,12 +128,17 @@ plot.exhaust.acc <- function(prefSummary,save=NA){
     ylab(expression('Expected mean for'*~rho*~'(%)'))+
     xlab('Validation accuracy (%)')
 
-  Bias=ifelse(length(levels(prefSummary$Bias))>1,'ALL',prefSummary$Bias[1])
-  if(Bias!='ALL'){p=p+scale_shape_discrete(guide = F)}
+  if(!is.null(best)){
+    p <- p+geom_segment(data=best,
+                        aes(x=Validation.Accuracy.Classification,
+                            xend=Validation.Accuracy.Optimality,
+                            yend=Validation.Rho,linetype=variable),color='red')+
+      scale_linetype_discrete('Best')
+  }
 
   if(!is.na(save)){
     Problem=ifelse(length(levels(prefSummary$Problem))>1,'ALL',prefSummary$Problem[1])
-    fname=paste(subdir,paste('training','accuracy',Bias,Problem,extension,sep='.'),sep='/')
+    fname=paste(subdir,paste('training','accuracy',Problem,extension,sep='.'),sep='/')
     if(save=='half'){
       ggsave(fname,p,units=units,width=Width,height=Height.half)
     }
