@@ -83,3 +83,8 @@ if(input$dimension=='6x5'){
   CDR.CMA <- get.CDR.CMA(input$problems,input$dimension)
   plot.CMABoxplot(CDR.CMA)
 }
+
+source('pref.stepwiseBias.R')
+CDR.stepwiseBias<-get.CDR.stepwiseBias(input$problems,input$dimension)
+plot.CDR.stepwiseBias(CDR.stepwiseBias)
+stats.CDR.stepwiseBias(CDR.stepwiseBias)

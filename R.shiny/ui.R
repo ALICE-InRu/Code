@@ -21,6 +21,7 @@ sidebar <- dashboardSidebar(
     menuItem("Preference models", icon = icon("gears"),
              menuSubItem("LIBLINEAR settings", tabName = "prefSettings", icon = icon("gear")),
              menuSubItem("Trajectories & ranks", tabName = "prefTrajectories", icon = icon("search")),
+             menuSubItem("Stepwise bias", tabName = "prefStepwiseBias", icon = icon("clock-o")),
              menuSubItem("Feature reduction", tabName = "prefExhaustive", icon = icon("angle-double-down")),
              menuSubItem("Imitation learning", tabName = "prefImitationLearning", icon = icon("copy"))
     ),
@@ -30,8 +31,7 @@ sidebar <- dashboardSidebar(
              menuSubItem("Best and worst case scenario", tabName = "optBW", icon = icon("star-o"))
              ),
     menuItem("Features", tabName = "feat", icon = icon("binoculars")),
-    menuItem("CMA-ES", tabName = "cmaes", icon = icon("globe"),
-             badgeLabel = "new", badgeColor = "green"),
+    menuItem("CMA-ES", tabName = "cmaes", icon = icon("globe")),
     menuItem("DataTable", tabName = "table", icon = icon("table")),
     menuItem("Save", icon = icon("save"),
              selectInput("save", "Save as", choices = ifelse(!is.na(file.info(subdir)$isdir),
@@ -55,6 +55,7 @@ body <- dashboardBody(
     tabItem(tabName = "table", uiOutput("tabTable")),
     tabItem(tabName = "prefSettings", uiOutput("tabPref.settings")),
     tabItem(tabName = "prefTrajectories", uiOutput("tabPref.trajectories")),
+    tabItem(tabName = "prefStepwiseBias", uiOutput("tabPref.stepwiseBias")),
     tabItem(tabName = "prefExhaustive", uiOutput("tabPref.exhaustive")),
     tabItem(tabName = "prefImitationLearning", uiOutput("tabPref.imitationLearning")),
     tabItem(tabName = "about", uiOutput("tabAbout"))
