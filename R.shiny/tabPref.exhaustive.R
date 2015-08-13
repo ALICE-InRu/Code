@@ -1,6 +1,6 @@
 output$tabPref.exhaustive <- renderUI({
   dashboardBody(
-    fluidRow(helpText('Using main problem distribution and preferably 10x10 dimension. Check settings to set trajectory used.')),
+    fluidRow(helpText('Using main problem distribution')),
     fluidRow(
       box(title = "Pareto front", collapsible = TRUE, width=12,
           #tags$head( tags$script(src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full", type = 'text/javascript'),tags$script( "MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});", type='text/x-mathjax-config')),
@@ -36,7 +36,7 @@ output$tabPref.exhaustive <- renderUI({
 
 prefSummary <- reactive({
   withProgress(message = 'Loading exhaustive data', value = 0, {
-    get.prefSummary(input$problems,input$dimension,'OPT','p',F,input$bias)
+    get.prefSummary(input$problems,input$dimension,'OPT','p',F)
   })
 })
 
@@ -54,7 +54,7 @@ output$plot.exhaust.paretoFront <- renderPlot({
 
 output$plot.exhaust.acc <- renderPlot({
   withProgress(message = 'Plotting training acc.', value = 0, {
-    plot.exhaust.acc(prefSummary(),input$save)+themeVerticalLegend
+    plot.exhaust.acc(prefSummary(),input$save,bestPrefModel()$Summary)+themeVerticalLegend
     })
 }, height="auto")
 

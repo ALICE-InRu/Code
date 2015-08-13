@@ -2,7 +2,7 @@ table.exhaust.paretoFront = function(paretoFront,onlyPareto=F){
   if(is.null(paretoFront)){return(NULL)}
   if(onlyPareto){paretoFront=subset(paretoFront,Pareto.front==T)}
   library('xtable')
-  tmp=ddply(paretoFront,~Problem+NrFeat+Model+Bias,summarise,
+  tmp=ddply(paretoFront,~Problem+NrFeat+Model,summarise,
             Accuracy.Optimality=round(Validation.Accuracy.Optimality,digit=2),
             Accuracy.Classification=round(Validation.Accuracy.Classification,digit=2),
             Rho=round(Validation.Rho,digit=2),
@@ -41,14 +41,13 @@ plot.exhaust.paretoWeights <- function(paretoFront,timedependent=F,save=NA,tiltT
     ylab(expression('Feature'*~phi))+xlab('')
 
   if(tiltText)
-    p <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+    p <- p+theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
                legend.position = 'right', legend.direction='vertical')
 
   if(!is.na(save)){
     problem = ifelse(length(levels(mdat$Problem))>1,'ALL',mdat$Problem[1])
     dim=ifelse(length(levels(mdat$Dimension))>1,'ALL',as.character(mdat$Dimension[1]))
-    Bias=ifelse(length(levels(mdat$Bias))>1,'ALL',mdat$Bias[1])
-    fname=paste(paste0(subdir,'/pareto'),dim,Bias,'phi',problem,extension,sep='.')
+    fname=paste(paste0(subdir,'/pareto'),dim,'phi',problem,extension,sep='.')
     if(save=='full')
       ggsave(p,filename=fname,width=Width,height=Height.full,units=units,dpi=dpi)
     else if (save=='half')
@@ -108,8 +107,7 @@ plot.exhaust.bestBoxplot <- function(bestPrefModel,SDR=NULL,save=NA,tiltText=T){
 
   if(!is.na(save)){
     dim=ifelse(length(levels(CDR$Dimension))==1,as.character(CDR$Dimension[1]),'ALL')
-    prob = ifelse(length(levels(CDR$Bias))==1,as.character(CDR$Bias[1]),'ALL')
-    fname=paste(subdir,paste('boxplotRho','CDR',dim,prob,extension,sep='.'),sep='/')
+    fname=paste(subdir,paste('boxplotRho','CDR',dim,extension,sep='.'),sep='/')
     if(save=='half'){
       ggsave(p,filename=fname,width=Width,height=Height.half,units=units,dpi=dpi)
     }
@@ -153,13 +151,8 @@ plot.exhaust.paretoFront <- function(prefSummary,paretoFront,plotAllSolutions=T,
                            color=as.factor(NrFeat)))+
     facet_grid(~Problem,scales='free_y')
 
-  if(length(unique(paretoFront$Bias))>1){
-    if(plotAllSolutions){p=p+geom_point(aes(shape=Bias))}
-    p=p+geom_point(data=paretoFront,aes(shape=Bias,size=Pareto.front))
-  } else {
-    if(plotAllSolutions){p=p+geom_point()}
-    p=p+geom_point(data=paretoFront,aes(shape=Pareto.front),size=5)
-  }
+  if(plotAllSolutions){p=p+geom_point()}
+  p=p+geom_point(data=paretoFront,aes(shape=Pareto.front),size=5)
 
   p=p+geom_line(data=paretoFront,size=1)+
     guides(size=FALSE)+ggplotColor('Feature count',4)+
@@ -172,9 +165,8 @@ plot.exhaust.paretoFront <- function(prefSummary,paretoFront,plotAllSolutions=T,
     ) + themeVerticalLegend
 
   if(!is.na(save)){
-    Bias=ifelse(length(levels(prefSummary$Bias))>1,'ALL',prefSummary$Bias[1])
     Problem=ifelse(length(levels(prefSummary$Problem))>1,'ALL',prefSummary$Problem[1])
-    fname=paste(subdir,paste('pareto',Bias,Problem,extension,sep='.'),sep='/')
+    fname=paste(subdir,paste('pareto',Problem,extension,sep='.'),sep='/')
     if(save=='full')
       ggsave(fname,p,units=units,width=Width,height=Height.full)
     else if (save=='half')
@@ -284,7 +276,7 @@ set.optAccuracy <- function(model){
 
 
 
-get.prefSummary <- function(problems,dim,track,rank,timedependent,bias){
+get.prefSummary <- function(problems,dim,track,rank,timedependent){
 
   get.CDR.Exhaust  <- function(model){
     CDR <- get.CDR(model,'train')
@@ -298,7 +290,7 @@ get.prefSummary <- function(problems,dim,track,rank,timedependent,bias){
 
   get.prefSummary1 <- function(model,Set='Validation'){
     CDR <- get.CDR.Exhaust(model)
-    vars = c('Bias','CDR','NrFeat','Model')
+    vars = c('CDR','NrFeat','Model')
     rho.stats = rho.statistic(CDR,vars,T)
     if(is.null(rho.stats)){return(NULL)}
     rho.stats = rho.stats[,c(vars,paste(Set,'Rho',sep='.'),paste0('N',Set))]
@@ -319,7 +311,7 @@ get.prefSummary <- function(problems,dim,track,rank,timedependent,bias){
     return(pref)
   }
 
-  file_list <- get.CDR.file_list(problems, dim, track, rank, timedependent, bias)
+  file_list <- get.CDR.file_list(problems, dim, track, rank, timedependent)
   file_list = file_list[grep('exhaust',file_list)]
 
   prefSummary <- ldply(file_list, get.prefSummary1)

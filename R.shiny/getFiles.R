@@ -78,7 +78,7 @@ get.files.TRDAT <- function(problems,dim,tracks,rank='p',useDiff=F,Global=F){
   return(trdat)
 }
 
-get.CDR.file_list <- function(problems,dim,tracks,ranks,timedependent,bias,lmax=F){
+get.CDR.file_list <- function(problems,dim,tracks,ranks,timedependent,bias='equal',lmax=F){
   if(length(problems)>1) problems=paste0('(',paste(problems,collapse='|'),')')
   ix=grepl('IL',tracks)
   if(any(ix)){ tracks[ix]=paste0(substr(tracks[ix],1,2),'[0-9]+',substr(tracks[ix],3,100)) }
