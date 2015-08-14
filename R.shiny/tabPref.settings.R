@@ -32,10 +32,7 @@ dataset.training <- reactive({
 })
 
 output$plot.stepwiseBias <- renderPlot({
-  steps=1:numericDimension(input$dimension)
-  w=get.stepwiseBias(steps,input$problem,input$dimension,input$bias)
-  df=data.frame('Step'=steps,'Weight'=w)
-  ggplot(df,aes(x=Step,y=Weight))+geom_line()+scale_x_continuous(expand=c(0,0))
+  plot.stepwiseBiases(input$problem,input$dimension,input$bias)
 })
 
 output$output.liblinearModel <- renderPrint({

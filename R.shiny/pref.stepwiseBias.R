@@ -24,3 +24,20 @@ table.CDR.stepwiseBias <- function(CDR){
   return(xtable(stat))
 }
 
+plot.stepwiseBiases <- function(problems,dim,biases){
+
+  steps=1:numericDimension(dim)
+  w.stepwiseBias <- function(problem,bias){
+    w=get.stepwiseBias(steps,problem,dim,bias)
+    df=data.frame('Step'=steps,'Weight'=w,'Problem'=problem,'Bias'=bias)
+    return(df)
+  }
+
+  dat <- do.call(rbind, lapply(problems, function(problem){
+    do.call(rbind, lapply(biases, function(bias){
+      w.stepwiseBias(problem,bias)
+    }))}))
+
+  ggplot(dat,aes(x=Step,y=Weight,color=Bias))+geom_line()+scale_x_continuous(expand=c(0,0))+facet_grid(~Problem)+
+    ggplotColor('Bias',length(biases))
+}
