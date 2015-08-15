@@ -1,9 +1,10 @@
 plot.SDR <- function(SDR,type='boxplot',save=NA){
 
+  SDR$Problem=factorProblem(SDR,F)
   SDR$Names=droplevels(factorSDR(SDR$SDR,F))
   p=ggplot(SDR,aes(fill=SDR,colour=Set))+
     ggplotColor("Data set",length(unique(SDR$Set)))+
-    ggplotFill("Simple priority dispatching rule",length(sdrs),levels(SDR$Names))+
+    ggplotFill("Simple dispatching rule",length(sdrs),levels(SDR$Names))+
     ylab(rhoLabel)+xlab('')+
     facet_wrap(ncol=2,~Problem+Dimension,scales='free_y')+
     cornerLegend(length(levels(droplevels(SDR$Problem))))
@@ -14,7 +15,7 @@ plot.SDR <- function(SDR,type='boxplot',save=NA){
 
   if(!is.na(save)){
     dir=paste(subdir,paste0(type,'Rho'),sep='/')
-    dim=ifelse(length(levels(SDR$Dimension))>1,'ALL',SDR$Dimension[1])
+    dim=ifelse(length(levels(droplevels(SDR$Dimension)))>1,'ALL',as.character(SDR$Dimension[1]))
     fname=paste(paste(dir,'SDR',dim,sep='.'),extension,sep='.')
 
     if(save=='full')

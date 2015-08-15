@@ -1,12 +1,13 @@
 require(ggplot2)
 require(gridExtra)
 
-Width=6.69291 #170mm
-Height.quart=2.3622 #60mm
-Height.third=3.14961 #80mm
-Height.half=3.93701 #120mm
-Height.full=8.66142 #220mm
-units='in'
+factor=1.2
+Width=130*factor #170mm
+Height.quart=43*factor #60mm
+Height.third=61*factor #80mm
+Height.half=87*factor #120mm
+Height.full=175*factor #220mm
+units='mm'
 
 mainPalette <- function(n) {
   #palette <- c("red4", "darkslategray3", "dodgerblue1", "darkcyan", "skyblue2", "dodgerblue4", "purple4", "maroon", "chocolate1", "bisque3", "bisque", "seagreen4", "lightgreen", "skyblue4", "mediumpurple3", "palevioletred1", "lightsalmon4", "darkgoldenrod1")
@@ -46,7 +47,7 @@ cornerLegend <- function(n,ncol=2){
   l <- list(guides(fill = guide_legend(order=1, direction = "vertical", title.position = "top"),
                    colour = guide_legend(order=2, direction = "vertical", title.position = "top")))
   if(n%%ncol==0|n==1){ return(l) }
-    list(l, theme(legend.position = c(0.75, 1/(n*ncol)), legend.direction = "horizontal"))
+    list(l, theme(legend.position = c(0.75, 1/(n*1.5)), legend.direction = "horizontal"))
 }
 mytheme <- theme_update(legend.justification='center',legend.position='bottom',legend.box = "horizontal")
 axisCompactY <- list(scale_y_continuous(expand=c(0,0)))
