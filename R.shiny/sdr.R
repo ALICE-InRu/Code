@@ -46,7 +46,7 @@ plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.split,save=NA){
   p <- p + cornerLegend(probs)
 
   if(!is.na(save)){
-    fname=paste(subdir,'boxplotRho.BDR.10x10','.',extension,sep='')
+    fname=paste0(subdir,paste('boxplotRho.BDR',dim,extension,sep='.'))
     if(save=='full')
       ggsave(filename=fname,plot=p, height=Height.full, width=Width, dpi=dpi, units=units)
     else if(save=='half')
