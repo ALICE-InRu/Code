@@ -30,6 +30,7 @@ get.BestWorst <- function(problems,dim){
 plot.BestWorst <- function(problems,dim,track,save=NA){
 
   stat=get.BestWorst(problems,dim)
+  stat$Problem <- factorProblem(stat,F)
   if(is.null(stat)){return(NULL)}
 
   if(track=='OPT')
@@ -54,7 +55,7 @@ plot.BestWorst <- function(problems,dim,track,save=NA){
     p = ggplot(subset(stat,Followed==F), aes(x=Step))+
       ggplotColor(name='Trajectory',num=length(levels(stat$Track)))+
       ggplotFill(name='Trajectory',num=length(levels(stat$Track)))+
-      facet_grid(Problem~.,scales= 'free_y')+
+      facet_wrap(~Problem,ncol=3,scales= 'free_y')+
       axisStep(dim)+axisCompact
 
     p=p+geom_ribbon(aes(ymin=best.mu,ymax=worst.mu,fill=Track,color=Track),alpha=0.5)
@@ -64,7 +65,7 @@ plot.BestWorst <- function(problems,dim,track,save=NA){
 
   if(!is.na(save)){
     problem=ifelse(length(problems)>1,'ALL',problems)
-    fname=paste(paste(subdir,problem,'stepwise',sep='/'),dim,'Track','casescenario',extension,sep='.')
+    fname=paste(paste(subdir,problem,'stepwise',sep='/'),dim,track,'casescenario',extension,sep='.')
     if(save=='full')
       ggsave(filename=fname,plot=p, height=Height.full, width=Width, dpi=dpi, units=units)
     else if(save=='half')

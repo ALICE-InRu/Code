@@ -4,7 +4,7 @@ input=list(dimension='10x10',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd'
 #input=list(dimension='6x5',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc','j.rnd_pj1doubled','j.rnd_p1mdoubled'))
 SDR=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension)
 input$timedependent=F
-input$smooth=F
+input$smooth=T
 
 source('sdr.R')
 dataset.diff=checkDifficulty(subset(SDR, Set=='train' & Dimension==input$dimension & Problem%in%input$problems))
@@ -38,7 +38,7 @@ plot.stepwiseOptimality(all.StepwiseOptimality,input$dimension,F,input$smooth,sa
 source('opt.SDR.R')
 StepwiseOptimality=get.StepwiseOptimality(input$problem,input$dimension,'OPT')
 StepwiseExtremal=get.StepwiseExtremal(input$problem,input$dimension)
-plot.StepwiseSDR.wrtTrack(StepwiseOptimality,StepwiseExtremal,input$dimension,F,save)
+plot.StepwiseSDR.wrtTrack(StepwiseOptimality,StepwiseExtremal,input$dimension,input$smooth,save)
 
 source('opt.bw.R')
 plot.BestWorst(input$problems,input$dimension,'OPT',save)

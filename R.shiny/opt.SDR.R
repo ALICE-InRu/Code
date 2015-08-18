@@ -58,18 +58,20 @@ plot.StepwiseSDR.wrtTrack <- function(StepwiseOptimality,StepwiseExtremal,
     SDR$SDR[SDR$Feature=='jobWrm' & SDR$Extremal=='min']='LWR'
     SDR$SDR[SDR$Feature=='jobWrm' & SDR$Extremal=='max']='MWR'
     SDR$SDR=factorSDR(SDR$SDR)
+    SDR$Problem <- factorProblem(SDR,F)
 
     p=plot.stepwiseOptimality(StepwiseOptimality,dim,T,smooth,asRND = T) # random guessing
 
     if(smooth){
-      p=p+geom_smooth(data=SDR,aes(y=value,color=SDR,fill=SDR,size='OPT'))+ggplotFill('SDR',length(sdrs))
+      p=p+geom_smooth(data=SDR,aes(y=value,color=SDR,fill=SDR,linetype='OPT'))+
+        ggplotFill('SDR',length(sdrs),values=sdrs)
     } else {
       stat=ddply(SDR,~Problem+Step+SDR,summarise,mu=mean(value))
-      p=p+geom_line(data=stat,aes(y=mu,color=SDR,size='OPT'))
+      p=p+geom_line(data=stat,aes(y=mu,color=SDR,linetype='OPT'))
     }
 
     p=p+ggplotColor('SDR',length(sdrs),values=sdrs)+
-      facet_wrap(~Problem,nrow=1)+
+      facet_wrap(~Problem,ncol=3)+
       ylab('Probability of SDR being optimal')
 
     #if(length(problems)>1){ p <- p + cornerLegend(length(problems)) }
@@ -85,9 +87,10 @@ plot.StepwiseSDR.wrtTrack <- function(StepwiseOptimality,StepwiseExtremal,
 
   if(!is.null(SDR)){
     SDR<- factorTrack(SDR)
-    p=p+geom_line(data=SDR,aes(y=rnd.mu,color=Track,size='SDR'))
-    p=p+scale_size_manual('Track', values=c(1.2,0.8))
-  } else { p=p+scale_size_discrete(guide=F) }
+    SDR$Problem <- factorProblem(SDR,F)
+    p=p+geom_line(data=SDR,aes(y=rnd.mu,color=Track,linetype='SDR'))
+    p=p+scale_linetype_manual('Track', values=c(1,2))
+  } else { p=p+scale_linetype_discrete(guide=F) }
 
   if(!is.na(save)){
     fname=ifelse(length(problems)>1,

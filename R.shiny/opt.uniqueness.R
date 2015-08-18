@@ -72,10 +72,17 @@ plot.stepwiseOptimality <- function(StepwiseOptimality,dim,simple,smooth,save=NA
   if(is.null(StepwiseOptimality)) { return(NULL)}
 
   problems=levels(StepwiseOptimality$Stats$Problem)
+  StepwiseOptimality$Stats$Problem <- factorProblem(StepwiseOptimality$Stats,F)
+  StepwiseOptimality$Raw$Problem <- factorProblem(StepwiseOptimality$Raw,F)
+
   if(simple){
     p=ggplot(StepwiseOptimality$Stats,aes(x=Step,order=Problem))
     if(asRND)
-      p=p+geom_line(aes(y=rnd.mu,color='RND'))
+      if(smooth){
+        p=p+geom_smooth(data=StepwiseOptimality$Stats,aes(y=rnd.mu,color='RND',fill='RND',linetype='OPT'))
+      } else {
+        p=p+geom_line(aes(y=rnd.mu,color='RND',linetype='OPT'))
+      }
     else
       p=p+geom_line(aes(y=rnd.mu),linetype='dotted')
   } else {
