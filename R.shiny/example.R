@@ -8,12 +8,13 @@ dim='4x5'
 tracks=c(sdrs,'OPT')
 
 all.gantt <- do.call(rbind, lapply(tracks, function(sdr){get.gantt(problem,dim,sdr,1)}))
-p <- plot.gantt(all.gantt,numericDimension(dim))
-if(save) ggsave(paste0(subdir,'/example.gantt.SDRs.eps'),plot=p,width=Width,height=Height.full)
+p <- plot.gantt(all.gantt,numericDimension(dim),cmaxMargin = 75)
+if(save)
+  ggsave(paste0(subdir,'/example.gantt.SDRs.pdf'),plot=p,width=Width,height=130,units = units, dpi = dpi)
 
 gantt=get.gantt(problem,dim,'SPT',1)
 p <- plot.gantt(gantt,10,T,T,T)
-if(save) ggsave(paste0(subdir,'/example.gantt.pdf'),plot=p,width=Width,height=Height.half)
+if(save) ggsave(paste0(subdir,'/example.gantt.pdf'),plot=p,width=Width,height=85,units = units, dpi = dpi)
 
 #gantt.1=get.gantt(problem,dim,'RND',1);gantt.1=subset(gantt.1,Step<=1);plot.gantt(gantt.1,1,TightTime = T)
 #gantt.2=get.gantt(problem,dim,'RND',1);gantt.2=subset(gantt.2,Step<=1);plot.gantt(gantt.2,1,TightTime = T)

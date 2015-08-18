@@ -31,14 +31,14 @@ plot.gantt <- function(gantt,step,
     theme(legend.position="none")+facet_wrap(~Problem+Dimension+Track,ncol=2)
 
   if(nrow(fdat)>0){
-    cmax = ddply(fdat,~Problem+Dimension+Track,summarise,x=max(phi.endTime),Mac=0.3)
+    cmax = ddply(fdat,~Problem+Dimension+Track,summarise,x=max(phi.endTime),Mac=0.7)
     p=p+geom_rect(aes(fill=as.factor(Job),
                       xmin=phi.startTime,xmax=phi.endTime,
                       ymin=Mac-0.4,ymax=Mac+0.4))+
       geom_text(size=4,aes(label=Job))+
       geom_vline(data = cmax, aes(xintercept=x), linetype='dotted')+
-      geom_text(data = cmax, label='C[max]', parse=T, size=4, hjust=1, vjust=0)+
-      geom_text(data = cmax, aes(label=x), size=4, hjust=0, vjust=0)
+      geom_text(data = cmax, label='C[max]', parse=T, size=4, hjust=1, vjust=1)+
+      geom_text(data = cmax, aes(label=x), size=4, hjust=0, vjust=1)
   }
   if(nrow(pdat)>0){
     overlapping=duplicated(pdat$Mac)
@@ -84,7 +84,7 @@ plot.gantt <- function(gantt,step,
   }
 
   if(plotStep){
-    p <- p+annotate("text", x = 5, y = 0.3, vjust=1, hjust=0, size=4,
+    p <- p+annotate("text", x = 5, y=0.7, vjust=1, hjust=0, size=4,
                     label = ifelse(nrow(pdat)>0,paste0("k=",step),'complete schedule'))
   }
 
