@@ -13,7 +13,7 @@ plot.StepwiseExtremal <- function(StepwiseOptimality,StepwiseExtremal,CDR=NULL,d
     p=p+geom_line(data=StepwiseExtremal$Stats,aes(y=Extremal.mu,color=Extremal))
   }
 
-  p=p+facet_wrap(~Feature,ncol=3)+scale_color_brewer(palette = 'Set1')+
+  p=p+facet_wrap(~Feature,ncol=4)+scale_color_brewer(palette = 'Set1')+
     ylab(expression('Probability of extremal feature '* ~ phi[i] * ~ ' being optimal'))
 
   if(!is.null(CDR)){
@@ -26,7 +26,7 @@ plot.StepwiseExtremal <- function(StepwiseOptimality,StepwiseExtremal,CDR=NULL,d
       stats$SDR <- factor(stats$SDR,levels=c(sdrs,''))
 
       stats$Feature <- factorFeature(stats$Feature,F)
-      stats$Step=mean(StepwiseOptimality$Stats$Step)
+      stats$Step=quantile(StepwiseOptimality$Stats$Step,0.4)
 
       p <- p +
         geom_text(data = stats, size=4, hjust=1,
