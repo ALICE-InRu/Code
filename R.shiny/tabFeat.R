@@ -9,9 +9,13 @@ output$tabFEAT <- renderUI({
   )
 })
 
+dataset.singleFeat <- reactive({
+  get.SingleFeat.CDR(input$problem, input$dimension)
+})
+
 output$plot.extremal <- renderPlot({
   withProgress(message = 'Making plot', value = 0, {
-    plot.StepwiseExtremal(dataset.StepwiseOptimality(),dataset.StepwiseExtremal(),input$dimension,F)
+    plot.StepwiseExtremal(dataset.StepwiseOptimality(),dataset.StepwiseExtremal(),dataset.singleFeat(),input$dimension,F)
   })
 },height="auto")
 

@@ -64,7 +64,8 @@ if(!is.null(ks)){
 }
 
 source('feat.R')
-plot.StepwiseExtremal(StepwiseOptimality,StepwiseExtremal,input$dimension,F)
+CDR.singleFeat <- get.SingleFeat.CDR(input$problem, input$dimension)
+plot.StepwiseExtremal(StepwiseOptimality,StepwiseExtremal,CDR.singleFeat,input$dimension,F)
 plot.StepwiseFeatures(input$problem,input$dimension,T,F)
 plot.StepwiseFeatures(input$problem,input$dimension,F,T)
 
