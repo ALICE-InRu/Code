@@ -140,7 +140,7 @@ namespace ALICE
                         ? jssp.JobChosenBySDR((SDRData.SDR)Track)
                         : jssp.ReadyJobs[0];
                 }
-                jssp.Dispatch1(dispatchedJob, Features.Mode.None);
+                jssp.Dispatch1(dispatchedJob);
             }
             NumFeatures += currentNumFeatures;
             return String.Format("{0}:{1} #{2} phi", FileInfo.Name, pid, currentNumFeatures);
@@ -151,7 +151,7 @@ namespace ALICE
             foreach (var p in Preferences[pid - 1, step])
             {
                 var lookahead = jssp.Clone();
-                p.Feature = lookahead.Dispatch1(p.Dispatch.Job, FeatureMode);
+                p.Feature = lookahead.Dispatch1(p.Dispatch.Job, FeatureMode, true);
             }
             return Preferences[pid - 1, step].Count;
         }

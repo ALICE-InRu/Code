@@ -96,7 +96,7 @@ namespace ALICE
 
         public static int ExplanatoryCount
         {
-            get { return Enum.GetNames(typeof(Explanatory)).Length; }            
+            get { return Enum.GetNames(typeof (Explanatory)).Length; }
         }
 
 
@@ -129,35 +129,35 @@ namespace ALICE
         {
             #region job related
 
-            PhiLocal[(int)Local.proc] = proc;
-            PhiLocal[(int)Local.startTime] = startTime;
-            PhiLocal[(int)Local.endTime] = startTime + proc;
-            PhiLocal[(int)Local.jobOps] = job.MacCount;
-            PhiLocal[(int)Local.arrival] = arrivalTime;
-            PhiLocal[(int)Local.wait] = startTime - arrivalTime;
+            PhiLocal[(int) Local.proc] = proc;
+            PhiLocal[(int) Local.startTime] = startTime;
+            PhiLocal[(int) Local.endTime] = startTime + proc;
+            PhiLocal[(int) Local.jobOps] = job.MacCount;
+            PhiLocal[(int) Local.arrival] = arrivalTime;
+            PhiLocal[(int) Local.wait] = startTime - arrivalTime;
 
             #endregion
 
             #region machine related
 
-            PhiLocal[(int)Local.macFree] = mac.Makespan;
-            PhiLocal[(int)Local.macOps] = mac.JobCount;
+            PhiLocal[(int) Local.macFree] = mac.Makespan;
+            PhiLocal[(int) Local.macOps] = mac.JobCount;
 
             #endregion
 
             #region explanatory for features, static per step
 
-            XiExplanatory[(int)Explanatory.totProcTime] = totProcTime;
-            PhiLocal[(int)Local.macTotProcTime] = mac.TotProcTime;
-            PhiLocal[(int)Local.jobTotProcTime] = job.TotProcTime;
-            XiExplanatory[(int)Explanatory.step] = step;
-            
-            #endregion 
+            XiExplanatory[(int) Explanatory.totProcTime] = totProcTime;
+            PhiLocal[(int) Local.macTotProcTime] = mac.TotProcTime;
+            PhiLocal[(int) Local.jobTotProcTime] = job.TotProcTime;
+            XiExplanatory[(int) Explanatory.step] = step;
+
+            #endregion
 
             #region schedule related
 
-            PhiLocal[(int)Local.makespan] = makespan;
-            
+            PhiLocal[(int) Local.makespan] = makespan;
+
             #endregion
 
             #region work remaining
@@ -165,51 +165,53 @@ namespace ALICE
             /* add current processing time in order for <w,phi> can be equivalent to MWR/LWR 
             * (otherwise it would find the job with most/least work remaining in the next step,
             * i.e. after the one-step lookahead */
-            PhiLocal[(int)Local.macWrm] = mac.WorkRemaining + proc;
-            PhiLocal[(int)Local.jobWrm] = job.WorkRemaining + proc;
-            XiExplanatory[(int)Explanatory.totWrm] = wrmTotal + proc;
+            PhiLocal[(int) Local.macWrm] = mac.WorkRemaining + proc;
+            PhiLocal[(int) Local.jobWrm] = job.WorkRemaining + proc;
+            XiExplanatory[(int) Explanatory.totWrm] = wrmTotal + proc;
 
             #endregion
 
             #region flow related
 
-            PhiLocal[(int)Local.reducedSlack] = reduced;
-            PhiLocal[(int)Local.macSlack] = mac.TotSlack;
-            PhiLocal[(int)Local.allSlack] = slotsTotal;
+            PhiLocal[(int) Local.reducedSlack] = reduced;
+            PhiLocal[(int) Local.macSlack] = mac.TotSlack;
+            PhiLocal[(int) Local.allSlack] = slotsTotal;
 
             #endregion
 
         }
 
-        public void GetGlobalPhi(Schedule current)
+        public void GetGlobalPhi(Schedule current, bool randomRolloutsActive)
         {
             Schedule lookahead;
 
             for (int i = 0; i < SDRData.SDRCount; i++)
             {
-                SDRData.SDR sdr = (SDRData.SDR)i;
+                SDRData.SDR sdr = (SDRData.SDR) i;
                 lookahead = current.Clone();
-                lookahead.ApplySDR(sdr, Mode.None);
-                PhiGlobal[(int)(Global)(sdr)] = lookahead.Makespan;
+                lookahead.ApplySDR(sdr);
+                PhiGlobal[(int) (Global) (sdr)] = lookahead.Makespan;
             }
+
+            if (!randomRolloutsActive) return;
 
             for (int i = 0; i < RND.Length; i++)
             {
                 lookahead = current.Clone();
-                lookahead.ApplySDR(SDRData.SDR.RND, Mode.None);
+                lookahead.ApplySDR(SDRData.SDR.RND);
                 RND[i] = lookahead.Makespan;
             }
 
-            PhiGlobal[(int)Global.RNDmin] = RND.Min();
-            PhiGlobal[(int)Global.RNDmax] = RND.Max();
-            PhiGlobal[(int)Global.RNDmean] = RND.Average();
-            PhiGlobal[(int)Global.RNDstd] = StandardDev(RND, PhiGlobal[(int)Global.RNDmean]);
+            PhiGlobal[(int) Global.RNDmin] = RND.Min();
+            PhiGlobal[(int) Global.RNDmax] = RND.Max();
+            PhiGlobal[(int) Global.RNDmean] = RND.Average();
+            PhiGlobal[(int) Global.RNDstd] = StandardDev(RND, PhiGlobal[(int) Global.RNDmean]);
         }
 
         public void GetEquivPhi(int job, Schedule current)
         {
             for (int i = 0; i < SDRData.SDRCount; i++)
-                Equiv[i] = job == current.JobChosenBySDR((SDRData.SDR)i);
+                Equiv[i] = job == current.JobChosenBySDR((SDRData.SDR) i);
         }
 
         private static double StandardDev(IList<int> values, double mean)
@@ -219,8 +221,7 @@ namespace ALICE
             for (var i = 0; i < n; i++)
                 variance += Math.Pow((values[i] - mean), 2);
 
-            return Math.Sqrt(variance / n);
+            return Math.Sqrt(variance/n);
         }
-
     }
 }

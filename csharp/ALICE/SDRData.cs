@@ -50,12 +50,12 @@ namespace ALICE
         {
             ApplyAll(Apply);
         }
-        
+
         public Schedule Apply(int pid)
         {
             string name = GetName(pid);
             Schedule jssp = GetEmptySchedule(name);
-            jssp.ApplySDR(_sdr, Features.Mode.None);
+            jssp.ApplySDR(_sdr);
             AddMakespan(name, jssp.Makespan);
             return jssp;
         }

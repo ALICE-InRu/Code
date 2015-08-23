@@ -53,7 +53,7 @@ namespace ALICE
             public Schedule.Dispatch Dispatch;
             public int SimplexIterations;
 
-            public double Priority; 
+            public double Priority;
 
             public Preference(Schedule.Dispatch dispatch, Features features)
             {
@@ -92,14 +92,15 @@ namespace ALICE
 
         }
 
-        internal TrainingSet(string distribution, string dimension, Trajectory track, int iter, bool extended, DirectoryInfo data)
+        internal TrainingSet(string distribution, string dimension, Trajectory track, int iter, bool extended,
+            DirectoryInfo data)
             : base(distribution, dimension, DataSet.train, extended, data)
         {
             Track = track;
             string strTrack = track.ToString();
             NumInstances = ResetNumInstances(extended);
             NumTraining = ResetNumInstances(false);
-            
+
             switch (Track)
             {
                 case Trajectory.ILFIXSUP:
@@ -254,7 +255,7 @@ namespace ALICE
                                         info += string.Format(",{0:0}", pref.Feature.PhiLocal[i]);
 
                                     if (!dispatch) break;
-                             
+
                                     for (var i = 0; i < Features.ExplanatoryCount; i++)
                                         info += string.Format(",{0:0}", pref.Feature.XiExplanatory[i]);
                                     break;
@@ -294,7 +295,7 @@ namespace ALICE
             {
                 Preferences[pid - 1, step] = FindFeaturesForAllJobs(jssp, gurobiModel);
                 int dispatchedJob = _trajectory(jssp, Preferences[pid - 1, step]);
-                jssp.Dispatch1(dispatchedJob, Features.Mode.None);
+                jssp.Dispatch1(dispatchedJob);
                 gurobiModel.CommitConstraint(jssp.Sequence[step], step);
                 Preferences[pid - 1, step].Find(x => x.Dispatch.Job == dispatchedJob).Followed = true;
                 currentNumFeatures += Preferences[pid - 1, step].Count;
@@ -325,7 +326,7 @@ namespace ALICE
             for (int r = 0; r < jssp.ReadyJobs.Count; r++)
             {
                 Schedule lookahead = jssp.Clone();
-                Features phi = lookahead.Dispatch1(jssp.ReadyJobs[r], FeatureMode); // commit the lookahead
+                Features phi = lookahead.Dispatch1(jssp.ReadyJobs[r], FeatureMode, false); // commit the lookahead
                 prefs[r] = new Preference(lookahead.Sequence[lookahead.Sequence.Count - 1], phi);
                 // need to optimize to label featuers correctly -- this is computationally intensive
                 gurobiModel.Lookahead(prefs[r].Dispatch, out prefs[r].ResultingOptMakespan);

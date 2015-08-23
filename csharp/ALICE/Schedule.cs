@@ -13,7 +13,7 @@ namespace ALICE
         public List<int> ReadyJobs;
         private readonly Jobs[] _jobs;
         private readonly Macs[] _macs;
-        private readonly int _totProcTime; 
+        private readonly int _totProcTime;
 
         public int Makespan;
         private readonly ProblemInstance _prob;
@@ -54,7 +54,7 @@ namespace ALICE
 
             if (rnd == null)
             {
-                int seed = (int)DateTime.Now.Ticks;
+                int seed = (int) DateTime.Now.Ticks;
                 _random = new Random(seed);
             }
             else
@@ -85,7 +85,7 @@ namespace ALICE
 
                 Job = Convert.ToInt32(split[0]);
                 Mac = Convert.ToInt32(split[1]);
-                StartTime = Convert.ToInt32(split[2]); 
+                StartTime = Convert.ToInt32(split[2]);
             }
 
             public Dispatch Clone()
@@ -227,6 +227,7 @@ namespace ALICE
 
 
             #region find available slot
+
             int slot;
             int startTime;
             if (_macs[mac].JobCount == 0) // never been assigned a job before, no need to check for slotsizes
@@ -278,7 +279,12 @@ namespace ALICE
             return slot;
         }
 
-        public Features Dispatch1(int job, Features.Mode mode) // commits dispatch! 
+        public void Dispatch1(int job)
+        {
+            Dispatch1(job, Features.Mode.None, false);
+        }
+
+        public Features Dispatch1(int job, Features.Mode mode, bool randomRolloutsActive) // commits dispatch! 
         {
             Dispatch dispatch;
             int slot = FindDispatch(job, out dispatch);
@@ -308,7 +314,7 @@ namespace ALICE
             switch (mode)
             {
                 case Features.Mode.Global:
-                    phi.GetGlobalPhi(this);
+                    phi.GetGlobalPhi(this, randomRolloutsActive);
                     return phi;
                 case Features.Mode.Local:
                     phi.GetLocalPhi(_jobs[job], _macs[dispatch.Mac], _prob.Procs[job, dispatch.Mac],
@@ -321,35 +327,36 @@ namespace ALICE
             }
         }
 
-        public void ApplySDR(SDRData.SDR sdr, Features.Mode mode)
+        public void ApplySDR(SDRData.SDR sdr)
         {
             for (int step = Sequence.Count; step < _prob.Dimension; step++)
             {
                 var job = JobChosenBySDR(sdr);
-                Dispatch1(job, mode);
+                Dispatch1(job);
             }
         }
 
         public void ApplyBDR(SDRData.SDR sdrFirst, SDRData.SDR sdrSecond, int stepSplitProc)
         {
-            int stepSplit = (int)(stepSplitProc / 100.0 * _prob.Dimension);
+            int stepSplit = (int) (stepSplitProc/100.0*_prob.Dimension);
 
             for (int step = Sequence.Count; step < _prob.Dimension; step++)
             {
                 var sdr = step < stepSplit ? sdrFirst : sdrSecond;
                 var job = JobChosenBySDR(sdr);
-                Dispatch1(job, Features.Mode.None);
+                Dispatch1(job);
             }
         }
 
         public void ApplyCDR(LinearModel model)
         {
+
             for (int step = Sequence.Count; step < _prob.Dimension; step++)
             {
                 List<double> priority = new List<double>(ReadyJobs.Count);
                 priority.AddRange(from j in ReadyJobs
                     let lookahead = Clone()
-                    select lookahead.Dispatch1(j, model.FeatureMode)
+                    select lookahead.Dispatch1(j, model.FeatureMode, model.RandomRolloutsActive)
                     into feat
                     select model.PriorityIndex(feat));
 
@@ -357,14 +364,14 @@ namespace ALICE
                     .Where(x => Math.Abs(x.x - priority.Max()) < 1e-10)
                     .Select(x => x.i).ToList();
 
-                var highestPriority = ReadyJobs.Select((x, i) => new { x, i })
+                var highestPriority = ReadyJobs.Select((x, i) => new {x, i})
                     .Where(x => ix.Contains(x.i))
                     .Select(x => x.x).ToList();
 
                 // break ties randomly 
                 var job = highestPriority[_random.Next(0, highestPriority.Count())];
 
-                Dispatch1(job, Features.Mode.None);
+                Dispatch1(job);
             }
         }
 
@@ -419,14 +426,14 @@ namespace ALICE
         {
             if (resultingMakespan < trueMakespan | trueMakespan == int.MinValue)
                 return double.NaN;
-            return 100.0 * (resultingMakespan - trueMakespan) / trueMakespan;
+            return 100.0*(resultingMakespan - trueMakespan)/trueMakespan;
         }
 
         public bool Validate(out string error, bool fullSchedule, Dispatch newDispatch = null)
         {
             int reportedMakespan = -1;
             for (int mac = 0; mac < _prob.NumMachines; mac++)
-                reportedMakespan = Math.Max(Makespan, _macs[mac].Makespan); 
+                reportedMakespan = Math.Max(Makespan, _macs[mac].Makespan);
             if (reportedMakespan != Makespan)
             {
                 error = "Makespan doesn't match end time of machines";
@@ -489,7 +496,7 @@ namespace ALICE
 
         public void SetCompleteSchedule(int[,] times, int ms)
         {
-            if (times == null) return; 
+            if (times == null) return;
             Makespan = ms;
 
             for (int j = 0; j < _prob.NumJobs; j++)
@@ -537,12 +544,12 @@ namespace ALICE
 
             const int X0 = 25; // margin left
             const int X1 = 10; // margin right
-            int y0 = (int)(font.Size * 3); // top margin
-            int y1 = (int)(font.Size * 2); // bottom margin
+            int y0 = (int) (font.Size*3); // top margin
+            int y1 = (int) (font.Size*2); // bottom margin
 
-            double widthConvert = (width - X0 - X1) / (double)(Makespan);
-            int macheight = (height - y0 - y1) / _prob.NumMachines;
-            int space = (int)(macheight - font.Size * 2); // space between machines
+            double widthConvert = (width - X0 - X1)/(double) (Makespan);
+            int macheight = (height - y0 - y1)/_prob.NumMachines;
+            int space = (int) (macheight - font.Size*2); // space between machines
 
             Brush blackBrush = new SolidBrush(Color.Black);
 
@@ -551,12 +558,14 @@ namespace ALICE
                 colorBrushes[job] = new SolidBrush(colors.GetNextRandom());
 
             Bitmap imgSchedule = new Bitmap(width, height);
+
             #region plot final resulting image
+
             using (Graphics g = Graphics.FromImage(imgSchedule))
             {
                 g.Clear(Color.White);
                 for (int mac = 0; mac < _prob.NumMachines; mac++)
-                    g.DrawString(String.Format("{0}:", mac), font, blackBrush, new PointF(0, y0 + mac * macheight));
+                    g.DrawString(String.Format("{0}:", mac), font, blackBrush, new PointF(0, y0 + mac*macheight));
 
                 g.DrawString(String.Format("Cmax: {0}", Makespan), font, blackBrush, new PointF(0, height - y1));
 
@@ -568,18 +577,20 @@ namespace ALICE
                         int start = _jobs[job].XTime[mac];
                         int end = start + _prob.Procs[job, mac];
 
-                        start = (int)(start * widthConvert) + X0;
-                        end = (int)(end * widthConvert) + X0;
+                        start = (int) (start*widthConvert) + X0;
+                        end = (int) (end*widthConvert) + X0;
 
                         g.FillRectangle(colorBrushes[job],
-                            new Rectangle(start, y0 + mac * macheight, end - start, macheight - space));
+                            new Rectangle(start, y0 + mac*macheight, end - start, macheight - space));
                         if (printJobIndex)
-                            g.DrawString(job.ToString(), font, blackBrush, new PointF(start, y0 + mac * macheight));
+                            g.DrawString(job.ToString(), font, blackBrush, new PointF(start, y0 + mac*macheight));
                     }
                 }
                 g.Dispose();
             }
+
             #endregion
+
             return imgSchedule;
         }
 
@@ -601,14 +612,13 @@ namespace ALICE
                 // take a random integer between 0 & 128 (rather than between 0 and 255)
                 // and then add 127 to make the colour lighter
                 var colorBytes = new byte[3];
-                colorBytes[0] = (byte)(_random.Next(128) + 127);
-                colorBytes[1] = (byte)(_random.Next(128) + 127);
-                colorBytes[2] = (byte)(_random.Next(128) + 127);
+                colorBytes[0] = (byte) (_random.Next(128) + 127);
+                colorBytes[1] = (byte) (_random.Next(128) + 127);
+                colorBytes[2] = (byte) (_random.Next(128) + 127);
 
                 // make the color fully opaque
                 return Color.FromArgb(255, colorBytes[0], colorBytes[1], colorBytes[2]);
             }
         }
-
     }
 }
