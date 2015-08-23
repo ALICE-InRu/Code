@@ -727,7 +727,8 @@ namespace Cheshire
             "PREF",
             "CMAES",
             "PREF-exhaust",
-            "PREF-varyLMAX"});
+            "PREF-varyLMAX",
+            "SingleFeat"});
             this.ApplyModel.Location = new System.Drawing.Point(65, 71);
             this.ApplyModel.Name = "ApplyModel";
             this.ApplyModel.Size = new System.Drawing.Size(60, 21);

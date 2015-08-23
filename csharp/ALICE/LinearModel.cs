@@ -11,15 +11,20 @@ namespace ALICE
     {
         public enum Model
         {
-            NotSet, 
+            NotSet,
             SDR,
             CMAES,
-            PREF
+            PREF,
+            SingleFeat
         }
 
         public readonly Model Type;
 
-        public readonly string Name;
+        public string Name
+        {
+            get { return String.Format("F{0}.M{1}", _numFeatures, _modelID); }
+        }
+
         public readonly FileInfo FileInfo;
         private readonly int _numFeatures;
         private readonly int _modelID;
@@ -27,6 +32,8 @@ namespace ALICE
 
         public double[][] LocalWeights = new double[Features.LocalCount][];
         public readonly double[][] GlobalWeights = new double[Features.GlobalCount][];
+        public readonly bool RandomRolloutsActive;
+
         public readonly bool TimeIndependent;
 
         public readonly string Distribution;
@@ -41,7 +48,6 @@ namespace ALICE
             FeatureMode = featureMode;
             _numFeatures = numFeatures;
             _modelID = modelID;
-            Name = String.Format("F{0}.M{1}", _numFeatures, _modelID);
             TimeIndependent = timeIndependent;
             Distribution = distribution;
             Dimension = dimension;
@@ -68,7 +74,7 @@ namespace ALICE
         public LinearModel(SDRData.SDR sdr, string distribution, string dimension)
             : this(null, Features.Mode.Local, 1, 1, (int) sdr, distribution, dimension, Model.SDR)
         {
-            Name = String.Format("{0}Equiv", sdr);
+            //Name = String.Format("{0}Equiv", sdr);
             switch (sdr)
             {
                 case SDRData.SDR.MWR:
@@ -103,6 +109,25 @@ namespace ALICE
                 return;
             }
             throw new Exception(String.Format("Cannot find weights {0} to user requirements from {1}!", Name, file.Name));
+        }
+
+        public LinearModel(object feat, int extremal, DirectoryInfo dataDirInfo)
+            : this(null, feat is Features.Local ? Features.Mode.Local : Features.Mode.Global, 1, (int) feat + 1,
+                extremal, "", "", Model.SingleFeat)
+        {
+            switch (FeatureMode)
+            {
+                case Features.Mode.Local:
+                    LocalWeights[(int) feat][0] = extremal;
+                    break;
+                case Features.Mode.Global:
+                    _numFeatures += Features.LocalCount;
+                    GlobalWeights[(int) feat][0] = extremal;
+                    if (feat.ToString().Substring(0, 3) == "RND")
+                        RandomRolloutsActive = true;
+                    break;
+            }
+            FileInfo = new FileInfo(String.Format("{0}/{1}/weights/{2}.csv", dataDirInfo.FullName, Type, Name));
         }
 
         public LinearModel(string distribution, string dimension, CMAESData.ObjectiveFunction objFun,
@@ -227,7 +252,7 @@ namespace ALICE
         {
             LocalWeights = localWeights;
         }
-        
+
         public static LinearModel[] GetAllExhaustiveModels(string distribution, string dimension,
             TrainingSet.Trajectory track, int iter, bool extended, PreferenceSet.Ranking rank, bool timedependent,
             DirectoryInfo dataDir, string stepwiseBias)
@@ -291,7 +316,8 @@ namespace ALICE
             return str;
         }
 
-        private static LinearModel[] ReadLoggedLinearWeights(FileInfo file, string distribution, string dimension, Model model)
+        private static LinearModel[] ReadLoggedLinearWeights(FileInfo file, string distribution, string dimension,
+            Model model)
         {
             if (!file.Exists)
                 throw new Exception(String.Format("File {0} doesn't exist! Cannot read weights.", file.Name));
