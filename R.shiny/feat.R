@@ -36,8 +36,7 @@ plot.StepwiseExtremal <- function(StepwiseOptimality,StepwiseExtremal,CDR=NULL,d
     }
 
   if(!is.na(save)){
-    problem=ifelse(length(levels(StepwiseOptimality$Stats$Problem))>1,'ALL',StepwiseOptimality$Stats$Problem[1])
-    dim=ifelse(length(levels(StepwiseOptimality$Stats$Dimension))>1,'ALL',StepwiseOptimality$Stats$Dimension[1])
+    problem=ifelse(length(levels(StepwiseOptimality$Stats$Problem))>1,'ALL',as.character(StepwiseOptimality$Stats$Problem[1]))
     fname=paste(paste(subdir,problem,'stepwise',sep='/'),dim,'OPT','extremal',extension,sep='.')
     print(fname)
     if(save=='full')
