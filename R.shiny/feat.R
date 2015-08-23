@@ -1,4 +1,4 @@
-plot.StepwiseExtremal <- function(StepwiseOptimality,StepwiseExtremal,dim,smooth,save=NA){
+plot.StepwiseExtremal <- function(StepwiseOptimality,StepwiseExtremal,CDR=NULL,dim,smooth,save=NA){
   if(length(StepwiseOptimality$Stats)==0) return(NULL)
 
   p=plot.stepwiseOptimality(StepwiseOptimality,dim,T,smooth) # random guessing
@@ -15,6 +15,25 @@ plot.StepwiseExtremal <- function(StepwiseOptimality,StepwiseExtremal,dim,smooth
 
   p=p+facet_wrap(~Feature,ncol=3)+scale_color_brewer(palette = 'Set1')+
     ylab(expression('Probability of extremal feature '* ~ phi[i] * ~ ' being optimal'))
+
+  if(!is.null(CDR)){
+      stats <- ddply(CDR,~Problem+Dimension+Feature+Extremal,summarise,mu=round(mean(Rho),0))
+      stats$SDR=''
+      stats$SDR[stats$Feature == 'proc' & stats$Extremal == 'min']='SPT'
+      stats$SDR[stats$Feature == 'proc' & stats$Extremal == 'max']='LPT'
+      stats$SDR[stats$Feature == 'jobWrm' & stats$Extremal == 'min']='LWR'
+      stats$SDR[stats$Feature == 'jobWrm' & stats$Extremal == 'max']='MWR'
+      stats$SDR <- factor(stats$SDR,levels=c(sdrs,''))
+
+      stats$Feature <- factorFeature(stats$Feature,F)
+      stats$Step=mean(StepwiseOptimality$Stats$Step)
+
+      p <- p +
+        geom_text(data = stats, size=4, hjust=1,
+                  aes(y=0.5, color=Extremal, vjust=as.numeric(Extremal)), label='rho', parse=T)+
+        geom_text(data = stats, size=4, hjust=0,
+                  aes(y=0.5, color=Extremal, vjust=as.numeric(Extremal), label=paste(paste0('=',mu,'%'),SDR)))
+    }
 
   if(!is.na(save)){
     problem=ifelse(length(levels(StepwiseOptimality$Stats$Problem))>1,'ALL',StepwiseOptimality$Stats$Problem[1])

@@ -20,10 +20,7 @@ namespace ALICE
 
         public readonly Model Type;
 
-        public string Name
-        {
-            get { return String.Format("F{0}.M{1}", _numFeatures, _modelID); }
-        }
+        public readonly string Name;
 
         public readonly FileInfo FileInfo;
         private readonly int _numFeatures;
@@ -48,6 +45,7 @@ namespace ALICE
             FeatureMode = featureMode;
             _numFeatures = numFeatures;
             _modelID = modelID;
+            Name = String.Format("F{0}.M{1}", _numFeatures, _modelID);
             TimeIndependent = timeIndependent;
             Distribution = distribution;
             Dimension = dimension;
@@ -74,7 +72,7 @@ namespace ALICE
         public LinearModel(SDRData.SDR sdr, string distribution, string dimension)
             : this(null, Features.Mode.Local, 1, 1, (int) sdr, distribution, dimension, Model.SDR)
         {
-            //Name = String.Format("{0}Equiv", sdr);
+            Name = String.Format("{0}Equiv", sdr);
             switch (sdr)
             {
                 case SDRData.SDR.MWR:
@@ -112,9 +110,12 @@ namespace ALICE
         }
 
         public LinearModel(object feat, int extremal, DirectoryInfo dataDirInfo)
-            : this(null, feat is Features.Local ? Features.Mode.Local : Features.Mode.Global, 1, (int) feat + 1,
+            : this(
+                null, feat is Features.Local ? Features.Mode.Local : Features.Mode.Global, 1,
+                (int) feat + 1 + (feat is Features.Local ? 0 : Features.LocalCount),
                 extremal, "", "", Model.SingleFeat)
         {
+            FileInfo = new FileInfo(String.Format("{0}/{1}/weights/{2}.csv", dataDirInfo.FullName, Type, Name));
             switch (FeatureMode)
             {
                 case Features.Mode.Local:
@@ -127,6 +128,7 @@ namespace ALICE
                         RandomRolloutsActive = true;
                     break;
             }
+            Name = String.Format("phi.{0}.E{1}", feat, extremal);
             FileInfo = new FileInfo(String.Format("{0}/{1}/weights/{2}.csv", dataDirInfo.FullName, Type, Name));
         }
 

@@ -89,6 +89,29 @@ get.CDR.file_list <- function(problems,dim,tracks,ranks,timedependent,bias='equa
   return(file_list)
 }
 
+get.SingleFeat.CDR <- function(problems,dim,set='train'){
+  if(length(problems)>1) problems=paste0('(',paste(problems,collapse='|'),')')
+  file_list <- list.files(paste0(DataDir,'SingleFeat/CDR'),full.names = T, recursive = T,
+                          pattern=paste(problems,dim,set,'csv',sep='.'))
+
+  CDR <- do.call(rbind,lapply(file_list, function(file) { read_csv(file) } ))
+  if(is.null(CDR)) {return(NULL)}
+
+  CDR <- factorFromName(CDR)
+
+  CDR$Rho <- factorRho(CDR)
+  CDR <- subset(CDR, !is.na(Rho))
+
+  model.rex="phi.(?<Feature>[a-zA-Z]+).E(?<Extremal>-?[0-9])"
+  m=regexpr(model.rex,CDR$CDR,perl=T)
+  CDR$Feature = getAttribute(CDR$CDR,m,'Feature')
+  CDR$Extremal = getAttribute(CDR$CDR,m,'Extremal',asStr = F)
+  CDR$Extremal = factor(CDR$Extremal, levels=c(-1,1),labels=c('min','max'))
+  CDR$Feature <- factorFeature(CDR$Feature)
+
+  return(CDR)
+}
+
 get.many.CDR <- function(file_list,sets,NrFeat=16,ModelID=1){
   CDR <- ldply(sets, function(set) get.CDR(file_list, NrFeat, ModelID, set))
   return(CDR)
