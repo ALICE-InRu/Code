@@ -17,7 +17,7 @@ plot.StepwiseExtremal <- function(StepwiseOptimality,StepwiseExtremal,CDR=NULL,d
     ylab(expression('Probability of extremal feature '* ~ phi[i] * ~ ' being optimal'))
 
   if(!is.null(CDR)){
-      stats <- ddply(CDR,~Problem+Dimension+Feature+Extremal,summarise,mu=round(mean(Rho),0))
+      stats <- ddply(CDR,~Problem+Dimension+Feature+Extremal,summarise,mu=round(mean(Rho),ifelse(mean(Rho)>10,0,1)))
       stats$SDR=''
       stats$SDR[stats$Feature == 'proc' & stats$Extremal == 'min']='SPT'
       stats$SDR[stats$Feature == 'proc' & stats$Extremal == 'max']='LPT'
