@@ -95,9 +95,8 @@ plot.StepwiseFeatures <- function(problem,dim,local,global,save=NA){
   }
 
   stat$Feature = factorFeature(stat$Feature,F)
-  m=regexpr('(?<Global>[A-Z]{3})',stat$Feature,perl=T)
-  stat$FeatureType=factor(ifelse(attr(m,'capture.start')!=-1,'Global','Local'),
-                          levels=c('Local','Global'))
+  stat$FeatureType = factorFeatureType(stat$Feature)
+
   p=NULL
   if(global & local){
     pLocal=plotOne(stat,'Local')
@@ -123,4 +122,12 @@ plot.StepwiseFeatures <- function(problem,dim,local,global,save=NA){
   }
 
   return(p)
+}
+
+stats.singleFeat <- function(CDR){
+  stat <- rho.statistic(CDR,c('FeatureType','Feature','Extremal'))
+  stat$Test.Rho=NULL
+  stat$NTest=NULL
+  stat <- arrange(stat, Training.Rho) # order w.r.t. lowest mean
+  return(stat)
 }

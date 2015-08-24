@@ -4,7 +4,8 @@ output$tabFEAT <- renderUI({
       box(title="Extremal", plotOutput("plot.extremal", height=600)),
       box(title="Evolution of features",
           plotOutput("plot.local", height=300),
-          plotOutput("plot.global", height=300))
+          plotOutput("plot.global", height=300)),
+      box(width = 12, dataTableOutput("stats.singleFeat"))
     )
   )
 })
@@ -12,6 +13,12 @@ output$tabFEAT <- renderUI({
 dataset.singleFeat <- reactive({
   get.SingleFeat.CDR(input$problem, input$dimension)
 })
+
+output$stats.singleFeat <- renderDataTable({
+  withProgress(message = 'Summary table', value = 0, {
+    stats.singleFeat(dataset.singleFeat())
+  })
+},  options = list(paging = FALSE, searching = T))
 
 output$plot.extremal <- renderPlot({
   withProgress(message = 'Making plot', value = 0, {

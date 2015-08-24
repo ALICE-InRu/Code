@@ -111,6 +111,14 @@ factorFeature <- function(Feature,simple=T,phis=F){
   return(droplevels(Feature))
 }
 
+factorFeatureType <- function(Feature){
+  m=regexpr('(?<Global>[A-Z]{3})',Feature,perl=T)
+  Type=factor(ifelse(attr(m,'capture.start')!=-1,'Global','Local'),
+              levels=c('Local','Global'))
+  return(Type)
+}
+
+
 factorExplanatory <- function(Explanatory,simple=T,xis=F){
   # remove 'xi.' from variable name (cleaner)
   if(length(grep('xi',Explanatory))>0){Explanatory=substr(Explanatory,4,100)}

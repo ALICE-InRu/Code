@@ -108,6 +108,7 @@ get.SingleFeat.CDR <- function(problems,dim,set='train'){
   CDR$Extremal = getAttribute(CDR$CDR,m,'Extremal',asStr = F)
   CDR$Extremal = factor(CDR$Extremal, levels=c(-1,1),labels=c('min','max'))
   CDR$Feature <- factorFeature(CDR$Feature)
+  CDR$FeatureType = factorFeatureType(CDR$Feature)
 
   return(CDR)
 }
