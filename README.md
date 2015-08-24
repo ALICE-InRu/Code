@@ -15,12 +15,12 @@ Status
 
 Contact: hei2@hi.is / helga85@gmail.com / @tungufoss
 
-> Note: [Raw data](https://github.com/tungufoss/alice.data) and [thesis](https://github.com/tungufoss/alice.thesis) is contained in their own repo. 
+> Note: [Raw data](https://github.com/ALICE-InRu/Data) and [thesis](https://github.com/ALICE-InRu/Thesis) is contained in their own repo. 
 
 To maintain folder structure, clone as follows:
 ```
 mkdir alice
 cd alice
-git clone https://github.com/tungufoss/alice.code.git Code
-git clone https://github.com/tungufoss/alice.data.git Data
+git clone https://github.com/ALICE-InRu/Code.git Code
+git clone https://github.com/ALICE-InRu/Data.git Data
 ```
