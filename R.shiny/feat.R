@@ -26,7 +26,7 @@ plot.StepwiseExtremal <- function(StepwiseOptimality,StepwiseExtremal,CDR=NULL,d
       stats$SDR <- factor(stats$SDR,levels=c(sdrs,''))
 
       stats$Feature <- factorFeature(stats$Feature,F)
-      stats$Step=quantile(StepwiseOptimality$Stats$Step,0.4)
+      stats$Step=quantile(StepwiseOptimality$Stats$Step,0.25)
 
       p <- p +
         geom_text(data = stats, size=4, hjust=1,
