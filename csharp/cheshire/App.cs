@@ -11,15 +11,16 @@ namespace Cheshire
 {
     public partial class App : Form
     {
+        private static readonly string AliceDirectory = String.Format(@"{0}\..\..\..\..\..\..\",Directory.GetCurrentDirectory());
         private const int AUTOSAVE = 30; // minutes
-        private static readonly DirectoryInfo DataDir = new DirectoryInfo(@"C:\users\helga\alice\Data");
+        private static readonly DirectoryInfo DataDir = new DirectoryInfo(String.Format(@"{0}\Data", AliceDirectory));
 
         [SuppressMessage("ReSharper", "CoVariantArrayConversion")]
         public App()
         {
             InitializeComponent();
             InitializeBackgroundWorker();
-            Icon ico = new Icon(String.Format(@"C:\users\helga\alice\Code\csharp\cheshire\Resources\cheshirecat.ico"));
+            Icon ico = new Icon(String.Format(@"{0}\Code\csharp\cheshire\Resources\cheshirecat.ico", AliceDirectory));
             Icon = ico;
 
             TimeLimit.Value = AUTOSAVE;
