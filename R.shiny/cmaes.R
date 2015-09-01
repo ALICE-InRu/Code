@@ -50,7 +50,7 @@ plot.evolutionCMA.Weights <- function(evolutionCMA,problem){
 }
 
 plot.evolutionCMA.Fitness <- function(evolutionCMA){
-  evolutionCMA$Problem=factorProblem(evolutionCMA)
+  evolutionCMA$Problem=factorProblem(evolutionCMA,F)
   x=evolutionCMA; x$value=NULL
   x=tidyr::spread(x,'ObjFun','Fitness')
   x=subset(x,!is.na(MinimumMakespan) & !is.na(MinimumRho))
