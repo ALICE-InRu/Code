@@ -78,43 +78,37 @@ plot.StepwiseFeatures <- function(problem,dim,local,global,save=NA){
   if(is.null(stat)) { return(NULL) }
 
   plotOne <- function(stat,Type){
-    stat=subset(stat,FeatureType==Type)
     if(all(is.na(stat$mu))) { return(NULL) }
 
     p=ggplot(stat,aes(x=Step,color=Track,fill=Track))+
       geom_line(aes(y=mu),size=1)+
       facet_wrap(~Feature,ncol = 4, scales = 'free_y')+
-      xlab(ifelse(Type=='Local','','step'))+
-      ylab(paste(Type,'features'))+
+      xlab(ifelse(Type=='Local','','Step'))+
       ggplotColor(name='Trajectory',num=length(unique(stat$Track)))+
       axisStep(dim)+axisCompact
 
-    if(Type=='Local'){p=p+theme(legend.position='none')}
-    p=p+ggtitle(expression('Evolution of feature ' * ~ bold(phi)))
+    if(Type!='Global'){p=p+theme(legend.position='none')}
+    txt=expression('Evolution of scaled feature ' * ~ tilde(bold(phi))[i])
+    if(Type!='Global'&Type!='Local'){
+      p=p+ylab(txt)
+    } else {
+      p=p+ylab(paste(Type,'features'))+ggtitle(txt)
+    }
     return(p)
   }
 
   stat$Feature = factorFeature(stat$Feature,F)
   stat$FeatureType = factorFeatureType(stat$Feature)
 
-  p=NULL
   if(global & local){
-    pLocal=plotOne(stat,'Local')
-    pGlobal=plotOne(stat,'Global')+ggtitle('')
-    require(gridExtra)
-    if(save) pdf(fname,width = Width, height = Height.full)
-    grid.arrange(pLocal, pGlobal, ncol=1)
-    if(save) dev.off()
-    return(NULL)
+    p=plotOne(stat,'')
   } else if(global)
-    p=plotOne(stat,'Global')
+    p=plotOne(subset(stat,FeatureType=='Global'),'Global')
   else
-    p=plotOne(stat,'Local')
+    p=plotOne(subset(stat,FeatureType=='Local'),'Local')
 
   if(!is.na(save)){
-    problem=stat$Problem[1]
-    dim=stat$Dimension[1]
-    fname=paste(paste(subdir,problem,'stepwise',sep='/'),dim,'Track','evolution',ifelse(local & global, 'ALL', ifelse(global,'Global','Local')),extension,sep='.')
+    fname=paste(paste(subdir,problem,'stepwise',sep='/'),dim,'evolution',extension,sep='.')
     if(save=='full')
       ggsave(filename=fname,plot=p, height=Height.full, width=Width, dpi=dpi, units=units)
     else if(save=='half')
