@@ -1,6 +1,6 @@
 source('global.R')
-colorPalette='Greys';extension='pdf'
-subdir='../../Thesis/figures/'
+colorPalette='Greys';
+extension='pdf';subdir='../../Thesis/figures/'
 save=NA
 input=list(dimension='10x10',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd'))
 #input=list(dimension='6x5',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc','j.rnd_pj1doubled','j.rnd_p1mdoubled'))
@@ -78,12 +78,12 @@ stats.imitationLearning(CDR.IL)
 plot.imitationLearning.weights(input$problem,input$dimension)
 
 if(input$dimension=='6x5'){
-  source('cma.R')
+  source('cmaes.R')
   evolutionCMA=get.evolutionCMA(input$problems,input$dimension)
   plot.evolutionCMA.Weights(evolutionCMA,input$problem)
   plot.evolutionCMA.Fitness(evolutionCMA)
   plot.CMAPREF.timedependentWeights(input$problem, input$dimension)
-  CDR.CMA <- get.CDR.CMA(input$problems,input$dimension)
+  CDR.CMA <- get.CDR.CMA(input$problems,input$dimension,timedependent = input$timedependent)
   plot.CMABoxplot(CDR.CMA)
 }
 
