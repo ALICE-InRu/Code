@@ -32,6 +32,15 @@ namespace ALICE
             Dimension = dimension;
             NumDimension = DimString2Num(dimension);
             Set = set;
+
+            Data = new DataTable("Problem");
+
+            Data.Columns.Add("Name", typeof (string)); // unique!
+            Data.Columns.Add("PID", typeof (int)); // problem instance Index
+            Data.Columns.Add("Problem", typeof (ProblemInstance));
+
+            Data.PrimaryKey = new[] {Data.Columns["Name"]};
+
         }
 
         internal RawData(RawData clone) : this(clone.Distribution, clone.Dimension, clone.Set)
@@ -40,6 +49,16 @@ namespace ALICE
             NumInstances = clone.NumInstances;
             AlreadySavedPID = clone.AlreadySavedPID;
             Data = clone.Data.Copy();
+        }
+
+        public RawData(string orlib, DirectoryInfo data) : this(orlib.Substring(0, 3), "ORLIB", DataSet.test)
+        {
+            char shop = orlib.ToUpper()[0];
+
+            FileInfo =
+                new FileInfo(String.Format(@"{0}\Raw\{1}.txt", data.FullName, shop == 'J' ? "jobshop1" : "flowshop1"));
+
+            ReadProblemText(false);
         }
 
         public RawData(string distribution, string dimension, DataSet set, bool extended, DirectoryInfo data)
@@ -58,15 +77,7 @@ namespace ALICE
                         String.Format("Failed generating problem instances! Check if they are located in {0}",
                             FileInfo.DirectoryName));
             }
-
-            Data = new DataTable("Problem");
-
-            Data.Columns.Add("Name", typeof (string)); // unique!
-            Data.Columns.Add("PID", typeof (int)); // problem instance Index
-            Data.Columns.Add("Problem", typeof (ProblemInstance));
-
-            Data.PrimaryKey = new[] {Data.Columns["Name"]};
-
+            
             ReadProblemText(extended);
         }
 
@@ -99,6 +110,7 @@ namespace ALICE
         internal static int DimString2Num(string dim)
         {
             var jobxmac = Regex.Split(dim, "x");
+            if (jobxmac.Length < 2) return -1;
             var numJobs = Convert.ToInt32(jobxmac[0]);
             var numMachines = Convert.ToInt32(jobxmac[1]);
             return numJobs * numMachines;

@@ -783,7 +783,9 @@ namespace Cheshire
                 from set in Set.CheckedItems.Cast<string>()
                 select
                     new RawData(problem, dim, (RawData.DataSet) Enum.Parse(typeof (RawData.DataSet), set),
-                        Extended.CheckedItems.Count > 0, DataDir)).ToArray();
+                        Extended.CheckedItems.Count > 0, DataDir)).Union(
+                            (from type in ORLIBApply.CheckedItems.Cast<string>()
+                                select new RawData(type, DataDir))).ToArray();
 
             CDRData[] sets = models == null
                 ? null
