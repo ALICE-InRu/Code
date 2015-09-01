@@ -125,5 +125,5 @@ get.CDR.CMA <- function(problems,dim,timedependent,objFuns=c('MinimumRho','Minim
 }
 
 plot.CMABoxplot <- function(CDR.CMA,SDR=NULL){
-  pref.boxplot(CDR.CMA,SDR,'ObjFun',xText = 'CMA-ES objective function')
+  pref.boxplot(CDR.CMA,SDR,'ObjFun',xText = 'CMA-ES objective function',tiltText = F)
 }

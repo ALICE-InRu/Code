@@ -87,7 +87,7 @@ ggplotColor <- function(name,num,labels=NULL,values=NULL){
 
 pref.boxplot <- function(CDR,SDR=NULL,ColorVar,xVar='CDR',xText='CDR',tiltText=T,lineTypeVar=NA){
   CDR=subset(CDR,!is.na(Rho))
-  CDR$Problem=factorProblem(CDR)
+  CDR$Problem=factorProblem(CDR,F)
 
   colnames(CDR)[grep(ColorVar,colnames(CDR))]='ColorVar'
   colnames(CDR)[grep(xVar,colnames(CDR))]='xVar'
