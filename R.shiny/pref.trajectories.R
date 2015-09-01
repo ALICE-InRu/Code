@@ -19,10 +19,11 @@ get.trainingDataSize <- function(problems,dim,tracks=c('ALL','CMAESMINRHO')){
 }
 
 plot.trainingDataSize <- function(trainingDataSize){
+  trainingDataSize$Problem <- factorProblem(trainingDataSize,F)
   p=ggplot(trainingDataSize, aes(x=Step,y=V1,color=Track))+
     ggplotColor('Track',num = length(levels(trainingDataSize$Track)))+
     geom_line(size=1,position=position_jitter(w=0.25, h=0))+
-    facet_wrap(~Problem,ncol=2)+
+    facet_wrap(~Problem,ncol=3)+
     ylab(expression('Size of training set, |' * Phi * '|'))+
     axisStep(trainingDataSize$Dimension[1])+axisCompact
   return(p)
@@ -51,12 +52,13 @@ get.preferenceSetSize <- function(problems,dim,tracks=c('ALL','CMAESMINRHO'),ran
 }
 
 plot.preferenceSetSize <- function(preferenceSetSize){
+  preferenceSetSize$Problem=factorProblem(preferenceSetSize,F)
   preferenceSetSize$Rank=factorRank(preferenceSetSize$Rank,F)
   p=ggplot(preferenceSetSize, aes(x=Step,y=V1,color=Rank))+
     geom_line(size=1)+
     facet_grid(Problem~Track,scales='free_y')+
     ggplotColor('Ranking',num = 4)+
-    ylab(expression('Size of preference set, |' * S * '|'))+
+    ylab(expression('Size of preference set, |' * Psi * '|'))+
     axisStep(preferenceSetSize$Dimension[1])+axisCompact
   return(p)
 }
@@ -85,6 +87,7 @@ plot.rhoTracksRanks <- function(rhoTracksRanks,SDR=NULL){
   rhoTracksRanks <- joinRhoSDR(rhoTracksRanks,SDR)
   rhoTracksRanks$Rank <- factorRank(rhoTracksRanks$Rank,F)
   rhoTracksRanks <- factorTrack(rhoTracksRanks)
+  rhoTracksRanks$Problem <- factorProblem(rhoTracksRanks,F)
 
   p <- ggplot(data=rhoTracksRanks , aes(y=Rho, x=Track , fill=Rank)) + geom_boxplot() +
     facet_grid(Problem ~ Track, scale='free')+
