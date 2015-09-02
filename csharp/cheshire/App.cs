@@ -12,7 +12,7 @@ namespace Cheshire
     public partial class App : Form
     {
         private static readonly string AliceDirectory = String.Format(@"{0}\..\..\..\..\..\..\",Directory.GetCurrentDirectory());
-        private const int AUTOSAVE = 30; // minutes
+        private const int AUTOSAVE = 5; // minutes
         private static readonly DirectoryInfo DataDir = new DirectoryInfo(String.Format(@"{0}\Data", AliceDirectory));
 
         [SuppressMessage("ReSharper", "CoVariantArrayConversion")]
@@ -148,11 +148,13 @@ namespace Cheshire
             {
                 progressBarOuter.Value = valid ? e.ProgressPercentage : 100;
                 progressBarInner.Value = valid ? 100 : 0;
+                if ((string) info[1] == "") return;
                 textHeader.AppendText(String.Format("\n{0}", info[1]));
             }
             else
             {
                 progressBarInner.Value = valid ? e.ProgressPercentage : 100;
+                if ((string) info[1] == "") return;
                 textContent.AppendText(String.Format("\n{0}", info[1]));
             }
         }
@@ -944,7 +946,7 @@ namespace Cheshire
                     string info = set.Apply(pid);
 
                     bkgWorker.ReportProgress((int) (100.0*pid/set.NumInstances),
-                        new object[] {1, set.Dimension == "ORLIB" ? info : ""});
+                        new object[] {1, (set.Dimension == "ORLIB" ? info : "")});
 
                     if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE | bkgWorker.CancellationPending)
                     {

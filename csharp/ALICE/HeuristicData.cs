@@ -78,11 +78,15 @@ namespace ALICE
                     st.WriteLine(header);
                 }
 
-                foreach (var row in from DataRow row in Data.Rows
-                    let pid = (int) row["PID"]
-                    where pid > AlreadySavedPID
-                    select row)
+                foreach(DataRow row in Data.Rows)
                 {
+                    int pid = (int) row["PID"];
+                    if (pid <= AlreadySavedPID) continue;
+                    if (row.IsNull("Makespan"))
+                    {
+                        AlreadySavedPID = pid - 1;
+                        break;
+                    }
                     string info = String.Format("{0},{1},{2}", row["Name"], HeuristicValue, row["Makespan"]);
                     if (_featureMode == Features.Mode.Global)
                         info += String.Format(",{0}", row["BestFoundMakespan"]);
