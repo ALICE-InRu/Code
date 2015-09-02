@@ -933,19 +933,40 @@ namespace Cheshire
 
             foreach (var set in sets)
             {
-                set.Apply();
+                DateTime autoSave = DateTime.Now;
+
+                bkgWorker.ReportProgress((int) (100.0*iter/sets.Length),
+                    new object[] {0, String.Format("Starting applying {0}", set.FileInfo.Name)});
+
+                for (int pid = set.AlreadySavedPID + 1; pid <= set.NumInstances; pid++)
+                {
+                    set.Apply(pid);
+                    if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE | bkgWorker.CancellationPending)
+                    {
+                        bkgWorker.ReportProgress((int) (100.0*iter/sets.Length),
+                            new object[]
+                            {
+                                0,
+                                String.Format("Auto saving {0} ({1:0}min {2} PIDS)", set.FileInfo.Name,
+                                    (DateTime.Now - autoSave).TotalMinutes, pid - set.AlreadySavedPID)
+                            });
+                        set.Write();
+                        autoSave = DateTime.Now;
+                    }
+
+                    if (!bkgWorker.CancellationPending) continue;
+                    bkgWorker.ReportProgress((int) (100.0*pid/set.NumInstances),
+                        new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
+                    e.Cancel = true;
+                    return;
+                }
+                set.Write();
                 bkgWorker.ReportProgress((int) (100.0*++iter/sets.Length),
                     new object[]
                     {
                         1,
                         String.Format("Applied {0}\n\tto {1}", set.Model.FileInfo.Name, set.FileInfo.Name)
                     });
-
-                if (!bkgWorker.CancellationPending) continue;
-                bkgWorker.ReportProgress((int) (100.0*iter/sets.Length),
-                    new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});
-                e.Cancel = true;
-                return;
             }
 
             bkgWorker.ReportProgress((int) (100.0*iter/sets.Length),

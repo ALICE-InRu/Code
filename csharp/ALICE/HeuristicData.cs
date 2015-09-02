@@ -54,7 +54,7 @@ namespace ALICE
             return true;
         }
 
-        internal void Write()
+        public void Write()
         {
             if (FileInfo.Directory != null && !FileInfo.Directory.Exists)
                 Directory.CreateDirectory(FileInfo.Directory.FullName);

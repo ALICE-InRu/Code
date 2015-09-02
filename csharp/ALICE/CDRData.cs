@@ -27,7 +27,7 @@ namespace ALICE
             ApplyAll(Apply);
         }
 
-        private Schedule Apply(int pid)
+        public Schedule Apply(int pid)
         {
             string name = GetName(pid);
             Schedule jssp = GetEmptySchedule(name);
