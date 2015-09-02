@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
@@ -76,16 +77,28 @@ namespace ALICE
             if (prob == null)
                 return String.Format("{0}:{1} doen't exist!", FileInfo.Name, pid);
 
-            // INTENSE WORK
-            int[,] xTimeJob = prob.Optimize(name, out opt, out solved, out simplexIterations, TimeLimit);
-
-            Schedule jssp = new Schedule(prob);
-            jssp.SetCompleteSchedule(xTimeJob, opt);
-
-            string errorMsg;
-            if (!jssp.Validate(out errorMsg, true))
+            int[,] xTimeJob;
+            if (prob.Dimension < 1000) // Gurobi cannot deal with instance hel1: Heller 100x10 
             {
-                return String.Format("Error {0}", errorMsg);
+                // INTENSE WORK
+                xTimeJob = prob.Optimize(name, out opt, out solved, out simplexIterations, TimeLimit);
+
+                Schedule jssp = new Schedule(prob);
+                jssp.SetCompleteSchedule(xTimeJob, opt);
+
+                string errorMsg;
+                if (!jssp.Validate(out errorMsg, true))
+                {
+                    return String.Format("Error {0}", errorMsg);
+                }
+            }
+            else
+            {
+                // too intense work 
+                opt = -1;
+                solved = false;
+                xTimeJob = null;
+                simplexIterations = -1;
             }
 
             AddOptMakespan(name, opt, solved, xTimeJob, simplexIterations);
