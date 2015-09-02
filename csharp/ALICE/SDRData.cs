@@ -25,7 +25,7 @@ namespace ALICE
         private readonly SDR _sdr;
 
         public SDRData(string distribution, string dimension, DataSet set, bool extended, SDR sdr, DirectoryInfo data)
-            : base(distribution, dimension, set, extended, "SDR", sdr.ToString(), data)
+            : base(distribution, dimension, set, extended, "SDR", sdr.ToString(), data, Features.Mode.Local)
         {
             _sdr = sdr;
             FileInfo =
@@ -37,7 +37,7 @@ namespace ALICE
 
         protected SDRData(string distribution, string dimension, DataSet set, bool extended, string heuristicName,
             string heuristicValue, DirectoryInfo data)
-            : base(distribution, dimension, set, extended, heuristicName, heuristicValue, data)
+            : base(distribution, dimension, set, extended, heuristicName, heuristicValue, data, Features.Mode.Local)
         {
             FileInfo =
                 new FileInfo(string.Format(@"{0}\{1}\{2}.{3}.{4}.csv", data.FullName, HeuristicName,

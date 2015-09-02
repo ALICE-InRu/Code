@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 
 namespace ALICE
 {
@@ -10,30 +11,37 @@ namespace ALICE
     {
         public readonly string HeuristicValue;
         public readonly string HeuristicName;
+        private Features.Mode _featureMode;
 
         internal HeuristicData(string distribution, string dimension, DataSet set, bool extended, string heuristicName,
-            string heuristicValue, DirectoryInfo data) : base(distribution, dimension, set, extended, data)
+            string heuristicValue, DirectoryInfo data, Features.Mode featureMode) : base(distribution, dimension, set, extended, data)
         {
             HeuristicName = heuristicName;
             HeuristicValue = heuristicValue;
-            Data.Columns.Add("Makespan", typeof (int));
-            Data.Columns.Add(heuristicName, typeof (string));
+            _featureMode = featureMode;
+            Data.Columns.Add("Makespan", typeof(int));
+            Data.Columns.Add("BestFoundMakespan", typeof(int));
+            Data.Columns.Add(heuristicName, typeof(string));
         }
 
-        internal HeuristicData(string heuristicName, string heuristicValue, RawData clone)
+        internal HeuristicData(string heuristicName, string heuristicValue, RawData clone, Features.Mode featureMode)
             : base(clone)
         {
             HeuristicName = heuristicName;
             HeuristicValue = heuristicValue;
+            _featureMode = featureMode;
             Data.Columns.Add("Makespan", typeof (int));
+            Data.Columns.Add("BestFoundMakespan", typeof(int));
             Data.Columns.Add(heuristicName, typeof (string));
         }
 
-        internal void AddMakespan(string name, int makespan)
+        internal void AddMakespan(string name, int makespan, int bestFoundMakespan = int.MaxValue)
         {
             var row = Data.Rows.Find(name);
             row.SetField(HeuristicName, HeuristicValue);
             row.SetField("Makespan", makespan);
+            if (bestFoundMakespan < int.MaxValue)
+                row.SetField("BestFoundMakespan", bestFoundMakespan);
         }
 
         internal bool Read(bool all)
@@ -65,14 +73,19 @@ namespace ALICE
                 if (fs.Length == 0) // header is missing 
                 {
                     string header = string.Format("Name,{0},Makespan", HeuristicName);
+                    if (_featureMode == Features.Mode.Global)
+                        header += String.Format(",BestFoundMakespan");
                     st.WriteLine(header);
                 }
 
-                foreach (var info in from DataRow row in Data.Rows
+                foreach (var row in from DataRow row in Data.Rows
                     let pid = (int) row["PID"]
                     where pid > AlreadySavedPID
-                    select String.Format("{0},{1},{2}", row["Name"], HeuristicValue, row["Makespan"]))
+                    select row)
                 {
+                    string info = String.Format("{0},{1},{2}", row["Name"], HeuristicValue, row["Makespan"]);
+                    if (_featureMode == Features.Mode.Global)
+                        info += String.Format(",{0}", row["BestFoundMakespan"]);
                     st.WriteLine(info);
                 }
                 st.Close();

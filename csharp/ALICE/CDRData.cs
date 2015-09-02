@@ -12,7 +12,7 @@ namespace ALICE
         public readonly LinearModel Model;
 
         public CDRData(RawData data, LinearModel model)
-            : base("CDR", model.Name, data)
+            : base("CDR", model.Name, data, model.FeatureMode)
         {
             Model = model;
             FileInfo =
@@ -38,8 +38,8 @@ namespace ALICE
         {
             string name = GetName(pid);
             Schedule jssp = GetEmptySchedule(name);
-            jssp.ApplyCDR(Model);
-            AddMakespan(name, jssp.Makespan);
+            int bestFoundMakespan = jssp.ApplyCDR(Model);
+            AddMakespan(name, jssp.Makespan, bestFoundMakespan);
             return jssp;
         }
     }

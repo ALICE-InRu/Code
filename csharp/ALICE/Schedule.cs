@@ -15,7 +15,8 @@ namespace ALICE
         private readonly Macs[] _macs;
         private readonly int _totProcTime;
 
-        public int Makespan;
+        public int Makespan { get; private set; }
+        
         private readonly ProblemInstance _prob;
         private readonly Random _random;
 
@@ -281,10 +282,10 @@ namespace ALICE
 
         public void Dispatch1(int job)
         {
-            Dispatch1(job, Features.Mode.None, false);
+            Dispatch1(job, Features.Mode.None, null);
         }
 
-        public Features Dispatch1(int job, Features.Mode mode, bool randomRolloutsActive) // commits dispatch! 
+        public Features Dispatch1(int job, Features.Mode mode, LinearModel model) // commits dispatch! 
         {
             Dispatch dispatch;
             int slot = FindDispatch(job, out dispatch);
@@ -314,14 +315,15 @@ namespace ALICE
             switch (mode)
             {
                 case Features.Mode.Global:
-                    phi.GetGlobalPhi(this, randomRolloutsActive);
+                    phi.GetGlobalPhi(this, model);
                     return phi;
+
                 case Features.Mode.Local:
                     phi.GetLocalPhi(_jobs[job], _macs[dispatch.Mac], _prob.Procs[job, dispatch.Mac],
                         _jobs.Sum(p => p.WorkRemaining), _macs.Sum(p => p.TotSlack), Makespan, Sequence.Count,
                         dispatch.StartTime, arrivalTime, slotReduced, _totProcTime);
                     return phi;
-                //case FeatureType.None:
+
                 default:
                     return null;
             }
@@ -348,17 +350,37 @@ namespace ALICE
             }
         }
 
-        public void ApplyCDR(LinearModel model)
+        public int ApplyCDR(LinearModel model)
         {
-
+            int bestFoundMakespan = int.MaxValue;
             for (int step = Sequence.Count; step < _prob.Dimension; step++)
             {
                 List<double> priority = new List<double>(ReadyJobs.Count);
-                priority.AddRange(from j in ReadyJobs
-                    let lookahead = Clone()
-                    select lookahead.Dispatch1(j, model.FeatureMode, model.RandomRolloutsActive)
-                    into feat
-                    select model.PriorityIndex(feat));
+
+                foreach (
+                    var phi in
+                        from j in ReadyJobs
+                        let lookahead = Clone()
+                        select lookahead.Dispatch1(j, model.FeatureMode, model))
+                {
+                    priority.Add(model.PriorityIndex(phi));
+
+                    if (model.FeatureMode != Features.Mode.Global) continue;
+                    var rollout = (from sdr in new List<Features.Global>
+                    {
+                        Features.Global.SPT,
+                        Features.Global.LPT,
+                        Features.Global.LWR,
+                        Features.Global.MWR,
+                        Features.Global.RNDmin
+                    }
+                        where Math.Abs(phi.PhiGlobal[(int) sdr]) > 0
+                        select (int) phi.PhiGlobal[(int) sdr]).ToList();
+
+                    var bestRollout = rollout.Min();
+                    if (bestRollout < bestFoundMakespan)
+                        bestFoundMakespan = bestRollout;
+                }
 
                 List<int> ix = priority.Select((x, i) => new {x, i})
                     .Where(x => Math.Abs(x.x - priority.Max()) < 1e-10)
@@ -373,6 +395,7 @@ namespace ALICE
 
                 Dispatch1(job);
             }
+            return bestFoundMakespan == int.MaxValue ? Makespan : bestFoundMakespan;
         }
 
         public int JobChosenBySDR(SDRData.SDR sdr)

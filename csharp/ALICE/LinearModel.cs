@@ -29,7 +29,8 @@ namespace ALICE
 
         public double[][] LocalWeights = new double[Features.LocalCount][];
         public readonly double[][] GlobalWeights = new double[Features.GlobalCount][];
-        public readonly bool RandomRolloutsActive;
+
+        public const double WEIGHT_TOLERANCE = 1e-10;
 
         public readonly bool TimeIndependent;
 
@@ -124,8 +125,6 @@ namespace ALICE
                 case Features.Mode.Global:
                     _numFeatures += Features.LocalCount;
                     GlobalWeights[(int) feat][0] = extremal;
-                    if (feat.ToString().Substring(0, 3) == "RND")
-                        RandomRolloutsActive = true;
                     break;
             }
             Name = String.Format("phi.{0}.E{1}", feat, extremal);
@@ -245,6 +244,17 @@ namespace ALICE
                     break;
             }
             return index;
+        }
+
+        public LinearModel()
+            : this(new FileInfo("dummy.txt"), Features.Mode.Global, 1, Features.LocalCount + Features.GlobalCount,
+                -1, "unity", "dummy", Model.NotSet)
+        {
+            double[] eps = {WEIGHT_TOLERANCE*2};
+            for (var i = 0; i < Features.LocalCount; i++)
+                LocalWeights[i] = eps;
+            for (var i = 0; i < Features.GlobalCount; i++)
+                GlobalWeights[i] = eps;
         }
 
         public LinearModel(double[][] localWeights, int generation, string distribution, string dimension)

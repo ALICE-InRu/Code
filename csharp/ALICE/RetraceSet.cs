@@ -148,10 +148,11 @@ namespace ALICE
 
         internal int UpdateFeatures(int pid, int step, Schedule jssp)
         {
+            LinearModel dummy = new LinearModel();
             foreach (var p in Preferences[pid - 1, step])
             {
                 var lookahead = jssp.Clone();
-                p.Feature = lookahead.Dispatch1(p.Dispatch.Job, FeatureMode, true);
+                p.Feature = lookahead.Dispatch1(p.Dispatch.Job, FeatureMode, dummy);
             }
             return Preferences[pid - 1, step].Count;
         }

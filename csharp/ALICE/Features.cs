@@ -181,20 +181,24 @@ namespace ALICE
 
         }
 
-        public void GetGlobalPhi(Schedule current, bool randomRolloutsActive)
+        public void GetGlobalPhi(Schedule current, LinearModel model)
         {
             Schedule lookahead;
 
             for (int i = 0; i < SDRData.SDRCount; i++)
             {
                 SDRData.SDR sdr = (SDRData.SDR) i;
+                if (!(Math.Abs(model.GlobalWeights[(int) sdr][0]) > LinearModel.WEIGHT_TOLERANCE)) continue;
                 lookahead = current.Clone();
                 lookahead.ApplySDR(sdr);
                 PhiGlobal[(int) (Global) (sdr)] = lookahead.Makespan;
             }
-
-            if (!randomRolloutsActive) return;
-
+            
+            if ((Math.Abs(model.GlobalWeights[(int) Global.RNDmin][0]) < LinearModel.WEIGHT_TOLERANCE) &&
+                (Math.Abs(model.GlobalWeights[(int) Global.RNDmax][0]) < LinearModel.WEIGHT_TOLERANCE) &&
+                (Math.Abs(model.GlobalWeights[(int) Global.RNDstd][0]) < LinearModel.WEIGHT_TOLERANCE) &&
+                (Math.Abs(model.GlobalWeights[(int) Global.RNDmean][0]) < LinearModel.WEIGHT_TOLERANCE)) return;
+         
             for (int i = 0; i < RND.Length; i++)
             {
                 lookahead = current.Clone();

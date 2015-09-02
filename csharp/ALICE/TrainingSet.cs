@@ -326,7 +326,7 @@ namespace ALICE
             for (int r = 0; r < jssp.ReadyJobs.Count; r++)
             {
                 Schedule lookahead = jssp.Clone();
-                Features phi = lookahead.Dispatch1(jssp.ReadyJobs[r], FeatureMode, false); // commit the lookahead
+                Features phi = lookahead.Dispatch1(jssp.ReadyJobs[r], FeatureMode, null); // commit the lookahead
                 prefs[r] = new Preference(lookahead.Sequence[lookahead.Sequence.Count - 1], phi);
                 // need to optimize to label featuers correctly -- this is computationally intensive
                 gurobiModel.Lookahead(prefs[r].Dispatch, out prefs[r].ResultingOptMakespan);
