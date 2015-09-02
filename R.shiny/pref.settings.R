@@ -14,7 +14,8 @@ get.stepwiseBias <- function(steps,problem,dim,bias){
   return(w[steps])
 }
 
-rho.statistic <- function(dat,variables,useValidationSet=F){
+rho.statistic <- function(dat,variables,useValidationSet=F,rhoValue='rho'){
+  if(rhoValue!='rho'){ dat$Rho=dat[,grep(rhoValue,colnames(dat))] }
   if(useValidationSet){
     dat$Set <- factorSet(dat$Set)
     pids <- unique(dat$PID[which(dat$Set=='train')])

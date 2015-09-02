@@ -72,40 +72,24 @@ get.StepwiseFeatures <- function(problem,dim){
   return(stat)
 }
 
-plot.StepwiseFeatures <- function(problem,dim,local,global,save=NA){
+plot.StepwiseEvolution <- function(problem,dim,save=NA){
 
   stat = get.StepwiseFeatures(problem,dim)
   if(is.null(stat)) { return(NULL) }
 
-  plotOne <- function(stat,Type){
-    if(all(is.na(stat$mu))) { return(NULL) }
-
-    p=ggplot(stat,aes(x=Step,color=Track,fill=Track))+
-      geom_line(aes(y=mu),size=1)+
-      facet_wrap(~Feature,ncol = 4, scales = 'free_y')+
-      xlab(ifelse(Type=='Local','','Step'))+
-      ggplotColor(name='Trajectory',num=length(unique(stat$Track)))+
-      axisStep(dim)+axisCompact
-
-    if(Type!='Global'){p=p+theme(legend.position='none')}
-    txt=expression('Evolution of scaled feature ' * ~ tilde(bold(phi))[i])
-    if(Type!='Global'&Type!='Local'){
-      p=p+ylab(txt)
-    } else {
-      p=p+ylab(paste(Type,'features'))+ggtitle(txt)
-    }
-    return(p)
-  }
-
   stat$Feature = factorFeature(stat$Feature,F)
   stat$FeatureType = factorFeatureType(stat$Feature)
+  if(all(is.na(stat$mu))) { return(NULL) }
 
-  if(global & local){
-    p=plotOne(stat,'')
-  } else if(global)
-    p=plotOne(subset(stat,FeatureType=='Global'),'Global')
-  else
-    p=plotOne(subset(stat,FeatureType=='Local'),'Local')
+  p=ggplot(stat,aes(x=Step,color=Track,fill=Track))+
+    geom_line(aes(y=mu),size=1)+
+    facet_wrap(~Feature,ncol = 4, scales = 'free_y')+
+    xlab('Step')+
+    ggplotColor(name='Trajectory',num=length(unique(stat$Track)))+
+    axisStep(dim)+axisCompact
+
+  txt=expression('Evolution of scaled feature ' * ~ tilde(bold(phi))[i])
+  p=p+ylab(txt)
 
   if(!is.na(save)){
     fname=paste(paste(subdir,problem,'stepwise',sep='/'),dim,'evolution',extension,sep='.')
@@ -120,8 +104,12 @@ plot.StepwiseFeatures <- function(problem,dim,local,global,save=NA){
 
 stats.singleFeat <- function(CDR){
   stat <- rho.statistic(CDR,c('FeatureType','Feature','Extremal'))
+  stat2 <- rho.statistic(CDR,c('FeatureType','Feature','Extremal'),rhoValue = 'RhoFortified')
+  stat$Training.Fortified=stat2$Training.Rho
+  stat$Diff <- stat$Training.Rho-stat$Training.Fortified
   stat$Test.Rho=NULL
   stat$NTest=NULL
+  stat$Problem<-factorProblem(stat,F)
   stat <- arrange(stat, Training.Rho) # order w.r.t. lowest mean
   return(stat)
 }

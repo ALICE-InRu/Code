@@ -94,12 +94,17 @@ get.SingleFeat.CDR <- function(problems,dim,set='train'){
   file_list <- list.files(paste0(DataDir,'SingleFeat/CDR'),full.names = T, recursive = T,
                           pattern=paste(problems,dim,set,'csv',sep='.'))
 
-  CDR <- do.call(rbind,lapply(file_list, function(file) { read_csv(file) } ))
+  CDR <- do.call(rbind,lapply(file_list, function(file) {
+    dat=read_csv(file)
+    if(!any(grepl('BestFoundMakespan',colnames(dat)))){ dat$BestFoundMakespan=dat$Makespan }
+    return(dat)
+  } ))
   if(is.null(CDR)) {return(NULL)}
 
   CDR <- factorFromName(CDR)
 
   CDR$Rho <- factorRho(CDR)
+  CDR$RhoFortified <- factorRho(CDR,var = 'BestFoundMakespan')
   CDR <- subset(CDR, !is.na(Rho))
 
   model.rex="phi.(?<Feature>[a-zA-Z]+).E(?<Extremal>-?[0-9])"

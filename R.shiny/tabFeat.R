@@ -2,9 +2,7 @@ output$tabFEAT <- renderUI({
   dashboardBody(
     fluidRow(
       box(title="Extremal", plotOutput("plot.extremal", height=600)),
-      box(title="Evolution of features",
-          plotOutput("plot.local", height=300),
-          plotOutput("plot.global", height=300)),
+      box(title="Evolution of features", plotOutput("plot.evol", height=600)),
       box(width = 12, dataTableOutput("stats.singleFeat"))
     )
   )
@@ -26,18 +24,9 @@ output$plot.extremal <- renderPlot({
   })
 },height="auto")
 
-output$plot.global <- renderPlot({
+output$plot.evol <- renderPlot({
   withProgress(message = 'Making plot', value = 0, {
-    p=plot.StepwiseFeatures(input$problem,input$dimension,F,T)
-    if(!is.null(p)){p=p+ggtitle('')}
-    print(p)
-  })
-},height="auto")
-
-output$plot.local <- renderPlot({
-  withProgress(message = 'Making plot', value = 0, {
-    p=plot.StepwiseFeatures(input$problem,input$dimension,T,F)
-    if(!is.null(p)){p=p+ggtitle('')}
+    p=plot.StepwiseEvolution(input$problem,input$dimension)
     print(p)
   })
 },height="auto")
