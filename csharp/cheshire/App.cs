@@ -252,7 +252,8 @@ namespace Cheshire
                 select
                     new OPTData(problem, dim, (RawData.DataSet) Enum.Parse(typeof (RawData.DataSet), set),
                         Extended.CheckedItems.Count > 0, Convert.ToInt32(TimeLimit.Value),
-                        DataDir)).ToArray();
+                        DataDir)).Union(from type in ORLIBApply.CheckedItems.Cast<string>()
+                            select new OPTData(type, Convert.ToInt32(TimeLimit.Value), DataDir)).ToArray();
 
             if (sets.Length == 0)
             {
@@ -940,7 +941,11 @@ namespace Cheshire
 
                 for (int pid = set.AlreadySavedPID + 1; pid <= set.NumInstances; pid++)
                 {
-                    set.Apply(pid);
+                    string info = set.Apply(pid);
+
+                    bkgWorker.ReportProgress((int) (100.0*pid/set.NumInstances),
+                        new object[] {1, set.Dimension == "ORLIB" ? info : ""});
+
                     if ((DateTime.Now - autoSave).TotalMinutes > AUTOSAVE | bkgWorker.CancellationPending)
                     {
                         bkgWorker.ReportProgress((int) (100.0*iter/sets.Length),
@@ -953,7 +958,7 @@ namespace Cheshire
                         set.Write();
                         autoSave = DateTime.Now;
                     }
-
+                    
                     if (!bkgWorker.CancellationPending) continue;
                     bkgWorker.ReportProgress((int) (100.0*pid/set.NumInstances),
                         new object[] {1, String.Format("{0} cancelled!", set.FileInfo.Name)});

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 
 namespace ALICE
 {
@@ -21,6 +22,11 @@ namespace ALICE
                 new FileInfo(string.Format(@"{0}\OPT\{1}.{2}.{3}.csv", data.FullName,
                     Distribution, Dimension, Set));
 
+            CommonBase(readAll);
+        }
+
+        private void CommonBase(bool readAll)
+        {
             SetAlreadySavedPID();
 
             Data.Columns.Add("Solved", typeof (string));
@@ -37,6 +43,20 @@ namespace ALICE
             : this(distribution, dimension, set, extended, false, data)
         {
             TimeLimit = timeLimit_min;
+            FileInfo =
+                new FileInfo(string.Format(@"{0}\OPT\{1}.{2}.{3}.csv", data.FullName,
+                    Distribution, Dimension, Set));
+        }
+
+        public OPTData(string orlib, int timeLimit_min, DirectoryInfo data)
+            : base(orlib, data)
+        {
+            TimeLimit = timeLimit_min;
+            FileInfo =
+                new FileInfo(string.Format(@"{0}\OPT\{1}.{2}.{3}.csv", data.FullName,
+                    Distribution, Dimension, Set));
+
+            CommonBase(false);
         }
 
         public void Optimise()
@@ -105,25 +125,34 @@ namespace ALICE
 
         public void Write()
         {
+            bool orlib = Dimension == "ORLIB";
+
             var fs = new FileStream(FileInfo.FullName, FileMode.Append, FileAccess.Write);
             using (var st = new StreamWriter(fs))
             {
                 if (fs.Length == 0) // header is missing 
                 {
-                    const string HEADER = "Name,Optimum,Solved";
-                    st.WriteLine(HEADER);
+                    string header = String.Format("Name,Optimum,Solved{0}", orlib ? ",GivenName,Dimension" : "");
+                    st.WriteLine(header);
                 }
 
                 foreach (
                     DataRow row in
-                        from DataRow row in Data.Rows let pid = (int)row["PID"] where pid > AlreadySavedPID select row)
+                        from DataRow row in Data.Rows let pid = (int) row["PID"] where pid > AlreadySavedPID select row)
                 {
                     if (row["Optimum"].ToString() == "")
                     {
                         AlreadySavedPID = (int) row["PID"] - 1;
                         break;
                     }
-                    st.WriteLine("{0},{1},{2}", row["Name"], row["Optimum"], row["Solved"]);
+                    string info = String.Format("{0},{1},{2}", row["Name"], row["Optimum"], row["Solved"]);
+                    if (orlib)
+                    {
+                        ProblemInstance prob = (ProblemInstance) row["Problem"];
+                        info += String.Format(",{0},{1}", row["GivenName"],
+                            String.Format("{0}x{1}", prob.NumJobs, prob.NumMachines));
+                    }
+                    st.WriteLine(info);
                 }
                 st.Close();
             }

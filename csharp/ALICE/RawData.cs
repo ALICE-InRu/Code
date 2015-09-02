@@ -36,6 +36,7 @@ namespace ALICE
             Data = new DataTable("Problem");
 
             Data.Columns.Add("Name", typeof (string)); // unique!
+            Data.Columns.Add("GivenName", typeof(string)); // human readable, i.e., ORLIB-name
             Data.Columns.Add("PID", typeof (int)); // problem instance Index
             Data.Columns.Add("Problem", typeof (ProblemInstance));
 
@@ -96,7 +97,7 @@ namespace ALICE
             {
                 int iName = firstSplit.FindIndex(x => x == "Name");
                 string[] name = Regex.Split(lastSplit[iName], "\\.").ToArray();
-                AlreadySavedPID = Convert.ToInt32(name[4]);
+                AlreadySavedPID = Convert.ToInt32(name[name.Length - 1]);
             }
             else
             {
@@ -258,20 +259,20 @@ namespace ALICE
             var fullContent = File.ReadAllText(FileInfo.FullName);
             var allContent = Regex.Split(fullContent, "[\r\n ]*[+]+[\r\n ]*");
 
-            var shortName = string.Empty;
-            var regShortName = new Regex("^instance ([a-zA-Z0-9. ]*)");
+            var givenName = string.Empty;
+            var regGivenName = new Regex("^instance ([a-zA-Z0-9. ]*)");
             foreach (var content in allContent)
             {
-                var m = regShortName.Match(content);
+                var m = regGivenName.Match(content);
                 if (m.Success)
                 {
-                    shortName = m.Groups[1].Value;
+                    givenName = m.Groups[1].Value;
                 }
-                else if (shortName != string.Empty)
+                else if (givenName != string.Empty)
                 {
                     var prob = ReadSingleProblem(content);
-                    AddProblem(prob);
-                    shortName = string.Empty;
+                    AddProblem(prob, givenName);
+                    givenName = string.Empty;
                 }
                 if (Data.Rows.Count >= maxNumInstances)
                     break;
@@ -328,7 +329,7 @@ namespace ALICE
             return new ProblemInstance(jobs, macs, procs, sigma);
         }
 
-        private void AddProblem(ProblemInstance prob)
+        private void AddProblem(ProblemInstance prob, string givenName)
         {
             if (prob == null) return;
 
@@ -337,6 +338,8 @@ namespace ALICE
             row["Name"] = GetName(pid);
             row["PID"] = pid;
             row["Problem"] = prob;
+            row["GivenName"] = givenName;
+
             Data.Rows.Add(row);
         }
 

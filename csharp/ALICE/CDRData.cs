@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Reflection;
 
@@ -24,10 +25,16 @@ namespace ALICE
 
         public void Apply()
         {
-            ApplyAll(Apply);
+            ApplyAll(Apply1);
         }
 
-        public Schedule Apply(int pid)
+        public string Apply(int pid)
+        {
+            Schedule jssp = Apply1(pid);
+            return String.Format("{0}:{1} {2}", FileInfo.Name, pid, jssp.Makespan);
+        }
+
+        private Schedule Apply1(int pid)
         {
             string name = GetName(pid);
             Schedule jssp = GetEmptySchedule(name);
