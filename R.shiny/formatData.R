@@ -9,12 +9,23 @@ getAttribute<-function(str,regexpr.m,name,asStr=T){
 
 factorFromName <- function(x){
   m=regexpr("(?<Problem>[j|f].[a-z_1]+).(?<Dimension>[0-9]+x[0-9]+).(?<Set>train|test).(?<PID>[0-9]+)", x$Name, perl = T)
-  x$Problem=getAttribute(x$Name,m,'Problem')
+
+  if(any(attr(m,"match.length")>0)){
+    x$Problem=getAttribute(x$Name,m,'Problem')
+    x$Dimension=getAttribute(x$Name,m,'Dimension')
+    x$Set=factorSet(getAttribute(x$Name,m,'Set'))
+    x$PID=getAttribute(x$Name,m,'PID',F)
+    x$Dimension = factorDimension(x)
+  } else {
+    m=regexpr("(?<Problem>[j|f]sp.orlib).test.(?<PID>[0-9]+)", x$Name, perl = T)
+    x$Problem=getAttribute(x$Name,m,'Problem')
+    x$Set=factorSet(rep('test',nrow(x)))
+    x$PID=getAttribute(x$Name,m,'PID',F)
+    m=regexpr("(?<Name>[a-zA-Z]+)(?<PID>[0-9]+)", x$GivenName, perl = T)
+    x$ORSet=factor(getAttribute(x$GivenName,m,'Name'),levels=c('abz','ft','la','orb','swv','yn','car','hel','reC'))
+    x$ORPID=getAttribute(x$GivenName,m,'PID',F)
+  }
   x$Problem = factorProblem(x)
-  x$Dimension=getAttribute(x$Name,m,'Dimension')
-  x$Dimension = factorDimension(x)
-  x$Set=factorSet(getAttribute(x$Name,m,'Set'))
-  x$PID=getAttribute(x$Name,m,'PID',F)
   return(x)
 }
 
@@ -22,8 +33,10 @@ factorProblem <- function(x, simple=T){
   if('Shop' %in% names(x) & 'Distribution' %in% names(x) ) {
     x$Problem=interaction(x$Shop,x$Distribution)
   }
-  x$Problem=factor(x$Problem, levels=c('j.rnd','j.rndn','j.rnd_p1mdoubled','j.rnd_pj1doubled','f.rnd','f.rndn','f.jc','f.mc','f.mxc'))
-  if(!simple) levels(x$Problem)=c('j.rnd','j.rndn','j.rnd, J1','j.rnd, M1','f.rnd','f.rndn','f.jc','f.mc','f.mxc')
+  x$Problem=factor(x$Problem, levels=c('j.rnd','j.rndn','j.rnd_p1mdoubled','j.rnd_pj1doubled','f.rnd','f.rndn','f.jc','f.mc','f.mxc',
+                                       'jsp.orlib','fsp.orlib'))
+  if(!simple) levels(x$Problem)=c('j.rnd','j.rndn','j.rnd, J1','j.rnd, M1','f.rnd','f.rndn','f.jc','f.mc','f.mxc',
+                                  'JSP.ORLIB','FSP.ORLIB')
   return(droplevels(x$Problem))
 }
 
