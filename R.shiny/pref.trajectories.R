@@ -112,3 +112,9 @@ table.rhoTracksRanks <- function(problem,rhoTracksRanks,SDR=NULL,save=NA){
     print(tbl,include.rownames = FALSE,file=paste(lbl,'.txt',sep=''))
   }
 }
+
+stat.trainingDataSize <- function(trainingDataSize){
+  trainingDataSize$Problem = factorProblem(trainingDataSize,F)
+  mdat=ddply(trainingDataSize,~Problem+Track,function(x) sum(x$V1))
+  dcast(mdat,Track~Problem,sum,value.var = 'V1')
+}
