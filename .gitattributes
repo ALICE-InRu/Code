@@ -1,0 +1,4 @@
+*.pdf -delta
+*.jpg -delta
+*.eps -delta
+*.gif -delta
