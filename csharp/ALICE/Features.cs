@@ -77,14 +77,14 @@ namespace ALICE
             SPT,
             LPT,
             // ReSharper disable once InconsistentNaming
-            RNDmean,
+            RNDmin,
             // ReSharper disable once InconsistentNaming
-            RNDstd,
+            RNDmean,
             // ReSharper disable once InconsistentNaming
             RNDmax,
             // ReSharper disable once InconsistentNaming
-            RNDmin
-
+            RNDstd
+            
             #endregion
 
         }
