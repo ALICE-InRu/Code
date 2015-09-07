@@ -41,9 +41,14 @@ SDR <- reactive({
   subset(dataset.SDR,Problem %in% input$problems & Dimension == input$dimension)
 })
 
+quartiles <- reactive({
+  dat=subset(SDR(), Set=='train' & Problem==input$problem)
+  get.quartiles(dat)
+})
+
 dataset.diff <- reactive({
-  dat=subset(SDR(), Set=='train' & Dimension==input$dimension & Problem==input$problem)
-  checkDifficulty(dat)
+  dat=subset(SDR(), Set=='train' & Problem==input$problem)
+  checkDifficulty(dat,quartiles())
 })
 
 output$diff.Quartiles <- renderTable({ xtable(dataset.diff()$Quartiles) }, include.rownames = FALSE)

@@ -56,18 +56,31 @@ plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.split,save=NA){
   return(p)
 }
 
-checkDifficulty <- function(dat){
-
+get.quartiles <- function(dat){
   quartiles=ddply(dat,~Problem+Dimension, summarise, Q1 = round(quantile(Rho,.25),digits = 2), Q3 = round(quantile(Rho,.75), digits = 2))
   rownames(quartiles)=interaction(quartiles$Problem,quartiles$Dimension)
+  return(quartiles)
+}
+
+checkDifficulty <- function(dat, quartiles){
 
   dat=merge(dat,quartiles)
+
   split = ddply(dat,~Problem+Dimension+SDR, summarise, Easy = round(mean(Rho<=Q1)*100,digits = 2), Hard = round(mean(Rho>Q3)*100,digits = 2))
 
   Easy = ddply(dat,~Problem+Dimension+SDR,summarise,PIDs=list(PID[Rho<=Q1]),N=length(PID))
   Hard = ddply(dat,~Problem+Dimension+SDR,summarise,PIDs=list(PID[Rho>=Q3]),N=length(PID))
 
   return(list('Quartiles'=quartiles,'Split'=split,'Easy'=Easy,'Hard'=Hard))
+}
+
+labelDifficulty <- function(dat,quartiles){
+  dat=merge(dat,quartiles)
+  dat = ddply(dat,~Problem+Dimension,mutate,Difficulty=ifelse(Rho<=Q1,'Easy',ifelse(Rho>=Q3,'Hard','Medium')))
+  dat$Difficulty <- factor(dat$Difficulty, levels=c('Easy','Medium','Hard'))
+  dat$Q1=NULL
+  dat$Q3=NULL
+  return(dat)
 }
 
 splitSDR <- function(dat,problem,dim){

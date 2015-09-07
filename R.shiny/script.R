@@ -9,7 +9,9 @@ input$timedependent=F
 input$smooth=T
 
 source('sdr.R')
-dataset.diff=checkDifficulty(subset(SDR, Set=='train' & Dimension==input$dimension & Problem%in%input$problems))
+dat<-subset(SDR, Set=='train' & Dimension==input$dimension & Problem%in%input$problems)
+quartiles <- get.quartiles(dat)
+dataset.diff=checkDifficulty(dat,quartiles)
 print(xtable(dataset.diff$Quartiles), include.rownames = FALSE)
 print(xtable(dataset.diff$Split), include.rownames = FALSE)
 print(xtable(splitSDR(dataset.diff$Easy)))# first problem
