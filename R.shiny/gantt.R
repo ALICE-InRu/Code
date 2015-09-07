@@ -1,5 +1,6 @@
-get.gantt <- function(problem,dim,SDR='ALL',plotPID=-1){
-  trdat <- get.files.TRDAT(problem,dim,SDR)
+get.gantt <- function(problem,dim,SDR='ALL',plotPID=-1,all.trdat=NULL){
+  if(is.null(all.trdat)){ trdat <- get.files.TRDAT(problem,dim,SDR) } else { trdat=all.trdat }
+
   if(plotPID>0){ trdat <- subset(trdat,PID==plotPID) }
   if(nrow(trdat)<1){return(NULL)}
   m=regexpr('(?<Job>[0-9]+).(?<Mac>[0-9]+).(?<StartTime>[0-9]+)',trdat$Dispatch,perl = T)

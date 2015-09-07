@@ -18,9 +18,13 @@ output$tabGantt <- renderUI({
   )
 })
 
+all.trdat <- reactive({
+  get.files.TRDAT(input$problem, input$dimension, 'ALL', useDiff = F)
+})
+
 all.dat.schedules <- reactive({
   withProgress(message = 'Loading schedules', value = 0, {
-    get.gantt(input$problem,'6x5','ALL')
+    get.gantt(input$problem,input$dimension,'ALL',all.trdat=all.trdat())
   })
 })
 
