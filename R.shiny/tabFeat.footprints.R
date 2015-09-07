@@ -11,7 +11,7 @@ output$tabFeat.footprints <- renderUI({
       box(width = 9, collapsible = T,
           plotOutput("plot.correlation.all"),
           checkboxInput("BonferroniAll","Bonferroni adjustment",value=T),
-          checkboxInput("PlotJointlyAll","Plot difficulty jointly",value=T)),
+          checkboxInput("PlotJointlyAll","Plot difficulties jointly",value=T)),
       box(width=3, collapsible = T,
           tableOutput("stat.correlation.all"))),
     fluidRow(

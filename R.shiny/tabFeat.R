@@ -1,4 +1,4 @@
-output$tabFEAT <- renderUI({
+output$tabFeat <- renderUI({
   dashboardBody(
     fluidRow(
       box(title="Extremal", plotOutput("plot.extremal", height=600)),

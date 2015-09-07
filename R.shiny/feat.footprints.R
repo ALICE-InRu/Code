@@ -31,7 +31,7 @@ correlation.matrix.stepwise <- function(df,fixedColumnName='FinalRho',bonferroni
       } else { cor.matrix[col,step]=NA }
     }
 
-    N=nrow(df)/TotalSteps
+    N=nrow(subset(df,Step==1))
     test.cor.matrix <- cor.matrix*sqrt(N-2)/sqrt(1-cor.matrix**2)
 
     conf.level=0.95
@@ -51,15 +51,14 @@ correlation.matrix.stepwise <- function(df,fixedColumnName='FinalRho',bonferroni
     cor.dat <- merge(cor.dat, sign.cor, by=c('Feature','Step'))
 
     cor.dat <- cor.dat[-which(is.na(cor.dat$Significant)),]
-    if(nrow(cor.dat)>1) { cor.dat$N = N }
-
+    if(nrow(cor.dat)>0) { cor.dat$N = N }
 
     return(cor.dat)
   }
 
   cor.dat <- do.call(rbind, lapply(c('Easy','Hard'), function(diff){
     tmp <- correlation.matrix.stepwise1(subset(df,Difficulty==diff))
-    if(nrow(tmp)>1){ tmp$Difficulty=diff }
+    if(nrow(tmp)>0){ tmp$Difficulty=diff }
     return(tmp)
   }))
 
