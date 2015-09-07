@@ -2,30 +2,32 @@ output$tabFeat.footprints <- renderUI({
   dashboardBody(
     fluidRow(
       box(width = 9, collapsible = T,
-          plotOutput("plot.correlation.SDR"),
-          checkboxInput("BonferroniSDR","Bonferroni adjustment",value=F),
-          selectInput("DisplayDifficulty",'Display difficulties:',c('Both','Easy','Hard'))),
+          plotOutput("plot.correlation.SDR")),
       box(width=3, collapsible = T,
+          checkboxInput("BonferroniSDR","Bonferroni adjustment",value=F),
+          selectInput("DisplayDifficulty",'Display difficulties:',c('Both','Easy','Hard')),
           tableOutput("stat.correlation.SDR"))),
     fluidRow(
       box(width = 9, collapsible = T,
-          plotOutput("plot.correlation.all"),
-          checkboxInput("BonferroniAll","Bonferroni adjustment",value=T),
-          checkboxInput("PlotJointlyAll","Plot difficulty jointly",value=T)),
+          plotOutput("plot.correlation.all")),
       box(width=3, collapsible = T,
+          checkboxInput("BonferroniAll","Bonferroni adjustment",value=T),
+          checkboxInput("PlotJointlyAll","Plot difficulties jointly",value=T),
           tableOutput("stat.correlation.all"))),
     fluidRow(
-      box(width = 12, dataTableOutput("stats.correlation"))
-    )
+      box(width = 9, collapsible = T,
+          plotOutput("plot.kstest.all")),
+      box(width=3, collapsible = T,
+          checkboxInput("BonferroniKS","Bonferroni adjustment"),
+          tableOutput("stat.kstest.all")))
   )
 })
 
 
 footprint.dat <- reactive({
   withProgress(message = 'Retrieving data', value = 0, {
-    trdat <- get.files.TRDAT(input$problem, input$dimension, 'ALL', useDiff = F)
-    trdat <- subset(trdat,Followed==T)
 
+    trdat <- subset(all.trdat(),Followed==T)
     trdat.lbl=labelDifficulty(subset(trdat,Step==max(trdat$Step)-1), # might be missing last step
                               quartiles())
     trdat.lbl$FinalRho = trdat.lbl$Rho
@@ -83,6 +85,15 @@ output$stat.correlation.all <- renderTable({
 }, include.rownames = FALSE)
 
 
-output$stats.correlation <- renderTable({
-
+ks.rho.all <- reactive({
+  ks.matrix.stepwise(footprint.dat(), input$BonferroniKS)
 })
+
+output$plot.kstest.all <- renderPlot({
+  plot.ks.matrix.stepwise(ks.rho.all())
+})
+
+output$stat.kstest.all <- renderTable({
+  mdat=ddply(ks.rho.all(),~Track+N.Easy+N.Hard,summarise,Significant=sum(Significant))
+  xtable(mdat)
+}, include.rownames = FALSE)
