@@ -31,6 +31,7 @@ sidebar <- dashboardSidebar(
              menuSubItem("Best and worst case scenario", tabName = "optBW", icon = icon("star-o"))
              ),
     menuItem("Features", tabName = "feat", icon = icon("binoculars")),
+    menuItem("Footprints", tabName = "footprint", icon = icon("hand-o-right")),
     menuItem("CMA-ES", tabName = "cmaes", icon = icon("globe")),
     menuItem("DataTable", tabName = "table", icon = icon("table")),
     menuItem("Save", icon = icon("save"),
@@ -50,7 +51,8 @@ body <- dashboardBody(
     tabItem(tabName = "optUniqueness", uiOutput("tabOpt.uniqueness")),
     tabItem(tabName = "optSDR", uiOutput("tabOpt.SDR")),
     tabItem(tabName = "optBW", uiOutput("tabOpt.bw")),
-    tabItem(tabName = "feat", uiOutput("tabFEAT")),
+    tabItem(tabName = "feat", uiOutput("tabFeat")),
+    tabItem(tabName = "footprint", uiOutput("tabFeat.footprints")),
     tabItem(tabName = "cmaes", uiOutput("tabCMAES")),
     tabItem(tabName = "table", uiOutput("tabTable")),
     tabItem(tabName = "prefSettings", uiOutput("tabPref.settings")),

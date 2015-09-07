@@ -15,6 +15,7 @@ server <- function(input, output, session) {
   source('tabGantt.R', local=T); source('gantt.R', local=T)
   source('tabCMAES.R', local=T); source('cmaes.R', local=T)
   source('tabAbout.R', local=T)
+  source('tabFeat.footprints.R', local=T); source('feat.footprints.R')
 
   observe({
     lvs = levels(droplevels(subset(dataset.OPT,Dimension==input$dimension))$Problem)
