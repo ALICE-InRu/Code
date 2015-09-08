@@ -5,20 +5,23 @@ output$tabFeat.footprints <- renderUI({
           plotOutput("plot.correlation.SDR")),
       box(title='Settings', width=3, collapsible = T,
           checkboxInput("BonferroniSDR","Bonferroni adjustment",value=F),
+          sliderInput("CorrWindowSDR","Sliding window for k",min=0,max=10,value=0),
           selectInput("DisplayDifficulty",'Display difficulties:',c('Both','Easy','Hard')),
           tableOutput("stat.correlation.SDR"))),
     fluidRow(
       box(title="Stepwise correlation for difficulty over all trajectories", width = 9, collapsible = T,
           plotOutput("plot.correlation.all")),
       box(title='Settings', width=3, collapsible = T,
-          checkboxInput("BonferroniAll","Bonferroni adjustment",value=T),
-          checkboxInput("PlotJointlyAll","Plot difficulties jointly",value=T),
+          checkboxInput("BonferroniALL","Bonferroni adjustment",value=T),
+          sliderInput("CorrWindowALL","Sliding window for k",min=0,max=10,value=0),
+          checkboxInput("PlotJointlyALL","Plot difficulties jointly",value=T),
           tableOutput("stat.correlation.all"))),
     fluidRow(
       box(title="Stepwise K-S test for difficulty", width = 9, collapsible = T,
           plotOutput("plot.kstest.SDR")),
       box(title='Settings', width=3, collapsible = T,
           checkboxInput("BonferroniKS","Bonferroni adjustment"),
+          sliderInput("KSWindowSDR","Sliding window for k",min=0,max=10,value=0),
           tableOutput("stat.kstest.SDR")))
   )
 })
@@ -41,7 +44,8 @@ footprint.dat <- reactive({
 
 corr.rho.SDR <- reactive({
   corr.rho <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
-    df <- correlation.matrix.stepwise(subset(footprint.dat(),Track==sdr),'FinalRho',input$BonferroniSDR)
+    df <- correlation.matrix.stepwise(subset(footprint.dat(),Track==sdr),'FinalRho',
+                                      input$BonferroniSDR,input$CorrWindowSDR)
     df$Track = sdr
     return(df) } ))
   return(corr.rho)
@@ -66,7 +70,8 @@ output$stat.correlation.SDR <- renderTable({
 }, include.rownames = FALSE)
 
 corr.rho.all <- reactive({
-  corr.rho <- correlation.matrix.stepwise(footprint.dat(),'FinalRho',input$BonferroniAll)
+  corr.rho <- correlation.matrix.stepwise(footprint.dat(),'FinalRho',
+                                          input$BonferroniALL,input$CorrWindowALL)
   corr.rho$Track='ALL'
   return(corr.rho)
 })
@@ -74,7 +79,7 @@ corr.rho.all <- reactive({
 output$plot.correlation.all <- renderPlot({
   withProgress(message = 'Testing correlation significance', value = 0, {
     p<-plot.correlation.matrix.stepwise(corr.rho.all())
-    if(!input$PlotJointlyAll) {p<-p+facet_grid(Track~Difficulty)}
+    if(!input$PlotJointlyALL) {p<-p+facet_grid(Track~Difficulty)}
     return(p)
   })
 })
@@ -89,7 +94,8 @@ output$stat.correlation.all <- renderTable({
 
 ks.rho.SDR <- reactive({
   ks.rho <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
-    df <- ks.matrix.stepwise(subset(footprint.dat(),Track==sdr),input$BonferroniKS)
+    df <- ks.matrix.stepwise(subset(footprint.dat(),Track==sdr),
+                             input$BonferroniKS,input$KSWindowSDR)
     df$Track = sdr
     return(df) } ))
   return(ks.rho)

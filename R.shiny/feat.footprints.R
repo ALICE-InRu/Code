@@ -9,7 +9,7 @@ label.trdat <- function(trdat,quartiles){
   return(trdat)
 }
 
-ks.matrix.stepwise <- function(df, bonferroniAdjust=T)
+ks.matrix.stepwise <- function(df, bonferroniAdjust=T,window=0)
 {
 
   df$Step=as.numeric(df$Step)
@@ -35,9 +35,9 @@ ks.matrix.stepwise <- function(df, bonferroniAdjust=T)
     alpha=alpha/TotalSteps
   }
 
-  for(step in 1:TotalSteps){
-    ddf1=subset(df1, Step==step)
-    ddf2=subset(df2, Step==step)
+  for(step in (1+window):(TotalSteps-window)){
+    ddf1=subset(df1, Step<=step+window & Step>=step-window)
+    ddf2=subset(df2, Step<=step+window & Step>=step-window)
     if(nrow(ddf1)>0 & nrow(ddf2)>0){
       for(col in values){
         ks.matrix[col,step] <- ks.test2(ddf1[,col],ddf2[,col],alpha)
@@ -45,8 +45,8 @@ ks.matrix.stepwise <- function(df, bonferroniAdjust=T)
     } else { ks.matrix[col,step]=NA }
   }
 
-  N1=nrow(subset(df1,Step==1))
-  N2=nrow(subset(df2,Step==1))
+  N1=nrow(subset(df1,Step==1))*(1+diff(c(-window,window)))
+  N2=nrow(subset(df2,Step==1))*(1+diff(c(-window,window)))
 
   ks.dat <- melt(ks.matrix)
   colnames(ks.dat)=c('Feature','Step','Significant')
@@ -62,7 +62,7 @@ ks.matrix.stepwise <- function(df, bonferroniAdjust=T)
   return(ks.dat)
 }
 
-correlation.matrix.stepwise <- function(f.trdat,fixedColumnName='FinalRho',bonferroniAdjust=T)
+correlation.matrix.stepwise <- function(f.trdat,fixedColumnName='FinalRho',bonferroniAdjust=T,window=0)
 {
   correlation.matrix.stepwise1 <- function(df){
 
@@ -86,8 +86,9 @@ correlation.matrix.stepwise <- function(f.trdat,fixedColumnName='FinalRho',bonfe
     method='pearson'
     op <- options(warn = (-1)) # suppress warnings
 
-    for(step in 1:TotalSteps){
-      ddf=subset(df, Step==step)
+    for(step in (1+window):(TotalSteps-window)){
+      ddf=subset(df, Step>=step-window & Step<=step+window)
+      print(nrow(ddf))
       if(nrow(ddf)>0){
         for(col in values){
           cor.matrix[col,step] <- cor(ddf[,col],ddf$Fixed, use = "pairwise.complete.obs", method = method)
@@ -95,7 +96,7 @@ correlation.matrix.stepwise <- function(f.trdat,fixedColumnName='FinalRho',bonfe
       } else { cor.matrix[col,step]=NA }
     }
 
-    N=nrow(subset(df,Step==1))
+    N=nrow(subset(df,Step==1))*(1+diff(c(-window,window)))
     test.cor.matrix <- cor.matrix*sqrt(N-2)/sqrt(1-cor.matrix**2)
 
     conf.level=0.95
