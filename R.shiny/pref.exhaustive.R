@@ -13,7 +13,7 @@ table.exhaust.paretoFront = function(paretoFront,onlyPareto=F){
   return(xtable(tmp))#,include.rownames=FALSE,sanitize.text.function=function(x){x})
 }
 
-plot.exhaust.paretoWeights <- function(paretoFront,save=NA,tiltText=T){
+plot.exhaust.paretoWeights <- function(paretoFront,save=NA,tiltText=T,rhoTxt=F){
   if(is.null(paretoFront$File)){return(NULL)}
 
   weights=NULL
@@ -33,12 +33,22 @@ plot.exhaust.paretoWeights <- function(paretoFront,save=NA,tiltText=T){
 
   p=ggplot(mdat, aes(fill=sc.value,x=CDR,y=Feature))+
     geom_tile(color='black')+
-    geom_point(data=subset(mdat,Pareto.front==T),aes(label='pareto'),shape=17)+
     scale_fill_gradient2(name='Normalised\nweights', low = scales::muted("red"), mid = "white",
                          high = scales::muted("blue"), midpoint = 0, space = "rgb",
                          na.value = "grey50", guide = "colourbar")+
     facet_grid(Problem~NrFeat,scales='free_x',space='free_x',labeller = ifelse(is.na(save),'label_both','label_value'))+
     ylab(expression('Feature'*~phi))+xlab('')
+
+  if(any(mdat$Pareto.front)){
+    p=p+geom_point(data=subset(mdat,Pareto.front==T),aes(label='pareto'),shape=17)
+  }
+  if(rhoTxt){
+    p <- p+geom_text(y=0,aes(label=paste0('Rho: ',round(Validation.Rho,0),'\n',
+                                          'Acc: ',round(Validation.Accuracy.Optimality,0),
+                                          ' / ',round(Validation.Accuracy.Classification,0))
+                             ),size=3) + expand_limits(y=-0.5)
+  }
+
 
   if(tiltText)
     p <- p+theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
