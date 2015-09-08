@@ -1,25 +1,25 @@
 output$tabFeat.footprints <- renderUI({
   dashboardBody(
     fluidRow(
-      box(width = 9, collapsible = T,
+      box(title="Stepwise correlation for difficulty w.r.t. SDR", width = 9, collapsible = T,
           plotOutput("plot.correlation.SDR")),
-      box(width=3, collapsible = T,
+      box(title='Settings', width=3, collapsible = T,
           checkboxInput("BonferroniSDR","Bonferroni adjustment",value=F),
           selectInput("DisplayDifficulty",'Display difficulties:',c('Both','Easy','Hard')),
           tableOutput("stat.correlation.SDR"))),
     fluidRow(
-      box(width = 9, collapsible = T,
+      box(title="Stepwise correlation for difficulty over all trajectories", width = 9, collapsible = T,
           plotOutput("plot.correlation.all")),
-      box(width=3, collapsible = T,
+      box(title='Settings', width=3, collapsible = T,
           checkboxInput("BonferroniAll","Bonferroni adjustment",value=T),
           checkboxInput("PlotJointlyAll","Plot difficulties jointly",value=T),
           tableOutput("stat.correlation.all"))),
     fluidRow(
-      box(width = 9, collapsible = T,
-          plotOutput("plot.kstest.all")),
-      box(width=3, collapsible = T,
+      box(title="Stepwise K-S test for difficulty", width = 9, collapsible = T,
+          plotOutput("plot.kstest.SDR")),
+      box(title='Settings', width=3, collapsible = T,
           checkboxInput("BonferroniKS","Bonferroni adjustment"),
-          tableOutput("stat.kstest.all")))
+          tableOutput("stat.kstest.SDR")))
   )
 })
 
@@ -85,15 +85,22 @@ output$stat.correlation.all <- renderTable({
 }, include.rownames = FALSE)
 
 
-ks.rho.all <- reactive({
-  ks.matrix.stepwise(footprint.dat(), input$BonferroniKS)
+# ks.rho.all <- reactive({ ks.matrix.stepwise(footprint.dat(), input$BonferroniKS) })
+
+ks.rho.SDR <- reactive({
+  ks.rho <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
+    df <- ks.matrix.stepwise(subset(footprint.dat(),Track==sdr),input$BonferroniKS)
+    df$Track = sdr
+    return(df) } ))
+  print(summary(ks.rho))
+  return(ks.rho)
 })
 
-output$plot.kstest.all <- renderPlot({
-  plot.ks.matrix.stepwise(ks.rho.all())
+output$plot.kstest.SDR <- renderPlot({
+  plot.ks.matrix.stepwise(ks.rho.SDR())
 })
 
-output$stat.kstest.all <- renderTable({
-  mdat=ddply(ks.rho.all(),~Track+N.Easy+N.Hard,summarise,Significant=sum(Significant))
+output$stat.kstest.SDR <- renderTable({
+  mdat=ddply(ks.rho.SDR(),~Track+N.Easy+N.Hard,summarise,Significant=sum(Significant))
   xtable(mdat)
 }, include.rownames = FALSE)

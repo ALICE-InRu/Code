@@ -149,6 +149,6 @@ plot.correlation.matrix.stepwise <- function(cor.df){
 }
 
 plot.ks.matrix.stepwise <- function(ks.df){
-  plot.stepwise.kstest(ks.df) + scale_shape_manual(values=c(8))+ylab('Kolmogorov-Smirnov Test')
+  plot.stepwise.test(ks.df) + scale_shape_manual(values=c(8))+ylab('Kolmogorov-Smirnov Test')
 }
 
