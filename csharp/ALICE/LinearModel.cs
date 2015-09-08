@@ -230,7 +230,7 @@ namespace ALICE
 
         public double PriorityIndex(Features phi)
         {
-            var step = TimeIndependent ? 0 : phi.PhiLocal[(int) Features.Explanatory.step] - 1;
+            var step = TimeIndependent ? 0 : phi.XiExplanatory[(int) Features.Explanatory.step] - 1;
             double index = 0;
             switch (FeatureMode)
             {
