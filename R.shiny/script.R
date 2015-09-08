@@ -55,16 +55,15 @@ bestPrefModel=get.bestPrefModel(paretoFront)
 
 plot.exhaust.paretoFront(prefSummary,paretoFront,T,save)
 plot.exhaust.acc(prefSummary,save,bestPrefModel$Summary)
-plot.exhaust.paretoWeights(paretoFront,F,save)
+plot.exhaust.paretoWeights(paretoFront,save,F)
 plot.exhaust.bestAcc(all.StepwiseOptimality,bestPrefModel)
 plot.exhaust.bestBoxplot(bestPrefModel,SDR)
 print(table.exhaust.paretoFront(paretoFront),
       include.rownames=FALSE, sanitize.text.function=function(x){x})
 ks=suppressWarnings(get.pareto.ks(paretoFront,input$problem, onlyPareto = F, SDR=NULL))
 if(!is.null(ks)){
-  print(ks$Rho.train,sanitize.text.function=function(x){x})
-  print(ks$Rho.test,sanitize.text.function=function(x){x})
-  print(ks$Acc,sanitize.text.function=function(x){x})
+  plot.ks.test2(ks$Rho.train,ks$Acc)
+  plot.ks.test2(ks$Rho.test)
 }
 
 source('feat.R')

@@ -31,3 +31,33 @@ ks.test2 <- function(x1,x2,alpha=0.05){
   H  =  (alpha >= pValue)
   return(H)
 }
+
+plot.ks.test2 <- function(p.rho, p.acc=NULL, alpha=0.05){
+
+  H.rho = alpha >= p.rho
+  mdat <- melt(H.rho)
+  mdat$Type = 'Rho'
+
+  if(!is.null(p.acc)){
+    H.acc = alpha >= p.acc
+    tmp = melt(H.acc)
+    tmp$Type = 'Acc'
+    mdat = rbind(mdat,tmp)
+    mdat$Type <- factor(mdat$Type, levels=c('Rho','Acc'))
+  }
+
+  p <- ggplot(subset(mdat,!is.na(value)), aes(x=factor(Var2),y=factor(Var1))) +
+    geom_tile(fill='white',color='black')+
+    geom_point(data=subset(mdat, value==T), aes(shape=Type)) + scale_shape_manual('Reject',values=c(3,4)) +
+    xlab(NULL)+ylab(NULL)+
+    theme_bw() +
+    theme(axis.text.x=element_blank(),
+          axis.text.y=element_blank(),
+          axis.ticks=element_blank(),
+          panel.border=element_blank(),
+          legend.position="bottom") +
+    annotate("text", x = (1:nrow(H.rho)), y = 1:nrow(H.rho), label = rownames(H.rho))
+
+  return(p)
+
+}

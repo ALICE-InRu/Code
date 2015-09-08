@@ -25,12 +25,14 @@ output$tabPref.exhaustive <- renderUI({
       ),
       box(title='Pareto front', collapsible=TRUE, width=12, tableOutput("table.exhaust.paretoFront")),
       box(title='Kolmogorov-Smirnov Tests', collapsible = TRUE, width=12, height=1000,
-          helpText('p-values for two-sided Kolmogorov-Smirnov test. Only done for main problem distribution.'),
+          helpText('H0: Models are drawn  drawn from the same continuous distribution.',
+                   'K-S test p-values for main problem distribution.'),
+          #box(title='Training set', width=6, plotOutput("plot.liblinearKolmogorov.train")),
+          #box(title='Test set', width=6, plotOutput("plot.liblinearKolmogorov.test")))
           box(title='w.r.t. Rho for training set', width=6, tableOutput("table.liblinearKolmogorov.Rho.train")),
           box(title='w.r.t. Rho for test set', width=6, tableOutput("table.liblinearKolmogorov.Rho.test")),
           box(title='w.r.t. training accuracy', width=6, tableOutput("table.liblinearKolmogorov.Acc"))
-      )
-    )
+    ))
   )
 })
 
@@ -60,7 +62,7 @@ output$plot.exhaust.acc <- renderPlot({
 
 output$plot.exhaust.paretoWeights <- renderPlot({
   withProgress(message = 'Plotting Pareto weights', value = 0, {
-    plot.exhaust.paretoWeights(paretoFront(),input$timedependent,input$save)
+    plot.exhaust.paretoWeights(paretoFront(),input$save)
   })
 }, height="auto")
 
@@ -108,3 +110,16 @@ output$table.liblinearKolmogorov.Acc <- renderTable({
   if(is.null(ks)){return(NULL)}
   return(ks$Acc)
 },sanitize.text.function=function(x){x})
+
+
+output$plot.liblinearKolmogorov.train <- renderPlot({
+  ks=pareto.ks()
+  if(is.null(ks)){return(NULL)}
+  return(plot.ks.test2(ks$Rho.train,ks$Acc))
+})
+
+output$plot.liblinearKolmogorov.test <- renderPlot({
+  ks=pareto.ks()
+  if(is.null(ks)){return(NULL)}
+  return(plot.ks.test2(ks$Rho.test))
+})

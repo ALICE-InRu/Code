@@ -44,7 +44,8 @@ plot.imitationLearning.weights <- function(problem,dim){
   file_list = getFileNamesIL(problem,dim)
   if(length(file_list)<=1) return(NULL)
 
-  w <- do.call(rbind, lapply(file_list, function(X) { data.frame(Track = basename(X), subset(get.prefWeights(X,F),NrFeat==16)) } ))
+  w <- do.call(rbind, lapply(file_list, function(X) {
+    data.frame(Track = basename(X), subset(get.prefWeights(X),NrFeat==16)) } ))
 
   w$Track=getAttribute(w$Track,regexpr('(?<Track>[A-Z]{2}[A-Z0-9]+)',w$Track,perl=T),'Track')
   w=factorTrack(w)

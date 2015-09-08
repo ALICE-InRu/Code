@@ -13,12 +13,12 @@ table.exhaust.paretoFront = function(paretoFront,onlyPareto=F){
   return(xtable(tmp))#,include.rownames=FALSE,sanitize.text.function=function(x){x})
 }
 
-plot.exhaust.paretoWeights <- function(paretoFront,timedependent=F,save=NA,tiltText=T){
+plot.exhaust.paretoWeights <- function(paretoFront,save=NA,tiltText=T){
   if(is.null(paretoFront$File)){return(NULL)}
 
   weights=NULL
   for(file in unique(paretoFront$File)){
-    tmp=get.prefWeights(file,timedependent);tmp$Type=NULL;tmp$File=file
+    tmp=get.prefWeights(file);tmp$Type=NULL;tmp$File=file
     weights=rbind(weights,tmp)
   }
   mdat=join(weights,paretoFront,by=c('NrFeat','Model','File'))
@@ -248,7 +248,7 @@ set.optAccuracy <- function(model){
 
   if(file.exists(fname)){ opt.acc=read.csv(fname)}else{
     print(fname)
-    weights = get.prefWeights(model,grepl(model,'timedependent'),T)
+    weights = get.prefWeights(model,T)
     trdat = get.files.TRDAT(problem,dim,track,rank)
     trdat$isOPT=trdat$Rho==0
     Ntrain=quantile(unique(trdat$PID),0.8)
@@ -372,12 +372,13 @@ get.pareto.ks <- function(paretoFront,problem,onlyPareto=T,SDR=NULL){
 
   ks.matrix <- function(dat,var,label){
     if(nrow(dat)==0) return(NULL)
-    ks.mat=matrix(nrow=length(dat[,label]),ncol=length(dat[,label]))
+    ks.mat=matrix(NA,nrow=length(dat[,label]),ncol=length(dat[,label]))
     rownames(ks.mat)=dat[,label]
     colnames(ks.mat)=dat[,label]
 
     for(c1 in 1:ncol(ks.mat)){
-      for(c2 in 1:ncol(ks.mat)){
+      for(c2 in c1:ncol(ks.mat)){
+        #ks.mat[c1,c2]=ks.test2(dat[c1,var][[1]], dat[c2,var][[1]])
         ks.mat[c1,c2]=ks.test(dat[c1,var][[1]], dat[c2,var][[1]])$p.value
       }
     }

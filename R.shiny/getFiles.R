@@ -167,8 +167,9 @@ get.CDR <- function(file_list,nrFeat=NULL,modelID=NULL,sets=c('train','test')){
   return(dat)
 }
 
-get.prefWeights <- function(model,timedependent,asMatrix=F){
+get.prefWeights <- function(model,asMatrix=F){
   m=regexpr("(?<Problem>[jf].[a-z0-9]+).(?<Dimension>[0-9]+x[0-9]+).",model,perl=T)
+  timedependent=grepl('timedependent',model)
   problem=getAttribute(model,m,'Problem')
   weights=read_csv(paste0(DataDir,'PREF/weights/',model,'.csv'))
   weights=subset(weights,Type=='Weight')
