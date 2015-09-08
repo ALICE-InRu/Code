@@ -92,7 +92,6 @@ ks.rho.SDR <- reactive({
     df <- ks.matrix.stepwise(subset(footprint.dat(),Track==sdr),input$BonferroniKS)
     df$Track = sdr
     return(df) } ))
-  print(summary(ks.rho))
   return(ks.rho)
 })
 
@@ -102,5 +101,7 @@ output$plot.kstest.SDR <- renderPlot({
 
 output$stat.kstest.SDR <- renderTable({
   mdat=ddply(ks.rho.SDR(),~Track+N.Easy+N.Hard,summarise,Significant=sum(Significant))
-  xtable(mdat)
+  mdat$Track <- factor(mdat$Track, levels=sdrs)
+  mdat = arrange(mdat, Track)
+  xtable(mdat)  xtable(mdat)
 }, include.rownames = FALSE)
