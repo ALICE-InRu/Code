@@ -89,7 +89,7 @@ corr.rho <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
 plot.correlation.matrix.stepwise(corr.rho)
 if(!is.na(save)){
   fname = paste(paste(subdir,input$problem,'phi',sep='/'),'corr','SDR',input$dimension,extension,sep = '.')
-  ggsave(fname,width = Width, height = Height.full, dpi = dpi, units = units)
+  ggsave(fname,width = Width, height = Height.half, dpi = dpi, units = units)
 }
 
 corr.rho <- correlation.matrix.stepwise(trdat,'FinalRho')
@@ -97,14 +97,14 @@ corr.rho$Track='ALL'
 plot.correlation.matrix.stepwise(corr.rho)+facet_grid(Track~Difficulty)
 if(!is.na(save)){
   fname = paste(paste(subdir,input$problem,'phi',sep='/'),'corr','ALL',input$dimension,extension,sep = '.')
-  ggsave(fname,width = Width, height = Height.full, dpi = dpi, units = units)
+  ggsave(fname,width = Width, height = Height.half, dpi = dpi, units = units)
 }
 
 ks.dat <- ks.matrix.stepwise(trdat,bonferroniAdjust = F)
 plot.stepwise.test(ks.dat)
 if(!is.na(save)){
   fname = paste(paste(subdir,input$problem,'phi',sep='/'),'ks','SDR',input$dimension,extension,sep = '.')
-  ggsave(fname,width = Width, height = Height.full, dpi = dpi, units = units)
+  ggsave(fname,width = Width, height = Height.half, dpi = dpi, units = units)
 }
 
 
