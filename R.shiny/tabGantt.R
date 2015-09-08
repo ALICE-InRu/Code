@@ -20,7 +20,6 @@ output$tabGantt <- renderUI({
 
 observe({
   dim=numericDimension(input$dimension)
-  print(paste('dim observe',dim))
   updateSliderInput(session, "step", max=dim, value=dim)
 })
 

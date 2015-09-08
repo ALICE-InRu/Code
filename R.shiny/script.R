@@ -91,8 +91,6 @@ if(!is.na(save)){
   fname = paste(paste(subdir,input$problem,'phi',sep='/'),'corr','SDR',input$dimension,extension,sep = '.')
   ggsave(fname,p.sdr,width = Width, height = Height.half, dpi = dpi, units = units)
 }
-mdat=ddply(corr.rho.sdr,~Track+Difficulty+N,summarise,Significant=sum(Significant))
-print(xtable(mdat), include.rownames = FALSE)
 
 corr.rho.all <- correlation.matrix.stepwise(trdat,'FinalRho')
 corr.rho.all$Track='ALL'
@@ -101,8 +99,12 @@ if(!is.na(save)){
   fname = paste(paste(subdir,input$problem,'phi',sep='/'),'corr','ALL',input$dimension,extension,sep = '.')
   ggsave(fname,p.all,width = Width, height = Height.half, dpi = dpi, units = units)
 }
-mdat=ddply(corr.rho.all,~Track+Difficulty+N,summarise,Significant=sum(Significant))
+
+mdat=ddply(rbind(corr.rho.sdr,corr.rho.all),~Track,summarise,
+           N.Easy=sum(Significant & Difficulty=='Easy'),
+           N.Hard=sum(Significant & Difficulty=='Hard'))
 print(xtable(mdat), include.rownames = FALSE)
+print(colSums(mdat[,2:3]))
 
 ks.rho <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
   df <- ks.matrix.stepwise(subset(trdat,Track==sdr),T)
@@ -115,6 +117,7 @@ if(!is.na(save)){
 }
 mdat=ddply(ks.rho,~Track+N.Easy+N.Hard,summarise,Significant=sum(Significant))
 print(xtable(mdat), include.rownames = FALSE)
+print(colSums(mdat[,2:4]))
 
 source('pref.imitationLearning.R')
 CDR.IL <- get.CDR.IL(input$problem,input$dimension)
