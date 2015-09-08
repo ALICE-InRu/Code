@@ -88,7 +88,6 @@ correlation.matrix.stepwise <- function(f.trdat,fixedColumnName='FinalRho',bonfe
 
     for(step in (1+window):(TotalSteps-window)){
       ddf=subset(df, Step>=step-window & Step<=step+window)
-      print(nrow(ddf))
       if(nrow(ddf)>0){
         for(col in values){
           cor.matrix[col,step] <- cor(ddf[,col],ddf$Fixed, use = "pairwise.complete.obs", method = method)
