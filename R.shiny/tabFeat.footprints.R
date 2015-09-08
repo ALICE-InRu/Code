@@ -103,5 +103,5 @@ output$stat.kstest.SDR <- renderTable({
   mdat=ddply(ks.rho.SDR(),~Track+N.Easy+N.Hard,summarise,Significant=sum(Significant))
   mdat$Track <- factor(mdat$Track, levels=sdrs)
   mdat = arrange(mdat, Track)
-  xtable(mdat)  xtable(mdat)
+  xtable(mdat)
 }, include.rownames = FALSE)
