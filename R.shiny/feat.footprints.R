@@ -56,7 +56,7 @@ ks.matrix.stepwise <- function(df, bonferroniAdjust=T)
     ks.dat$N.Easy = N1
     ks.dat$N.Hard = N2
     ks.dat$Track = 'ALL'
-    ks.dat$Difficulty = 'Reject null hypothesis'
+    ks.dat$Difficulty = 'Reject'
   }
 
   return(ks.dat)
@@ -145,7 +145,7 @@ plot.stepwise.test <- function(df){
 }
 
 plot.correlation.matrix.stepwise <- function(cor.df){
-  plot.stepwise.test(cor.df) + scale_shape_manual(values = c(3, 4)) +
+  plot.stepwise.test(cor.df) + scale_shape_manual('Significant difficulty', values = c(3, 4)) +
     ylab(expression('Correlation between' *~ phi^(k) *~ ' and ' * ~ rho))
 }
 

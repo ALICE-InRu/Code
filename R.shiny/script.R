@@ -81,32 +81,40 @@ trdat <- subset(trdat,Followed==T)
 trdat <- label.trdat(trdat,quartiles)
 trdat <- subset(trdat,Difficulty %in% c('Easy','Hard'))
 
-corr.rho <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
+corr.rho.sdr <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
   df <- correlation.matrix.stepwise(subset(trdat,Track==sdr),'FinalRho',F)
   df$Track = sdr
   return(df) } ))
 
-plot.correlation.matrix.stepwise(corr.rho)
+p.sdr=plot.correlation.matrix.stepwise(corr.rho.sdr)+theme(legend.position='none')+xlab(NULL)
 if(!is.na(save)){
   fname = paste(paste(subdir,input$problem,'phi',sep='/'),'corr','SDR',input$dimension,extension,sep = '.')
-  ggsave(fname,width = Width, height = Height.half, dpi = dpi, units = units)
+  ggsave(fname,p.sdr,width = Width, height = Height.half, dpi = dpi, units = units)
 }
+mdat=ddply(corr.rho.sdr,~Track+Difficulty+N,summarise,Significant=sum(Significant))
+print(xtable(mdat), include.rownames = FALSE)
 
-corr.rho <- correlation.matrix.stepwise(trdat,'FinalRho')
-corr.rho$Track='ALL'
-plot.correlation.matrix.stepwise(corr.rho)+facet_grid(Track~Difficulty)
+corr.rho.all <- correlation.matrix.stepwise(trdat,'FinalRho')
+corr.rho.all$Track='ALL'
+p.all=plot.correlation.matrix.stepwise(corr.rho.all)
 if(!is.na(save)){
   fname = paste(paste(subdir,input$problem,'phi',sep='/'),'corr','ALL',input$dimension,extension,sep = '.')
-  ggsave(fname,width = Width, height = Height.half, dpi = dpi, units = units)
+  ggsave(fname,p.all,width = Width, height = Height.half, dpi = dpi, units = units)
 }
+mdat=ddply(corr.rho.all,~Track+Difficulty+N,summarise,Significant=sum(Significant))
+print(xtable(mdat), include.rownames = FALSE)
 
-ks.dat <- ks.matrix.stepwise(trdat,bonferroniAdjust = F)
-plot.stepwise.test(ks.dat)
+ks.rho <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
+  df <- ks.matrix.stepwise(subset(trdat,Track==sdr),T)
+  df$Track = sdr
+  return(df) } ))
+p=plot.ks.matrix.stepwise(ks.rho)
 if(!is.na(save)){
   fname = paste(paste(subdir,input$problem,'phi',sep='/'),'ks','SDR',input$dimension,extension,sep = '.')
-  ggsave(fname,width = Width, height = Height.half, dpi = dpi, units = units)
+  ggsave(fname,p,width = Width*1.2, height = Height.half*1.2, dpi = dpi, units = units)
 }
-
+mdat=ddply(ks.rho,~Track+N.Easy+N.Hard,summarise,Significant=sum(Significant))
+print(xtable(mdat), include.rownames = FALSE)
 
 source('pref.imitationLearning.R')
 CDR.IL <- get.CDR.IL(input$problem,input$dimension)
