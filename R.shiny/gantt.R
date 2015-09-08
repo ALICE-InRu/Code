@@ -12,8 +12,8 @@ get.gantt <- function(problem,dim,SDR='ALL',plotPID=-1,all.trdat=NULL){
   return(trdat)
 }
 
-plot.gantt <- function(gantt,step,
-                       plotPhi=F,plotStep=F,TightTime=F,xlabel='Time',ylabel='Machine',ncol=2,cmaxMargin=25){
+plot.gantt <- function(gantt,step,plotPhi=F,
+                       plotStep=F,TightTime=F,xlabel='Time',ylabel='Machine',ncol=2,cmaxMargin=25,vchi=F){
 
   NumJobs=max(gantt$Job)
   NumMacs=max(gantt$Mac)
@@ -23,7 +23,7 @@ plot.gantt <- function(gantt,step,
 
   maxMakespan=ifelse(TightTime,max(pdat$phi.makespan),max(gantt$phi.makespan))+cmaxMargin
 
-  cat('vchi_',step,'=(',fdat$Job,')\n')
+  if(vchi){ cat('vchi_',step,'=(',fdat$Job,')\n') }
 
   p=ggplot(fdat,aes(x=x,y=Mac))+
     ggplotFill('Job',NumJobs)+

@@ -9,13 +9,19 @@ output$tabGantt <- renderUI({
                       'Moreover, the current Cmax is denoted with a dotted line.')),
     fluidRow(
       box(sliderInput("pid", "Problem instance:", min=1, max=500, value=10)),
-      box(sliderInput("step", "Step during the dispatching process:", min=0, max=30, value=30))
+      box(sliderInput("step", "Step during the dispatching process:", min=0, max=30, step=1, value=30))
       ),
     fluidRow(
       box(width=12, plotOutput('gantt.schedules', height = 700)),
       box(checkboxInput("plotPhi", "Display features."))
       )
   )
+})
+
+observe({
+  dim=numericDimension(input$dimension)
+  print(paste('dim observe',dim))
+  updateSliderInput(session, "step", max=dim, value=dim)
 })
 
 all.trdat <- reactive({
