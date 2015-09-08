@@ -12,6 +12,7 @@ source('sdr.R')
 dat<-subset(SDR, Set=='train' & Dimension==input$dimension & Problem%in%input$problems)
 quartiles <- get.quartiles(dat)
 dataset.diff=checkDifficulty(dat,quartiles)
+
 print(xtable(dataset.diff$Quartiles), include.rownames = FALSE)
 print(xtable(dataset.diff$Split), include.rownames = FALSE)
 print(xtable(splitSDR(dataset.diff$Easy)))# first problem
@@ -73,6 +74,39 @@ stats.singleFeat(CDR.singleFeat)
 plot.StepwiseExtremal(StepwiseOptimality,StepwiseExtremal,CDR.singleFeat,input$dimension,F)
 plot.StepwiseFeatures(input$problem,input$dimension,T,F)
 plot.StepwiseFeatures(input$problem,input$dimension,F,T)
+
+source('feat.footprints.R')
+trdat <- get.files.TRDAT(input$problem, input$dimension, 'ALL', useDiff = F)
+trdat <- subset(trdat,Followed==T)
+trdat <- label.trdat(trdat,quartiles)
+trdat <- subset(trdat,Difficulty %in% c('Easy','Hard'))
+
+corr.rho <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
+  df <- correlation.matrix.stepwise(subset(trdat,Track==sdr),'FinalRho',F)
+  df$Track = sdr
+  return(df) } ))
+
+plot.correlation.matrix.stepwise(corr.rho,save)
+if(is.na(save)){
+  fname = paste(paste(subdir,input$problem,'phi',sep='/'),'corr','SDR',input$dimension,extension,sep = '.')
+  ggsave(fname,width = Width, height = Height.full, dpi = dpi, units = units)
+}
+
+corr.rho <- correlation.matrix.stepwise(trdat,'FinalRho')
+corr.rho$Track='ALL'
+plot.correlation.matrix.stepwise(corr.rho)+facet_grid(Track~Difficulty)
+if(is.na(save)){
+  fname = paste(paste(subdir,input$problem,'phi',sep='/'),'corr','ALL',input$dimension,extension,sep = '.')
+  ggsave(fname,width = Width, height = Height.full, dpi = dpi, units = units)
+}
+
+ks.dat <- ks.matrix.stepwise(trdat,bonferroniAdjust = F)
+plot.stepwise.test(ks.dat)
+if(is.na(save)){
+  fname = paste(paste(subdir,input$problem,'phi',sep='/'),'ks','SDR',input$dimension,extension,sep = '.')
+  ggsave(fname,width = Width, height = Height.full, dpi = dpi, units = units)
+}
+
 
 source('pref.imitationLearning.R')
 CDR.IL <- get.CDR.IL(input$problem,input$dimension)

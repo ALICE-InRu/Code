@@ -13,18 +13,9 @@ output$tabFootprint <- renderUI({
 
 footprint.dat <- reactive({
   withProgress(message = 'Retrieving data', value = 0, {
-    trdat <- get.files.TRDAT(input$problem, input$dimension, 'ALL', useDiff = F)
-    trdat <- subset(trdat,Followed==T)
-
+    trdat <- subset(all.trdat(),Followed==T)
     quartiles <- dataset.diff()$Quartiles
-
-    trdat.lbl=labelDifficulty(subset(trdat,Step==max(trdat$Step)-1), # might be missing last step
-                              quartiles)
-    trdat.lbl$FinalRho = trdat.lbl$Rho
-    trdat <- merge(trdat,trdat.lbl[,c('Problem','Track','PID','FinalRho','Difficulty')],
-                   by=c('Problem','Track','PID'))
-    trdat <- trdat[,grep('Track|PID|Step|phi|Difficulty|Rho',colnames(trdat))]
-    trdat$Rho=NULL
+    label.trdat(trdat,quartiles)
   })
   return(trdat)
 })

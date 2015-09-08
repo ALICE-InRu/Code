@@ -1,3 +1,14 @@
+label.trdat <- function(trdat,quartiles){
+  trdat.lbl=labelDifficulty(subset(trdat,Step==max(trdat$Step)-1), # might be missing last step
+                            quartiles)
+  trdat.lbl$FinalRho = trdat.lbl$Rho
+  trdat <- merge(trdat,trdat.lbl[,c('Problem','Track','PID','FinalRho','Difficulty')],
+                 by=c('Problem','Track','PID'))
+  trdat <- trdat[,grep('Track|PID|Step|phi|Difficulty|Rho',colnames(trdat))]
+  trdat$Rho=NULL
+  return(trdat)
+}
+
 ks.matrix.stepwise <- function(df, bonferroniAdjust=T)
 {
 
