@@ -107,7 +107,7 @@ pref.boxplot <- function(CDR,SDR=NULL,ColorVar,xVar='CDR',xText='CDR',tiltText=T
     p=p+geom_boxplot(aes(color=ColorVar))
 
   if(!is.null(SDR)){ p=p+geom_boxplot(data=SDR,aes(fill=SDR))+ggplotFill('SDR',length(sdrs));}
-  p=p+facet_grid(Set~Problem, scales='free_x', space = 'free_x') +
+  p=p+facet_grid(Set~Problem,scales='free_x', space = 'free_x') +
     ggplotColor(xText,length(unique(CDR$ColorVar))) +
     xlab('')+ylab(rhoLabel)+
     axisCompactY+expand_limits(y = 0)

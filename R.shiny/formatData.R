@@ -58,7 +58,7 @@ factorDimension <- function(x){
 }
 
 factorCMAObjFun <- function(objFuns){
-  return(droplevels(factor(objFuns, levels=c('MinimumRho','MinimumMakespan'), labels=c('min Rho','min Cmax'))))
+  return(droplevels(factor(objFuns, levels=c('MinimumMakespan','MinimumRho'), labels=c('min Cmax','min Rho'))))
 }
 
 factorRank <- function(Rank,simple=T){

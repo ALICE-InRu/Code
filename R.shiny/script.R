@@ -145,10 +145,10 @@ if(input$dimension=='6x5'){
 
   CDR.CMA.orlib <- do.call(rbind, lapply(c('6x5','10x10'), function(dim){
     get.CDR.CMA(input$problems,dim,timedependent = F, testProblems = 'ORLIB') }))
-  p.orb=plot.CMABoxplot(CDR.CMA.orlib)
+  p.orb=plot.CMABoxplot(CDR.CMA.orlib)+theme(legend.position='none')
   if(!is.na(save)){
     fname=paste(paste0(subdir,'boxplot'),'CMAES','ORLIB',extension,sep='.')
-    ggsave(fname,p.orb,width = Width, height = Height.half, dpi = dpi, units = units)
+    ggsave(fname,p.orb,width = Width, height = Height.half*0.95, dpi = dpi, units = units)
   }
 
 }
