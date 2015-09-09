@@ -140,6 +140,6 @@ plot.CMABoxplot <- function(CDR.CMA,SDR=NULL){
     levels(CDR.CMA$Set) = paste(levels(CDR.CMA$Set),'set')
     pref.boxplot(CDR.CMA,SDR,'TrainingData', tiltText = T,
                  ColorVar = 'ObjFun', xText = 'CMA-ES objective function') +
-      facet_wrap(~Problem+Set,scales='free')
+      facet_wrap(~Problem+Set,scales='free')+ylab(bksLabel)
   }
 }
