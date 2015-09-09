@@ -23,6 +23,7 @@ get.evolutionCMA <- function(problems,dim,Timedependent=T,Timeindependent=T,mean
     if(is.null(stat)) return(NULL)
     stat$Timedependent=timedependent
     stat$Problem=problem
+    stat$Dimension=dim
     return(stat)
   }
   stat=NULL
@@ -40,6 +41,7 @@ get.evolutionCMA <- function(problems,dim,Timedependent=T,Timeindependent=T,mean
 }
 
 plot.evolutionCMA.Weights <- function(evolutionCMA,problem){
+  evolutionCMA$ObjFun <- factorCMAObjFun(evolutionCMA$ObjFun)
   x=subset(evolutionCMA,Problem==problem)
   x=ddply(x,~ObjFun+Generation+Timedependent,mutate,sc.weight=value/sqrt(sum(value*value)))
   x$Feature=factorFeature(x$Feature,F)
@@ -49,22 +51,39 @@ plot.evolutionCMA.Weights <- function(evolutionCMA,problem){
   return(p)
 }
 
+last.evolutionCMA <- function(evolutionCMA){
+  evolutionCMA$ObjFun <- factorCMAObjFun(evolutionCMA$ObjFun)
+  objFuns=levels(evolutionCMA$ObjFun)
+
+  stat1 <- function(evolutionCMA){
+    ddply(evolutionCMA, ~Problem+Dimension+Timedependent, function(x) {
+      x[nrow(x), c('Generation','CountEval','Fitness')] })
+  }
+  stat <- merge(stat1(subset(evolutionCMA,ObjFun==objFuns[1])),
+                stat1(subset(evolutionCMA,ObjFun==objFuns[2])),
+                by=c('Problem','Dimension','Timedependent'), suffixes = paste0('.',objFuns))
+  stat$Problem = factorProblem(stat,F)
+  stat$Dimension = factorDimension(stat)
+  stat=arrange(stat,Dimension,Problem, Timedependent)
+  print(xtable(stat),include.rownames = F)
+}
+
 plot.evolutionCMA.Fitness <- function(evolutionCMA){
-  evolutionCMA$Problem=factorProblem(evolutionCMA,F)
-  x=evolutionCMA; x$value=NULL
-  x=tidyr::spread(x,'ObjFun','Fitness')
-  x=subset(x,!is.na(MinimumMakespan) & !is.na(MinimumRho))
+  evolutionCMA$Problem = factorProblem(evolutionCMA,F)
+  evolutionCMA$Dimension = factorDimension(evolutionCMA)
+  evolutionCMA$TrainingData = interaction(evolutionCMA$Problem,evolutionCMA$Dimension)
+  evolutionCMA$ObjFun <- factorCMAObjFun(evolutionCMA$ObjFun)
+  p <- ggplot(evolutionCMA,aes(x=Generation, y=log(Fitness))) +
+    #ylab('Fitness value') +
+    geom_line(aes(linetype = Timedependent, color=Problem,size=Dimension)) +
+    facet_grid(ObjFun~., scales = 'free') +
+    ggplotColor('Problem',length(levels(evolutionCMA$Problem))) +
+    scale_size_manual(values=c(0.5,1)) +
+    guides(linetype=guide_legend(ncol=1,byrow=TRUE),
+           size=guide_legend(ncol=1,byrow=TRUE),
+           color=guide_legend(nrow=3,byrow=TRUE))
 
-  p1 <- ggplot(x,aes(x=Generation, y=MinimumRho, linetype = Timedependent)) +
-    geom_line(color='grey') + ylab(expression("Minimum" * ~rho * ~" (%)")) +facet_wrap(~Problem,ncol=2)
-
-  p2 <- ggplot(x, aes(Generation, y=MinimumMakespan, linetype = Timedependent)) +
-    geom_line(color='black') + ylab(expression("Minimum" *~ C[max])) +facet_wrap(~Problem,ncol=2)
-
-  cat(paste('MinimumRho=grey','MinimumMakespan=black',sep='\n'))
-
-  grid_arrange_different_yaxis(p1,p2,length(unique(x$Problem)))
-  #grid_arrange_shared_xaxis(p1,p2)
+  return(p)
 }
 
 plot.CMAPREF.timedependentWeights <- function(problem,dim='6x5',
@@ -97,6 +116,7 @@ plot.CMAPREF.timedependentWeights <- function(problem,dim='6x5',
   w$Feature=factorFeature(w$Feature,F)
   w$Feature[w$Feature == levels(w$Feature)[5]] = levels(w$Feature)[17]
   w=ddply(w,~Step+Model,mutate,sc.weight=value/sqrt(sum(value*value)))
+  w$ObjFun <- factorCMAObjFun(w$ObjFun)
 
   p=ggplot(w,aes(x=Step,y=sc.weight,color=Model,shape=Model))+geom_point(alpha=0.1)+
     geom_smooth(se=F, method='loess')+ggplotColor('Model',3)+

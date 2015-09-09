@@ -128,10 +128,20 @@ plot.imitationLearning.weights(input$problem,input$dimension)
 
 if(input$dimension=='6x5'){
   source('cmaes.R')
-  evolutionCMA=get.evolutionCMA(input$problems,input$dimension)
-  plot.evolutionCMA.Weights(evolutionCMA,input$problem)
-  plot.evolutionCMA.Fitness(evolutionCMA)
+  evolutionCMA = do.call(rbind, lapply(c('6x5','10x10'), function(dim) {
+    get.evolutionCMA(input$problems,dim)}))
+
+  plot.evolutionCMA.Weights(subset(evolutionCMA,Timedependent==T &
+                                     Dimension==input$dimension),input$problem)
+  p.fit <- plot.evolutionCMA.Fitness(evolutionCMA)
+  if(!is.na(save)){
+    fname=paste(paste0(subdir,'CMAES'),'generation','log','fitness',extension,sep='.')
+    ggsave(fname,p.fit,width = Width, height = Height.half, dpi = dpi, units = units)
+  }
+  last.evolutionCMA(evolutionCMA)
+
   plot.CMAPREF.timedependentWeights(input$problem, input$dimension)
+
   CDR.CMA <- do.call(rbind, lapply(c('6x5','10x10'), function(dim) {
     get.CDR.CMA(input$problems,dim,timedependent = input$timedependent) } ))
   p.tr=plot.CMABoxplot(CDR.CMA)
