@@ -104,26 +104,42 @@ plot.CMAPREF.timedependentWeights <- function(problem,dim='6x5',
   return(p)
 }
 
-get.CDR.CMA <- function(problems,dim,timedependent,objFuns=c('MinimumRho','MinimumMakespan')){
+get.CDR.CMA <- function(problems,dim,timedependent,objFuns=c('MinimumRho','MinimumMakespan'),testProblems=NULL){
 
   get.CDR1 <- function(problem,objFun) {
     dir=paste0(DataDir,'CMAES/CDR/',paste('full',problem,dim,objFun,'weights',ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
-    files=list.files(dir,paste(problem,dim,sep='.'))
+    if(is.null(testProblems)) { testProblems = paste(problem,dim,sep='.') }
+
+    files=list.files(dir,paste(testProblems,collapse = '|'))
+    if(length(files)==0){return(NULL)}
     CDR = get.files(dir,files)
     CDR$ObjFun = objFun
+    CDR$TrainingData <- problem
     return(CDR)
   }
 
   CDR <- do.call(rbind, lapply(objFuns, function(objFun) { ldply(problems, get.CDR1, objFun)} ))
 
   CDR <- factorFromName(CDR)
-  CDR$ObjFun <- as.factor(CDR$ObjFun)
+  CDR$ObjFun <- factorCMAObjFun(CDR$ObjFun)
   CDR$Rho <- factorRho(CDR)
+  CDR$TrainingData <- factorProblem(CDR, simple = F, 'TrainingData')
+  CDR$TrainingData <- factor(paste(CDR$TrainingData,dim), levels=paste(levels(CDR$TrainingData),dim))
 
   return(CDR)
 
 }
 
 plot.CMABoxplot <- function(CDR.CMA,SDR=NULL){
-  pref.boxplot(CDR.CMA,SDR,'ObjFun',xText = 'CMA-ES objective function',tiltText = F)
+  if(!any(grepl('ORLIB',CDR.CMA$Problem,ignore.case = T))){
+    CDR.CMA$CDR = factorProblem(CDR.CMA,F)
+    pref.boxplot(CDR.CMA,SDR,'ObjFun',xText = 'CMA-ES objective function',tiltText = F) +
+      facet_grid(Set~Dimension, scales='free', space = 'free_x')
+  } else {
+    CDR.CMA$CDR = CDR.CMA$TrainingData
+    levels(CDR.CMA$Set) = paste(levels(CDR.CMA$Set),'set')
+    pref.boxplot(CDR.CMA,SDR,'TrainingData', tiltText = T,
+                 ColorVar = 'ObjFun', xText = 'CMA-ES objective function') +
+      facet_wrap(~Problem+Set,scales='free')
+  }
 }

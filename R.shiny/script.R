@@ -7,6 +7,7 @@ input=list(dimension='10x10',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd'
 SDR=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension)
 input$timedependent=F
 input$smooth=T
+input$testProblems='ORLIB'
 
 source('sdr.R')
 dat<-subset(SDR, Set=='train' & Dimension==input$dimension & Problem%in%input$problems)
@@ -131,8 +132,25 @@ if(input$dimension=='6x5'){
   plot.evolutionCMA.Weights(evolutionCMA,input$problem)
   plot.evolutionCMA.Fitness(evolutionCMA)
   plot.CMAPREF.timedependentWeights(input$problem, input$dimension)
-  CDR.CMA <- get.CDR.CMA(input$problems,input$dimension,timedependent = input$timedependent)
-  plot.CMABoxplot(CDR.CMA)
+  CDR.CMA <- do.call(rbind, lapply(c('6x5','10x10'), function(dim) {
+    get.CDR.CMA(input$problems,dim,timedependent = input$timedependent) } ))
+  p.tr=plot.CMABoxplot(CDR.CMA)
+  if(!is.na(save)){
+    fname=paste(paste0(subdir,'boxplot'),'CMAES',extension,sep='.')
+    ggsave(fname,p.tr,width = Width, height = Height.half, dpi = dpi, units = units)
+  }
+  stat=ddply(CDR.CMA,~Problem+Dimension+ObjFun,function(x) summary(x$Rho))
+  stat$Problem <- factorProblem(stat,F)
+  print(xtable(stat),include.rownames = F)
+
+  CDR.CMA.orlib <- do.call(rbind, lapply(c('6x5','10x10'), function(dim){
+    get.CDR.CMA(input$problems,dim,timedependent = F, testProblems = 'ORLIB') }))
+  p.orb=plot.CMABoxplot(CDR.CMA.orlib)
+  if(!is.na(save)){
+    fname=paste(paste0(subdir,'boxplot'),'CMAES','ORLIB',extension,sep='.')
+    ggsave(fname,p.orb,width = Width, height = Height.half, dpi = dpi, units = units)
+  }
+
 }
 
 source('pref.stepwiseBias.R')

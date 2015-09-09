@@ -107,10 +107,14 @@ pref.boxplot <- function(CDR,SDR=NULL,ColorVar,xVar='CDR',xText='CDR',tiltText=T
     p=p+geom_boxplot(aes(color=ColorVar))
 
   if(!is.null(SDR)){ p=p+geom_boxplot(data=SDR,aes(fill=SDR))+ggplotFill('SDR',length(sdrs));}
-  p=p+facet_grid(Set~Problem,scale='free_x') +
+  p=p+facet_grid(Set~Problem, scales='free_x', space = 'free_x') +
     ggplotColor(xText,length(unique(CDR$ColorVar))) +
     xlab('')+ylab(rhoLabel)+
     axisCompactY+expand_limits(y = 0)
+
+  # Hide all the vertical gridlines
+  p <- p + theme(panel.grid.minor.x=element_blank(),
+                 panel.grid.major.x=element_blank())
 
   if(tiltText){ p=p+theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) }
   return(p)
