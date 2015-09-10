@@ -27,23 +27,36 @@ plot.SDR <- function(SDR,type='boxplot',save=NA){
   return(p)
 }
 
-plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.split,save=NA){
+plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.splits,save=NA,withRND=T){
 
-  BDR=get.BDR(dim, problems, bdr.firstSDR, bdr.secSDR, bdr.split)
+  BDR=do.call(rbind, lapply(bdr.splits, function(bdr.split){
+    get.BDR(dim, problems, bdr.firstSDR, bdr.secSDR, bdr.split)
+  }))
+
   if(is.null(BDR)) return()
-  SDR=subset(dataset.SDR, (SDR==bdr.firstSDR|SDR==bdr.secSDR)
+  baseline = c(bdr.firstSDR,bdr.secSDR)
+  if(withRND) {baseline=c(baseline,'RND') }
+  SDR=subset(dataset.SDR, (SDR %in% baseline)
              & Dimension %in% BDR$Dimension & Problem %in% BDR$Problem & Set %in% BDR$Set)
   SDR$BDR=factorSDR(SDR$SDR,F)
   dat = rbind(SDR,BDR[,names(SDR)])
+  dat <- subset(dat, PID <= 500)
 
-  p = ggplot(dat, aes(x=SDR,y=Rho,fill=SDR,color=Set))+geom_boxplot()+
+  mdat <- ddply(dat,~Problem+Dimension+BDR,function(x) summary(x$Rho))
+  print(mdat)
+
+  p = ggplot(dat, aes(x=SDR,y=Rho,fill=BDR,color=Set))+geom_boxplot()+
     facet_wrap(~Problem+Dimension,ncol=2,scales='free_y')+
     ylab(rhoLabel)+xlab('')+
     ggplotColor('Data set',2)+
-    ggplotFill('Dispatching rule',3, levels(dat$BDR))
+    ggplotFill('Dispatching rule',3+length(bdr.splits), levels(dat$BDR))
 
   probs=length(levels(droplevels(dat$Problem)))
-  p <- p + cornerLegend(probs)
+  if(probs==1){
+    p <- p + themeVerticalLegend
+  } else {
+    p <- p + cornerLegend(probs)
+  }
 
   if(!is.na(save)){
     fname=paste0(subdir,paste('boxplotRho.BDR',dim,extension,sep='.'))
@@ -105,9 +118,11 @@ get.BDR <- function(dim,problems,firstSDR='SPT',secSDR='MWR',split=40){
   BDR <- get.files(paste0(DataDir,'BDR'),files)
   BDR = factorFromName(BDR)
   BDR$SDR='BDR'
+  BDR <- subset(BDR, BDR == interaction(firstSDR,secSDR,split))
+  if(nrow(BDR)<1) return(NULL)
   BDR$BDR=paste(firstSDR,'(first',split,'%),',secSDR,'(last',100-split,'%)')
   BDR$Rho=factorRho(BDR)
-  BDR = subset(BDR,Dimension==dim & Problem %in% problems & !is.na(Rho))
+  BDR = subset(BDR,!is.na(Rho))
   if(nrow(BDR)>1) return(BDR)
   return(NULL)
 }

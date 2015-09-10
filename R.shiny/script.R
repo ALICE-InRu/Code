@@ -19,7 +19,7 @@ print(xtable(dataset.diff$Split), include.rownames = FALSE)
 print(xtable(splitSDR(dataset.diff$Easy)))# first problem
 print(xtable(splitSDR(dataset.diff$Easy)))# first problem
 plot.SDR(SDR,'boxplot', save)
-plot.BDR(input$dimension,input$problems,'SPT','MWR',40,save)
+plot.BDR(input$dimension,input$problem,'SPT','MWR',c(10,15,40),save,F)
 
 source('gantt.R')
 gantt=get.gantt(input$problem,input$dimension,'MWR',10)
@@ -44,7 +44,11 @@ plot.stepwiseOptimality(all.StepwiseOptimality,input$dimension,F,input$smooth,sa
 source('opt.SDR.R')
 StepwiseOptimality=get.StepwiseOptimality(input$problem,input$dimension,'OPT')
 StepwiseExtremal=get.StepwiseExtremal(input$problem,input$dimension)
-plot.StepwiseSDR.wrtTrack(StepwiseOptimality,StepwiseExtremal,input$dimension,input$smooth,save)
+p=plot.StepwiseSDR.wrtTrack(StepwiseOptimality,StepwiseExtremal,input$dimension,input$smooth,save)
+zoom=p+theme(legend.position="none")+xlab(NULL)+ylab(NULL)+
+  scale_x_continuous(expand = c(0,0), limits=c(5,30))+
+  scale_y_continuous(expand = c(0,0), limits=c(0,.05))+
+  facet_grid(~Problem, labeller= function(variable,value){ return('Zoom') })
 
 source('opt.bw.R')
 plot.BestWorst(input$problems,input$dimension,'OPT',save)
