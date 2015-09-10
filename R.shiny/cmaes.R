@@ -78,7 +78,8 @@ plot.evolutionCMA.Fitness <- function(evolutionCMA){
     geom_line(aes(linetype = Timedependent, color=Problem,size=Dimension)) +
     facet_grid(ObjFun~., scales = 'free') +
     ggplotColor('Problem',length(levels(evolutionCMA$Problem))) +
-    scale_size_manual(values=c(0.5,1)) +
+    scale_size_manual('Size',values=c(0.5,1)) +
+    labs(linetype="Stepwise\nmodel")+
     guides(linetype=guide_legend(ncol=1,byrow=TRUE),
            size=guide_legend(ncol=1,byrow=TRUE),
            color=guide_legend(nrow=3,byrow=TRUE))
