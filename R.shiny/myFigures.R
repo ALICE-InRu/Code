@@ -8,21 +8,19 @@ Height.third=61*factor #80mm
 Height.half=87*factor #120mm
 Height.full=175*factor #220mm
 units='mm'
-colorPalette='Set1'
+library(RColorBrewer)
+getPalette = colorRampPalette(brewer.pal(9, "Set1"))
 
 mainPalette <- function(n) {
   #palette <- c("red4", "darkslategray3", "dodgerblue1", "darkcyan", "skyblue2", "dodgerblue4", "purple4", "maroon", "chocolate1", "bisque3", "bisque", "seagreen4", "lightgreen", "skyblue4", "mediumpurple3", "palevioletred1", "lightsalmon4", "darkgoldenrod1")
-  if (n <= 1)
+  if (n <= 1){
     palette='black'
-  else if (n <= 2)
+  } else if (n <= 2) {
     palette <- c("gray79", "black")
-  else {
-    palette = RColorBrewer::brewer.pal(min(9,n), name=colorPalette)
+  } else {
+    palette = getPalette(n)
   }
-  if (n > length(palette)) {
-    palette = c(palette, RColorBrewer::brewer.pal(min(8,n), name='Set2'))
-  }
-  rep(palette, length.out=n)
+  return(palette)
 }
 
 extension='png'

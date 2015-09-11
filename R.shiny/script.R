@@ -6,7 +6,7 @@ input=list(dimension='10x10',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd'
 #input=list(dimension='6x5',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc','j.rnd_pj1doubled','j.rnd_p1mdoubled'))
 SDR=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension)
 input$timedependent=F
-input$smooth=T
+input$smooth=F
 input$testProblems='ORLIB'
 
 source('sdr.R')
@@ -132,33 +132,43 @@ plot.imitationLearning.weights(input$problem,input$dimension)
 
 if(input$dimension=='6x5'){
   source('cmaes.R')
+  evolutionCMA1 = do.call(rbind, lapply(c('6x5','10x10'), function(dim) {
+    get.evolutionCMA(input$problem,dim)}))
+  p.w.step=plot.evolutionCMA.Weights(evolutionCMA1,T)+theme(legend.position='none')
+  p.w.one=plot.evolutionCMA.Weights(evolutionCMA1,F)
+
+  if(!is.na(save)){
+    ggsave('../../Thesis/figures/CMAES.weights.timeindependent.pdf',p.w.one,
+           width = Width*1.2,height = Height.half*1.2, dpi=dpi, units=units)
+    ggsave('../../Thesis/figures/CMAES.weights.timedependent.pdf',p.w.step,
+           width = Width*1.2,height = Height.half*1, dpi=dpi, units=units)
+  }
+
   evolutionCMA = do.call(rbind, lapply(c('6x5','10x10'), function(dim) {
     get.evolutionCMA(input$problems,dim)}))
+  last.evolutionCMA(evolutionCMA)
 
-  plot.evolutionCMA.Weights(subset(evolutionCMA,Timedependent==T &
-                                     Dimension==input$dimension),input$problem)
   p.fit <- plot.evolutionCMA.Fitness(evolutionCMA)
   if(!is.na(save)){
     fname=paste(paste0(subdir,'CMAES'),'generation','log','fitness',extension,sep='.')
     ggsave(fname,p.fit,width = Width, height = Height.half, dpi = dpi, units = units)
   }
-  last.evolutionCMA(evolutionCMA)
 
   plot.CMAPREF.timedependentWeights(input$problem, input$dimension)
 
   CDR.CMA <- do.call(rbind, lapply(c('6x5','10x10'), function(dim) {
-    get.CDR.CMA(input$problems,dim,timedependent = input$timedependent) } ))
+    get.CDR.CMA(input$problems,dim) } ))
   p.tr=plot.CMABoxplot(CDR.CMA)
   if(!is.na(save)){
     fname=paste(paste0(subdir,'boxplot'),'CMAES',extension,sep='.')
     ggsave(fname,p.tr,width = Width, height = Height.half, dpi = dpi, units = units)
   }
-  stat=ddply(CDR.CMA,~Problem+Dimension+ObjFun,function(x) summary(x$Rho))
+  stat=ddply(CDR.CMA,~Problem+Dimension+Timedependent+ObjFun,function(x) summary(x$Rho))
   stat$Problem <- factorProblem(stat,F)
-  print(xtable(stat),include.rownames = F)
+  print(xtable(arrange(stat,Dimension,Problem,ObjFun,Timedependent)),include.rownames = F)
 
   CDR.CMA.orlib <- do.call(rbind, lapply(c('6x5','10x10'), function(dim){
-    get.CDR.CMA(input$problems,dim,timedependent = F, testProblems = 'ORLIB') }))
+    get.CDR.CMA(input$problems,dim,times = F, testProblems = 'ORLIB') }))
   p.orb=plot.CMABoxplot(CDR.CMA.orlib)+theme(legend.position='none')
   if(!is.na(save)){
     fname=paste(paste0(subdir,'boxplot'),'CMAES','ORLIB',extension,sep='.')

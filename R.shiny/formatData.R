@@ -38,7 +38,7 @@ factorProblem <- function(x, simple=T, Problem='Problem'){
   }
   x$Problem=factor(x[,Problem], levels=c('j.rnd','j.rndn','j.rnd_p1mdoubled','j.rnd_pj1doubled','f.rnd','f.rndn','f.jc','f.mc','f.mxc',
                                        'jsp.orlib','fsp.orlib'))
-  if(!simple) levels(x$Problem)=c('j.rnd','j.rndn','j.rnd, J1','j.rnd, M1','f.rnd','f.rndn','f.jc','f.mc','f.mxc',
+  if(!simple) levels(x$Problem)=c('j.rnd','j.rndn','j.rnd,J1','j.rnd,M1','f.rnd','f.rndn','f.jc','f.mc','f.mxc',
                                     'JSP.ORLIB','FSP.ORLIB')
   return(droplevels(x$Problem))
 }

@@ -12,7 +12,7 @@ get.evolutionCMA <- function(problems,dim,Timedependent=T,Timeindependent=T,mean
     x$Step=getAttribute(x$variable,m,'Step',F)
     if(meanStep & timedependent){
       x=ddply(x,~Generation+CountEval+Fitness+variable,summarise,value=mean(value), .progress = 'text')
-    } else { x=subset(x,Step==1)}
+    } else if (Timeindependent) { x=subset(x,Step==1)}
     x$Feature=factorFeature(getAttribute(x$variable,m,'Feature'))
     x$ObjFun=type
     return(x)
@@ -40,32 +40,60 @@ get.evolutionCMA <- function(problems,dim,Timedependent=T,Timeindependent=T,mean
   return(stat)
 }
 
-plot.evolutionCMA.Weights <- function(evolutionCMA,problem){
-  evolutionCMA$ObjFun <- factorCMAObjFun(evolutionCMA$ObjFun)
-  x=subset(evolutionCMA,Problem==problem)
-  x=ddply(x,~ObjFun+Generation+Timedependent,mutate,sc.weight=value/sqrt(sum(value*value)))
+plot.evolutionCMA.Weights <- function(evolutionCMA,timedependent=F){
+  x=subset(evolutionCMA,Timedependent==timedependent)
+  if(timedependent){
+    x = get.evolutionCMA(unique(x$Problem),unique(x$Dimension),T,F,F) # get missing steps
+    x = ddply(x, ~Problem+Dimension+Timedependent+Step+Feature, function(x) { x[nrow(x), ] })
+  }
+  x$Problem <- factorProblem(x, F)
+  x$ObjFun <- factorCMAObjFun(x$ObjFun)
+  #x=ddply(x,~Problem+Dimension+ObjFun+Generation+Timedependent,mutate,
+  #        sc.weight=value/sqrt(sum(value*value)))
   x$Feature=factorFeature(x$Feature,F)
-  p=ggplot(x,aes(x=Generation,y=sc.weight,color=ObjFun,linetype=Timedependent))+
-    geom_line()+
-    ggplotColor('Objective function',2)+axisCompact+facet_wrap(~Feature,nrow=4)
+
+  p=ggplot(x,aes(y=value,color=Feature,linetype=Timedependent))+
+    guides(linetype = guide_legend(title.position = 'top'),
+           color=guide_legend(ncol=4,byrow=TRUE, title.vjust=0.25,
+                              title.theme = element_text(size=12, face="bold", angle = 90)))+
+    ggplotColor('Feature',length(levels(x$Feature)))+
+    labs(linetype="Stepwise") + ylab(expression("Weight" *~ w[i] )) +
+    axisCompact+facet_wrap(~Problem+Dimension+ObjFun,ncol=6,scales='free_x')
+
+  if(timedependent) {
+    p = p + geom_line(aes(x=Step))
+  } else {
+    p = p + geom_line(aes(x=Generation))
+  }
+
   return(p)
 }
 
-last.evolutionCMA <- function(evolutionCMA){
+last.evolutionCMA <- function(evolutionCMA,printOut=T){
   evolutionCMA$ObjFun <- factorCMAObjFun(evolutionCMA$ObjFun)
   objFuns=levels(evolutionCMA$ObjFun)
 
+  vars=c('Generation','CountEval','Fitness')
+  if(!printOut) { vars=c(vars,'ObjFun') }
+
   stat1 <- function(evolutionCMA){
     ddply(evolutionCMA, ~Problem+Dimension+Timedependent, function(x) {
-      x[nrow(x), c('Generation','CountEval','Fitness')] })
+      x[nrow(x), vars] })
   }
-  stat <- merge(stat1(subset(evolutionCMA,ObjFun==objFuns[1])),
-                stat1(subset(evolutionCMA,ObjFun==objFuns[2])),
-                by=c('Problem','Dimension','Timedependent'), suffixes = paste0('.',objFuns))
-  stat$Problem = factorProblem(stat,F)
-  stat$Dimension = factorDimension(stat)
-  stat=arrange(stat,Dimension,Problem, Timedependent)
-  print(xtable(stat),include.rownames = F)
+  if(printOut){
+    stat <- merge(stat1(subset(evolutionCMA,ObjFun==objFuns[1])),
+                  stat1(subset(evolutionCMA,ObjFun==objFuns[2])),
+                  by=c('Problem','Dimension','Timedependent'),
+                  suffixes = paste0('.',objFuns),all = T)
+    stat$Problem = factorProblem(stat,F)
+    stat$Dimension = factorDimension(stat)
+    stat=arrange(stat,Dimension,Problem, Timedependent)
+    print(xtable(stat),include.rownames = F)
+  } else {
+    stat <- rbind(stat1(subset(evolutionCMA,ObjFun==objFuns[1])),
+                  stat1(subset(evolutionCMA,ObjFun==objFuns[2])))
+    return(stat)
+  }
 }
 
 plot.evolutionCMA.Fitness <- function(evolutionCMA){
@@ -79,9 +107,9 @@ plot.evolutionCMA.Fitness <- function(evolutionCMA){
     facet_grid(ObjFun~., scales = 'free') +
     ggplotColor('Problem',length(levels(evolutionCMA$Problem))) +
     scale_size_manual('Size',values=c(0.5,1)) +
-    labs(linetype="Stepwise\nmodel")+
-    guides(linetype=guide_legend(ncol=1,byrow=TRUE),
-           size=guide_legend(ncol=1,byrow=TRUE),
+    labs(linetype="Stepwise")+
+    guides(linetype=guide_legend(ncol=1,byrow=TRUE,title.position = 'top'),
+           size=guide_legend(ncol=1,byrow=TRUE,title.position = 'top'),
            color=guide_legend(nrow=3,byrow=TRUE))
 
   return(p)
@@ -125,9 +153,9 @@ plot.CMAPREF.timedependentWeights <- function(problem,dim='6x5',
   return(p)
 }
 
-get.CDR.CMA <- function(problems,dim,timedependent,objFuns=c('MinimumRho','MinimumMakespan'),testProblems=NULL){
+get.CDR.CMA <- function(problems,dim,times=c(T,F),objFuns=c('MinimumRho','MinimumMakespan'),testProblems=NULL){
 
-  get.CDR1 <- function(problem,objFun) {
+  get.CDR1 <- function(problem,objFun,timedependent) {
     dir=paste0(DataDir,'CMAES/CDR/',paste('full',problem,dim,objFun,'weights',ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
     if(is.null(testProblems)) { testProblems = paste(problem,dim,sep='.') }
 
@@ -136,10 +164,13 @@ get.CDR.CMA <- function(problems,dim,timedependent,objFuns=c('MinimumRho','Minim
     CDR = get.files(dir,files)
     CDR$ObjFun = objFun
     CDR$TrainingData <- problem
+    CDR$Timedependent=timedependent
     return(CDR)
   }
 
-  CDR <- do.call(rbind, lapply(objFuns, function(objFun) { ldply(problems, get.CDR1, objFun)} ))
+  CDR <- do.call(rbind, lapply(objFuns, function(objFun) {
+    do.call(rbind, lapply(times, function(timedependent) {
+      ldply(problems, get.CDR1, objFun,timedependent)}))}))
 
   CDR <- factorFromName(CDR)
   CDR$ObjFun <- factorCMAObjFun(CDR$ObjFun)
@@ -153,8 +184,15 @@ get.CDR.CMA <- function(problems,dim,timedependent,objFuns=c('MinimumRho','Minim
 
 plot.CMABoxplot <- function(CDR.CMA,SDR=NULL){
   if(!any(grepl('ORLIB',CDR.CMA$Problem,ignore.case = T))){
-    CDR.CMA$CDR = factorProblem(CDR.CMA,F)
-    pref.boxplot(CDR.CMA,SDR,'ObjFun',xText = 'CMA-ES objective function',tiltText = F) +
+    if(all(CDR.CMA$TrainingData == paste(factorProblem(CDR.CMA,F),CDR.CMA$Dimension))){
+      CDR.CMA$CDR = factorProblem(CDR.CMA,F); tilt=F
+    } else {
+      CDR.CMA$CDR = CDR.CMA$TrainingData; tilt=T
+    }
+    pref.boxplot(CDR.CMA,SDR,'ObjFun',xText = 'CMA-ES objective function',tiltText = tilt,
+                 lineTypeVar = 'Timedependent') +
+      scale_linetype_manual('Stepwise',values=c(1,2)) +
+      guides(linetype=guide_legend(ncol=1,byrow=TRUE,title.position = 'top'))+
       facet_grid(Set~Dimension, scales='free', space = 'free_x')
   } else {
     CDR.CMA$CDR = CDR.CMA$TrainingData
