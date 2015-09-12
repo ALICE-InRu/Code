@@ -79,8 +79,8 @@ factorTrack <- function(x){
     x$Iter[ix]=getAttribute(x$Track[ix],m,'Iter',F)
     x$Supervision='FIXSUP'
     x$Supervision[ix]=getAttribute(x$Track[ix],m,'Supervision')
-    x$Track[ix]=paste0('IL',x$Iter[ix])
-    lvs=c(lvs,paste0('IL',1:max(x$Iter)))
+    x$Track[ix]=paste0('DA',x$Iter[ix])
+    lvs=c(lvs,paste0('DA',1:max(x$Iter)))
     ix=x$Track=='OPT'
     if(any(ix)){ x$Supervision[ix]='FIXSUP' }
     x$Supervision=factor(x$Supervision, levels=c('FIXSUP','SUP','UNSUP'),
