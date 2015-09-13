@@ -1,6 +1,11 @@
 output$tabCMAES <- renderUI({
   dashboardBody(
     fluidRow(
+      box(title = "Settings", collapsible = TRUE, width=6,
+          checkboxInput("onlyMainCMAES","Only display main problem space", value=T)
+      )
+    ),
+    fluidRow(
       box(title = "Box-plot", collapsible = TRUE, width=6,
           plotOutput("plot.CMABoxplot", height = 500),
           checkboxInput("CMAvsSDR","Compare with SDRs for main problem")
@@ -21,9 +26,16 @@ output$tabCMAES <- renderUI({
   )
 })
 
-evolutionCMA <- reactive({
+evolutionCMA.all <- reactive({
   withProgress(message = 'Loading CMA-ES results', value = 0, {
     get.evolutionCMA(input$problems,input$dimension)})
+})
+
+evolutionCMA <- reactive({
+  if(input$onlyMainCMAES)
+    subset(evolutionCMA.all(), Problem == input$problem)
+  else
+    evolutionCMA.all()
 })
 
 output$plot.CMAWeights.timedependent <- renderPlot(
@@ -50,8 +62,10 @@ CDR.CMA <- reactive({
 output$plot.CMABoxplot <- renderPlot(
   withProgress(message = 'Plotting boxplot', value = 0, {
     if(input$CMAvsSDR)
-      plot.CMABoxplot(subset(CDR.CMA(),Problem==input$Problem),
-                      subset(SDR(),Problem==input$Problem))
+      plot.CMABoxplot(subset(CDR.CMA(),Problem == input$problem),
+                      subset(SDR(),Problem == input$problem))
+    else if(input$onlyMainCMAES)
+      plot.CMABoxplot(subset(CDR.CMA(),Problem == input$problem))
     else
       plot.CMABoxplot(CDR.CMA())
   })
