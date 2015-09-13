@@ -6,12 +6,16 @@ output$tabCMAES <- renderUI({
       )
     ),
     fluidRow(
-      box(title = "Box-plot", collapsible = TRUE, width=6,
+      box(title = "Deviation from optimality", collapsible = TRUE, width=12,
           plotOutput("plot.CMABoxplot", height = 500),
-          checkboxInput("CMAvsSDR","Compare with SDRs for main problem")
-      ),
-      box(title = "Evolution of fitness", collapsible = TRUE, width=6,
-          plotOutput("plot.evolutionCMA.Fitness", height = 500)
+          tableOutput("stat.CMABoxplot"),
+          checkboxInput("CMAvsSDR","Compare with SDRs for main problem"),
+          checkboxInput("CMAforORLIB","Test on OR-Library benchmark set")
+      )),
+    fluidRow(
+      box(title = "Evolution of fitness", collapsible = TRUE, width=12,
+          plotOutput("plot.evolutionCMA.Fitness", height = 500),
+          tableOutput("stat.evolutionCMA.Fitness")
       )),
     fluidRow(
       box(title = "Evolution of time independent weights over genaration",
@@ -54,19 +58,41 @@ output$plot.evolutionCMA.Fitness <- renderPlot(
     plot.evolutionCMA.Fitness(evolutionCMA())
   })
 )
+output$stat.evolutionCMA.Fitness <- renderTable({
+  last.evolutionCMA(evolutionCMA())
+}, include.rownames=F)
 
-CDR.CMA <- reactive({
+CDR.CMA.all <- reactive({
   withProgress(message = 'Loading CDR data', value = 0, {
-    get.CDR.CMA(input$problems,input$dimension) })
+    if(input$CMAforORLIB)
+      get.CDR.CMA(input$problems,input$dimension,times = F, testProblems = 'ORLIB')
+    else
+      get.CDR.CMA(input$problems,input$dimension) })
 })
+CDR.CMA <- reactive({
+  if(input$CMAvsSDR|input$onlyMainCMAES)
+    subset(CDR.CMA.all(),Problem == input$problem)
+  else
+    CDR.CMA.all()
+})
+SDR.CMA <- reactive({
+  if(input$CMAvsSDR)
+    subset(SDR(),Problem == input$problem)
+  else
+    NULL
+})
+
 output$plot.CMABoxplot <- renderPlot(
   withProgress(message = 'Plotting boxplot', value = 0, {
-    if(input$CMAvsSDR)
-      plot.CMABoxplot(subset(CDR.CMA(),Problem == input$problem),
-                      subset(SDR(),Problem == input$problem))
-    else if(input$onlyMainCMAES)
-      plot.CMABoxplot(subset(CDR.CMA(),Problem == input$problem))
-    else
-      plot.CMABoxplot(CDR.CMA())
+      plot.CMABoxplot(CDR.CMA(),SDR.CMA())
   })
 )
+output$stat.CMABoxplot <- renderTable({
+  if(input$CMAforORLIB) {
+    vars=c('Problem','TrainingData','Timedependent','ObjFun')
+  } else {vars=c('Problem','Dimension','Timedependent','ObjFun')}
+  stat=ddply(subset(CDR.CMA(),!is.na(Rho)),vars,function(x) summary(x$Rho))
+  stat$Problem <- factorProblem(stat,F)
+  stat=arrange(stat,Dimension,Problem,ObjFun,Timedependent)
+  xtable(stat)
+},include.rownames = F)

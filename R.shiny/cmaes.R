@@ -92,7 +92,7 @@ last.evolutionCMA <- function(evolutionCMA,printOut=T){
     stat$Problem = factorProblem(stat,F)
     stat$Dimension = factorDimension(stat)
     stat=arrange(stat,Dimension,Problem, Timedependent)
-    print(xtable(stat),include.rownames = F)
+    xtable(stat)
   } else {
     stat <- rbind(stat1(subset(evolutionCMA,ObjFun==objFuns[1])),
                   stat1(subset(evolutionCMA,ObjFun==objFuns[2])))
