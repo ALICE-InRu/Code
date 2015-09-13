@@ -50,7 +50,7 @@ namespace ALICE
             macWrm, // work remaining for mac
 
             jobTotProcTime, // total processing times for job            
-            macTotProcTime, // total processing times for mac
+            macTotProcTime // total processing times for mac
 
             #endregion
 

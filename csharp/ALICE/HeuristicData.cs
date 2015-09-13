@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Linq;
-using System.Security.AccessControl;
 
 namespace ALICE
 {
@@ -11,7 +9,7 @@ namespace ALICE
     {
         public readonly string HeuristicValue;
         public readonly string HeuristicName;
-        private Features.Mode _featureMode;
+        private readonly Features.Mode _featureMode;
 
         internal HeuristicData(string distribution, string dimension, DataSet set, bool extended, string heuristicName,
             string heuristicValue, DirectoryInfo data, Features.Mode featureMode) : base(distribution, dimension, set, extended, data)
