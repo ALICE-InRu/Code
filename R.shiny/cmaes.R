@@ -148,23 +148,37 @@ get.CDR.CMA <- function(problems,dim,times=c(T,F),objFuns=c('MinimumRho','Minimu
 
 }
 
-plot.CMABoxplot <- function(CDR.CMA,SDR=NULL){
+plot.CMABoxplot <- function(CDR.CMA,SDR=NULL,tilt=T){
+  CDR.CMA$CDR = CDR.CMA$TrainingData;
   if(!any(grepl('ORLIB',CDR.CMA$Problem,ignore.case = T))){
-    if(all(CDR.CMA$TrainingData == paste(factorProblem(CDR.CMA,F),CDR.CMA$Dimension))){
-      CDR.CMA$CDR = factorProblem(CDR.CMA,F); tilt=F
-    } else {
-      CDR.CMA$CDR = CDR.CMA$TrainingData; tilt=T
-    }
     pref.boxplot(CDR.CMA,SDR,'ObjFun',xText = 'CMA-ES objective function',tiltText = tilt,
                  lineTypeVar = 'Timedependent') +
       scale_linetype_manual('Stepwise',values=c(1,2)) +
-      guides(linetype=guide_legend(ncol=1,byrow=TRUE,title.position = 'top'))+
       facet_grid(Set~Dimension, scales='free', space = 'free_x')
   } else {
-    CDR.CMA$CDR = CDR.CMA$TrainingData
     levels(CDR.CMA$Set) = paste(levels(CDR.CMA$Set),'set')
     pref.boxplot(CDR.CMA,SDR,'TrainingData', tiltText = T,
                  ColorVar = 'ObjFun', xText = 'CMA-ES objective function') +
       facet_wrap(~Problem+Set,scales='free')+ylab(bksLabel)
   }
+}
+
+
+CDR.CMA.ks <- function(CDR,variable='ObjFun',alpha=0.05){
+  if('train' %in% CDR$Set) {CDR=subset(CDR,Set=='train')}
+  CDR$Makespan=NULL
+  CDR$Problem <- factorProblem(CDR,F)
+  colnames(CDR)[grep(variable,colnames(CDR))]='variable'
+
+  id.vars=setdiff(c('Problem','TrainingData','Timedependent','ObjFun'),variable)
+
+  vars = levels(factor(CDR$variable))
+  y=tidyr::spread(CDR,variable,'Rho')
+  y=y[rowSums(is.na(y))==0,]
+  suppressWarnings(
+  ks <- ddply(y,id.vars,
+                  function(x){
+                    ks.test2(x[,vars[1]], x[,vars[2]])}))
+  colnames(ks)[4]='H'
+  return(ks)
 }

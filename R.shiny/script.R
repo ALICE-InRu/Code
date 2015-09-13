@@ -2,6 +2,7 @@ source('global.R')
 colorPalette='Greys';
 extension='pdf';subdir='../../Thesis/figures/'
 save=NA
+problem.structured=c('f.jc','f.mc','f.mxc')
 input=list(dimension='10x10',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd'))
 #input=list(dimension='6x5',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc','j.rnd_pj1doubled','j.rnd_p1mdoubled'))
 SDR=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension)
@@ -146,7 +147,7 @@ if(input$dimension=='6x5'){
 
   evolutionCMA = do.call(rbind, lapply(c('6x5','10x10'), function(dim) {
     get.evolutionCMA(input$problems,dim)}))
-  last.evolutionCMA(evolutionCMA)
+  print(last.evolutionCMA(evolutionCMA),include.rownames = F)
 
   p.fit <- plot.evolutionCMA.Fitness(evolutionCMA)
   if(!is.na(save)){
@@ -156,7 +157,10 @@ if(input$dimension=='6x5'){
 
   CDR.CMA <- do.call(rbind, lapply(c('6x5','10x10'), function(dim) {
     get.CDR.CMA(input$problems,dim) } ))
-  p.tr=plot.CMABoxplot(CDR.CMA)
+  #CDR.CMA$Structure = factor(CDR.CMA$Problem %in% problem.structured,
+  #                      levels=c(F,T), labels=c('non-structured','structured'))
+  p.tr=plot.CMABoxplot(CDR.CMA)#+facet_wrap(~Set+Structure,scales ='free')
+
   if(!is.na(save)){
     fname=paste(paste0(subdir,'boxplot'),'CMAES',extension,sep='.')
     ggsave(fname,p.tr,width = Width, height = Height.half, dpi = dpi, units = units)
@@ -172,6 +176,8 @@ if(input$dimension=='6x5'){
     fname=paste(paste0(subdir,'boxplot'),'CMAES','ORLIB',extension,sep='.')
     ggsave(fname,p.orb,width = Width, height = Height.half*0.95, dpi = dpi, units = units)
   }
+
+
 
 }
 
