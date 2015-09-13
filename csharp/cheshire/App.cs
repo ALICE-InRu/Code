@@ -90,13 +90,21 @@ namespace Cheshire
 
         private void buttonSDRStart_Click(object sender, EventArgs e)
         {
-            SDRData[] sets = (from set in Set.CheckedItems.Cast<string>()
-                from dim in Dimension.CheckedItems.Cast<string>()
-                from problem in Problems.CheckedItems.Cast<string>()
+            RawData[] datas = (from dim in DimensionApply.CheckedItems.Cast<string>()
+                               from problem in ProblemsApply.CheckedItems.Cast<string>()
+                               from set in Set.CheckedItems.Cast<string>()
+                               select
+                                   new RawData(problem, dim, (RawData.DataSet)Enum.Parse(typeof(RawData.DataSet), set),
+                                       Extended.CheckedItems.Count > 0, DataDir)).Union(
+                (from type in ORLIBApply.CheckedItems.Cast<string>()
+                 select new RawData(type, DataDir))).ToArray();
+
+
+
+            SDRData[] sets = (from data in datas
                 from sdr in SDR.CheckedItems.Cast<string>()
                 select
-                    new SDRData(problem, dim, (RawData.DataSet) Enum.Parse(typeof (RawData.DataSet), set),
-                        Extended.CheckedItems.Count > 0, (SDRData.SDR) Enum.Parse(typeof (SDRData.SDR), sdr), DataDir))
+                    new SDRData(data, (SDRData.SDR) Enum.Parse(typeof (SDRData.SDR), sdr)))
                 .ToArray();
 
             if (sets.Length == 0)
