@@ -21,11 +21,7 @@ factorFromName <- function(x){
     x$Problem=getAttribute(x$Name,m,'Problem')
     x$Set=factorSet(rep('test',nrow(x)))
     x$PID=getAttribute(x$Name,m,'PID',F)
-    m=regexpr("(?<Name>[a-zA-Z]+)(?<PID>[0-9]+)", x$GivenName, perl = T)
-    if(any(attr(m,"match.length")>0)){
-      x$ORSet=factor(getAttribute(x$GivenName,m,'Name'),levels=c('abz','ft','la','orb','swv','yn','car','hel','reC'))
-      x$ORPID=getAttribute(x$GivenName,m,'PID',F)
-    }
+    x <- factorORLIB(x)
   }
   x$Problem = factorProblem(x)
   return(x)
@@ -36,10 +32,10 @@ factorProblem <- function(x, simple=T, Problem='Problem'){
   if('Shop' %in% names(x) & 'Distribution' %in% names(x)) {
     x$Problem=interaction(x$Shop,x$Distribution)
   }
-  x$Problem=factor(x[,Problem], levels=c('j.rnd','j.rndn','j.rnd_p1mdoubled','j.rnd_pj1doubled','f.rnd','f.rndn','f.jc','f.mc','f.mxc',
-                                       'jsp.orlib','fsp.orlib'))
+  x$Problem=factor(x[,Problem], levels=c('j.rnd','j.rndn','j.rnd_p1mdoubled','j.rnd_pj1doubled',
+                                         'f.rnd','f.rndn','f.jc','f.mc','f.mxc','jsp.orlib','fsp.orlib'))
   if(!simple) levels(x$Problem)=c('j.rnd','j.rndn','j.rnd,J1','j.rnd,M1','f.rnd','f.rndn','f.jc','f.mc','f.mxc',
-                                    'JSP.ORLIB','FSP.ORLIB')
+                                  'JSP.ORLIB','FSP.ORLIB')
   return(droplevels(x$Problem))
 }
 
@@ -109,6 +105,14 @@ factorSDR <- function(SDR, simple=T){
 factorRho <- function(x, var='Makespan'){
   x <- join(x,dataset.OPT[,c('Name','Optimum')],by='Name',type='left')
   return(round((x[,var]-x$Optimum)/x$Optimum*100,2))
+}
+
+factorORLIB <- function(x){
+  x <- join(x,dataset.OPT[,c('Name','GivenName')],by='Name',type='left')
+  m=regexpr("(?<Name>[a-zA-Z]+)(?<PID>[0-9]+)", x$GivenName, perl = T)
+  x$ORSet=factor(getAttribute(x$GivenName,m,'Name'),levels=c('abz','ft','la','orb','swv','yn','car','hel','reC'))
+  x$ORPID=getAttribute(x$GivenName,m,'PID',F)
+  return(x)
 }
 
 factorFeature <- function(Feature,simple=T,phis=F){

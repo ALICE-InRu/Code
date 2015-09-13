@@ -31,6 +31,18 @@ get.files.SDR <- function(){
   return(sdr)
 }
 
+get.files.SDR.ORLIB <- function(){
+  files=list.files(paste0(DataDir,'SDR'),pattern = 'ORLIB')
+  sdr=get.files(paste0(DataDir,'SDR'),files = files)
+  sdr=factorFromName(sdr)
+  sdr$SDR=factorSDR(sdr$SDR)
+  sdr$Rho=factorRho(sdr)
+  sdr=subset(sdr,!is.na(Rho))
+  sdr$Problem <- factorProblem(sdr,F)
+  return(sdr)
+}
+
+
 get.files.TRDAT <- function(problems,dim,tracks,rank='p',useDiff=F,Global=F){
   fileEnd = ifelse(useDiff,paste0('.diff.',rank),'')
   fileEnd = paste0(ifelse(Global,'Global','Local'),fileEnd,'.csv')

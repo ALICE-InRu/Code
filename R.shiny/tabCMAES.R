@@ -77,7 +77,12 @@ CDR.CMA <- reactive({
 })
 SDR.CMA <- reactive({
   if(input$CMAvsSDR)
-    subset(SDR(),Problem == input$problem)
+  {
+    if(input$CMAforORLIB)
+      get.files.SDR.ORLIB()
+    else
+      subset(SDR(),Problem == input$problem)
+  }
   else
     NULL
 })
@@ -88,9 +93,9 @@ output$plot.CMABoxplot <- renderPlot(
   })
 )
 output$stat.CMABoxplot <- renderTable({
-  if(input$CMAforORLIB) { vars=c('Problem','TrainingData','Timedependent','ObjFun')
+  if(input$CMAforORLIB) { vars=c('Problem','ORSet','TrainingData','Timedependent','ObjFun')
   } else { vars=c('Problem','Dimension','Timedependent','ObjFun') }
-  stat=ddply(subset(CDR.CMA(),!is.na(Rho)),vars,function(x) summary(x$Rho))
+  stat=ddply(subset(CDR.CMA(),!is.na(Rho)),vars,function(x) c(summary(x$Rho),N=nrow(x)))
   stat$Problem <- factorProblem(stat,F)
   stat=arrange(stat,Problem,ObjFun,Timedependent)
   xtable(stat)

@@ -148,16 +148,15 @@ get.CDR.CMA <- function(problems,dim,times=c(T,F),objFuns=c('MinimumRho','Minimu
 
 }
 
-plot.CMABoxplot <- function(CDR.CMA,SDR=NULL,tilt=T){
-  CDR.CMA$CDR = CDR.CMA$TrainingData;
-  if(!any(grepl('ORLIB',CDR.CMA$Problem,ignore.case = T))){
-    pref.boxplot(CDR.CMA,SDR,'ObjFun',xText = 'CMA-ES objective function',tiltText = tilt,
+plot.CMABoxplot <- function(CDR,SDR=NULL){
+  if(!any(grepl('ORLIB',CDR$Problem,ignore.case = T))){
+    pref.boxplot(CDR,SDR,'TrainingData', tiltText = T,
+                 ColorVar = 'ObjFun', xText = 'CMA-ES objective function',
                  lineTypeVar = 'Timedependent') +
       scale_linetype_manual('Stepwise',values=c(1,2)) +
       facet_grid(Set~Dimension, scales='free', space = 'free_x')
   } else {
-    levels(CDR.CMA$Set) = paste(levels(CDR.CMA$Set),'set')
-    pref.boxplot(CDR.CMA,SDR,'TrainingData', tiltText = T,
+    pref.boxplot(CDR,SDR,'TrainingData', tiltText = T,
                  ColorVar = 'ObjFun', xText = 'CMA-ES objective function') +
       facet_wrap(~Problem+Set,scales='free')+ylab(bksLabel)
   }
