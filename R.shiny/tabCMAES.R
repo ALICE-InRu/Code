@@ -71,7 +71,7 @@ CDR.CMA.all <- reactive({
 })
 CDR.CMA <- reactive({
   if(input$CMAvsSDR|input$onlyMainCMAES)
-    subset(CDR.CMA.all(),Problem == input$problem)
+    subset(CDR.CMA.all(),TrainingData == paste(input$problem,input$dimension))
   else
     CDR.CMA.all()
 })
@@ -88,11 +88,10 @@ output$plot.CMABoxplot <- renderPlot(
   })
 )
 output$stat.CMABoxplot <- renderTable({
-  if(input$CMAforORLIB) {
-    vars=c('Problem','TrainingData','Timedependent','ObjFun')
-  } else {vars=c('Problem','Dimension','Timedependent','ObjFun')}
+  if(input$CMAforORLIB) { vars=c('Problem','TrainingData','Timedependent','ObjFun')
+  } else { vars=c('Problem','Dimension','Timedependent','ObjFun') }
   stat=ddply(subset(CDR.CMA(),!is.na(Rho)),vars,function(x) summary(x$Rho))
   stat$Problem <- factorProblem(stat,F)
-  stat=arrange(stat,Dimension,Problem,ObjFun,Timedependent)
+  stat=arrange(stat,Problem,ObjFun,Timedependent)
   xtable(stat)
 },include.rownames = F)
