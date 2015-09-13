@@ -73,10 +73,10 @@
     <Compile Include="TrainingSet.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ClassDiagram.cd" />
+    <Content Include="cheshirecat.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="cheshirecat.ico" />
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

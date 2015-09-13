@@ -1,1 +1,147 @@
- 
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="ALICE.BDRData" Collapsed="true">
+    <Position X="2.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAhA=</HashCode>
+      <FileName>BDRData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.CDRAccuracy" Collapsed="true">
+    <Position X="7.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAAAAAAABAAAAAAAAAIAAAgAAAAAAAAAAAAAAEAABA=</HashCode>
+      <FileName>CDRAccuracy.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.CDRData" Collapsed="true">
+    <Position X="5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAA=</HashCode>
+      <FileName>CDRData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.CMAESData" Collapsed="true">
+    <Position X="0.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACEAFAKJoAIEAARAAABAFAIAQJQAQhAwQBhghBEAIFA=</HashCode>
+      <FileName>CMAESData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.CSV" Collapsed="true">
+    <Position X="12" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CSV.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.Features" Collapsed="true">
+    <Position X="13.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAABEABUAABABAAAAQAEAQAAAAAAAAgAAAAA=</HashCode>
+      <FileName>Features.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.GurobiJspModel" Collapsed="true">
+    <Position X="15.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AUAAQIIMACAoAAQFAgAAIAAAACAAAAAAAAAAAECAEAA=</HashCode>
+      <FileName>GurobiJspModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.HeuristicData" Collapsed="true">
+    <Position X="4" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAAAAAAAAAAAAAgEBAgAAAAAAAAQAEAAAA=</HashCode>
+      <FileName>HeuristicData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.LinearAlgebra" Collapsed="true">
+    <Position X="12" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAIAFAhgBAAEAARAAABAQAAAgAJAAAAAAwAAAA=</HashCode>
+      <FileName>LinearAlgebra.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.LinearModel" Collapsed="true">
+    <Position X="13.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgBEIAAEBAAAAQAAAAAgARAAAAAWAAABUABAAAAQQA=</HashCode>
+      <FileName>LinearModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.OPTData" Collapsed="true">
+    <Position X="0.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAoAAAAAAAAAAAAAAAAwAAABAAAAAAAAAAEAAAQ=</HashCode>
+      <FileName>OPTData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.PreferenceSet" Collapsed="true">
+    <Position X="9.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAAABEAAEAAggAAAAAAAgAAAgAAAAEAAAA=</HashCode>
+      <FileName>PreferenceSet.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.ProblemInstance" Collapsed="true">
+    <Position X="15.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQEAAAAAAgAAAAAAAAAABAAQEAAAAAAAAABAAA=</HashCode>
+      <FileName>ProblemInstance.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.RawData" Collapsed="true">
+    <Position X="5" Y="0.5" Width="1.5" />
+    <NestedTypes>
+      <Enum Name="ALICE.RawData.DataSet" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>RawData.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="ALICE.RawData.ManipulateProcs" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>RawData.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Class Name="ALICE.RawData.NameAndNumber" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>RawData.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAKAIIAAAAABIQAEABACAAAAEAAQFAAAEAAQAASBAA=</HashCode>
+      <FileName>RawData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.RetraceSet" Collapsed="true">
+    <Position X="8.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAhAAAAEIAAAAAAAgAAAAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>RetraceSet.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.Schedule" Collapsed="true">
+    <Position X="12" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAoAQBAAAACAAAAAAAAEACAIAAEAoAIgQAAAAgEgABE=</HashCode>
+      <FileName>Schedule.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.SDRData" Collapsed="true">
+    <Position X="2.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAABAAAAAAAIAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>SDRData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ALICE.TrainingSet" Collapsed="true">
+    <Position X="8.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAoAAAFAAAABJBAIAAAAAEgAQBAAgAEgACAEAAUA=</HashCode>
+      <FileName>TrainingSet.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
