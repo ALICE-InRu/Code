@@ -44,7 +44,7 @@ plot.evolutionCMA.Weights <- function(evolutionCMA,timedependent=F){
   x=subset(evolutionCMA,Timedependent==timedependent)
   if(timedependent){
     x = get.evolutionCMA(unique(x$Problem),unique(x$Dimension),T,F,F) # get missing steps
-    x = ddply(x, ~Problem+Dimension+Timedependent+Step+Feature, function(x) { x[nrow(x), ] })
+    x = ddply(x, ~Problem+Dimension+Timedependent+Step+Feature+ObjFun, function(x) { x[nrow(x), ] })
   }
   x$Problem <- factorProblem(x, F)
   x$ObjFun <- factorCMAObjFun(x$ObjFun)
@@ -52,13 +52,17 @@ plot.evolutionCMA.Weights <- function(evolutionCMA,timedependent=F){
   #        sc.weight=value/sqrt(sum(value*value)))
   x$Feature=factorFeature(x$Feature,F)
 
+  nFacets = length(unique(interaction(x$Problem,x$Dimension,x$ObjFun)))
+  nCol=ceiling(sqrt(nFacets)/2)*2
+
   p=ggplot(x,aes(y=value,color=Feature,linetype=Timedependent))+
+    cornerLegend(nFacets,ncol = nCol)+
     guides(linetype = guide_legend(title.position = 'top'),
            color=guide_legend(ncol=4,byrow=TRUE, title.vjust=0.25,
-                              title.theme = element_text(size=12, face="bold", angle = 90)))+
+                              title.theme = element_text(size=11, face="bold", angle = 90)))+
     ggplotColor('Feature',length(levels(x$Feature)))+
     labs(linetype="Stepwise") + ylab(expression("Weight" *~ w[i] )) +
-    axisCompact+facet_wrap(~Problem+Dimension+ObjFun,ncol=6,scales='free_x')
+    axisCompact+facet_wrap(~Problem+Dimension+ObjFun,ncol=nCol,scales='free_x')
 
   if(timedependent) {
     p = p + geom_line(aes(x=Step))
@@ -112,44 +116,6 @@ plot.evolutionCMA.Fitness <- function(evolutionCMA){
            size=guide_legend(ncol=1,byrow=TRUE,title.position = 'top'),
            color=guide_legend(nrow=3,byrow=TRUE))
 
-  return(p)
-}
-
-plot.CMAPREF.timedependentWeights <- function(problem,dim='6x5',
-                                      track='OPT',rank='p',bias='equal'){
-
-  getPrefWeight <- function(){
-    file=paste('full',problem,dim,rank,track,bias,'weights.timedependent.csv',sep='.')
-    w=read_csv(paste0(DataDir,'PREF/weights/',file))
-    w=subset(w[,-5],Type=='Weight');
-    w=tidyr::gather(w,'Step','value',grep('Step',names(w)))
-    w$Step=as.numeric(substr(w$Step,6,10))
-    w$Model='PREF'
-    return(w)
-  }
-
-  getCMAWeight <- function(type){
-    file=paste('full',problem,dim,type,'weights.timedependent.csv',sep='.')
-    w <- subset(read_csv(paste0(DataDir,'CMAES/weights/',file)),Type=='Weight')
-    w=subset(w[,-5],Type=='Weight');
-    w=tidyr::gather(w,'Step','value',grep('Step',names(w)))
-    w$Step=as.numeric(substr(w$Step,6,10))
-    w$Model=paste0('CMA-',ifelse('MinimumMakespan'==type,'Cmax','Rho'))
-    return(w)
-  }
-
-  w=rbind(getCMAWeight('MinimumMakespan'),
-          getCMAWeight('MinimumRho'),
-          getPrefWeight())
-
-  w$Feature=factorFeature(w$Feature,F)
-  w$Feature[w$Feature == levels(w$Feature)[5]] = levels(w$Feature)[17]
-  w=ddply(w,~Step+Model,mutate,sc.weight=value/sqrt(sum(value*value)))
-  w$ObjFun <- factorCMAObjFun(w$ObjFun)
-
-  p=ggplot(w,aes(x=Step,y=sc.weight,color=Model,shape=Model))+geom_point(alpha=0.1)+
-    geom_smooth(se=F, method='loess')+ggplotColor('Model',3)+
-    axisStep(dim)+axisCompact+facet_wrap(~Feature,ncol=4)
   return(p)
 }
 

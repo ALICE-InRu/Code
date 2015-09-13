@@ -154,8 +154,6 @@ if(input$dimension=='6x5'){
     ggsave(fname,p.fit,width = Width, height = Height.half, dpi = dpi, units = units)
   }
 
-  plot.CMAPREF.timedependentWeights(input$problem, input$dimension)
-
   CDR.CMA <- do.call(rbind, lapply(c('6x5','10x10'), function(dim) {
     get.CDR.CMA(input$problems,dim) } ))
   p.tr=plot.CMABoxplot(CDR.CMA)
