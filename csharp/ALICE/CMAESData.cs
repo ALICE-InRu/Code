@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace ALICE
 {
@@ -83,19 +84,25 @@ namespace ALICE
                     String.Format(@"{0}\CMAES\results\output.{1}.{2}.{3}.weights.{4}.csv", data.FullName, Distribution,
                         Dimension, objFun, dependentModel ? "timedependent" : "timeindependent"));
 
+            N = NUM_FEATURES;
+            if (dependentModel)
+                N *= NumDimension;
+            StopEval = 50000; // 1e3*N^2;   
+
+            if (FileInfoResults.Exists & !FileInfo.Exists)
+            {
+                ReadFileInfoResults();
+                AlreadySavedPID = Generation = _output.Count > 0 ? _output[_output.Count - 1].Generation : 0;
+                CountEval = StopEval; // use last results as finished run
+                if (OptimistationComplete)
+                    Write();
+            }
+
             if (FileInfo.Exists)
             {
                 //throw new WarningException(String.Format("Optimistation already completed, see results in {0}", FileInfo.Name));
                 CountEval = StopEval;
                 return;
-            }
-
-            if (FileInfoResults.Exists)
-            {
-                // need to read last run here - until then, start from scratch
-                // AlreadySavedPID=Generation
-                // throw new NotImplementedException();
-                FileInfoResults.Delete();
             }
 
             //Get the method information using the method info class
@@ -110,9 +117,6 @@ namespace ALICE
                     break;
             }
 
-            N = NUM_FEATURES;
-            if (dependentModel)
-                N *= NumDimension;
 
             #region --------------------  Initialization --------------------------------
 
@@ -120,7 +124,6 @@ namespace ALICE
 
             sigma = 0.5;
             _stopFitness = 1e-10;
-            StopEval = 50000; // 1e3*N^2;   
 
             #region Strategy parameter setting: Selection
 
@@ -413,16 +416,48 @@ namespace ALICE
 
         public new void Write()
         {
-            WriteFileInfoResults(_output.Where(x => x.Generation > AlreadySavedPID).ToList(), N, NUM_FEATURES);
+            WriteFileInfoResults(_output.Where(x => x.Generation > AlreadySavedPID).ToList());
             AlreadySavedPID = Generation;
          
             if (!OptimistationComplete) return;
-            SummaryCMA best = _output.FindLast(x => Math.Abs(x.Fitness - _output.Min(y => y.Fitness)) < 1e-8);
+            SummaryCMA best = _output.FindLast(x => Math.Abs(x.Fitness - _output.Min(y => y.Fitness)) <= double.Epsilon);
+            best.Generation = _output[_output.Count - 1].Generation + 1;
+            best.CountEval = _output[_output.Count - 1].CountEval;
             LinearModel bestWeights = ConvertToLinearModel(best.DistributionMeanVector);
+            WriteFileInfoResults(new List<SummaryCMA> {best}); // make sure last weight is the best weight
             WriteFileInfo(bestWeights);
         }
 
-        private void WriteFileInfoResults(List<SummaryCMA> output, int numDecsVariables, int numFeatures)
+        private void ReadFileInfoResults()
+        {   
+            List<string> header;
+            List<string[]> content = CSV.Read(FileInfoResults, out header);
+
+            const int GENERATION = 0;
+            const int COUNT_EVAL = 1;
+            const int FITNESS = 2;
+            const int WEIGHT = 3;
+
+            foreach (var line in content)
+            {
+                double[] weight = new double[N];
+                for (int i = WEIGHT; i < line.Length; i++)
+                {
+                    weight[i - WEIGHT] = Convert.ToDouble(line[i], CultureInfo.InvariantCulture);
+                }
+
+                SummaryCMA result = new SummaryCMA
+                {
+                    CountEval = Convert.ToInt32(line[COUNT_EVAL]),
+                    Fitness = Convert.ToDouble(line[FITNESS], CultureInfo.InvariantCulture),
+                    Generation = Convert.ToInt32(line[GENERATION]),
+                    DistributionMeanVector = weight
+                };
+                _output.Add(result);
+            }
+        }
+
+        private void WriteFileInfoResults(List<SummaryCMA> output)
         {
             var fs = new FileStream(FileInfoResults.FullName, FileMode.Append, FileAccess.Write);
             using (var st = new StreamWriter(fs))
@@ -430,10 +465,10 @@ namespace ALICE
                 if (fs.Length == 0) // header is missing 
                 {
                     string header = "Generation,CountEval,Fitness"; // for plotting output
-                    for (int i = 0; i < numDecsVariables; i++)
+                    for (int i = 0; i < N; i++)
                     {
-                        int ifeat = i%numFeatures;
-                        int step = (i - ifeat)/numFeatures + 1;
+                        int ifeat = i%NUM_FEATURES;
+                        int step = (i - ifeat)/NUM_FEATURES + 1;
                         Features.Local feat = (Features.Local) ifeat;
                         header += String.Format(CultureInfo.InvariantCulture, ",phi.{0}.{1}", feat, step);
                     }
@@ -468,14 +503,13 @@ namespace ALICE
                 for (int iFeat = 0; iFeat < Features.LocalCount; iFeat++)
                 {
                     Features.Local feat = (Features.Local) iFeat;
-                    string info = String.Format("Weight,{0},1,phi.{1},NA", NUM_FEATURES - 2, feat);
+                    string info = String.Format("Weight,{0},1,phi.{1},NA", NUM_FEATURES, feat);
 
                     for (int step = 0; step < numSteps; step++)
                         info += String.Format(CultureInfo.InvariantCulture, ",{0:R9}",
                             linearModel.LocalWeights[iFeat][step]);
 
                     st.WriteLine(info);
-                    break;
                 }
                 st.Close();
             }

@@ -400,7 +400,8 @@ namespace ALICE
                     }
                 }
             }
-            if (linearWeights != null) models.Add(linearWeights);
+            if (linearWeights != null && featFound == nrFeat)
+                models.Add(linearWeights);
 
             int d = Features.LocalCount;
             int minNum = Regex.IsMatch(file.Name, "exhaust")
