@@ -8,17 +8,21 @@ Height.third=61*factor #80mm
 Height.half=87*factor #120mm
 Height.full=175*factor #220mm
 units='mm'
-library(RColorBrewer)
-getPalette = colorRampPalette(brewer.pal(9, "Set1"))
 
 mainPalette <- function(n) {
+  library(RColorBrewer)
+  name='Set1'
+  getPalette = colorRampPalette(brewer.pal(9, name))
+
   #palette <- c("red4", "darkslategray3", "dodgerblue1", "darkcyan", "skyblue2", "dodgerblue4", "purple4", "maroon", "chocolate1", "bisque3", "bisque", "seagreen4", "lightgreen", "skyblue4", "mediumpurple3", "palevioletred1", "lightsalmon4", "darkgoldenrod1")
   if (n <= 1){
     palette='black'
   } else if (n <= 2) {
     palette <- c("gray79", "black")
-  } else {
+  } else if (n>9) {
     palette = getPalette(n)
+  } else {
+    palette = brewer.pal(n, name)
   }
   return(palette)
 }
@@ -86,6 +90,7 @@ ggplotColor <- function(name,num,labels=NULL,values=NULL){
 pref.boxplot <- function(CDR,SDR=NULL,ColorVar,xVar='CDR',xText='CDR',tiltText=T,lineTypeVar=NA){
   CDR=subset(CDR,!is.na(Rho))
   CDR$Problem=factorProblem(CDR,F)
+  levels(CDR$Set)=paste(levels(CDR$Set),'set')
 
   colnames(CDR)[grep(ColorVar,colnames(CDR))]='ColorVar'
   colnames(CDR)[grep(xVar,colnames(CDR))]='xVar'
@@ -94,8 +99,9 @@ pref.boxplot <- function(CDR,SDR=NULL,ColorVar,xVar='CDR',xText='CDR',tiltText=T
     colnames(CDR)[grep(lineTypeVar,colnames(CDR))]='lineTypeVar'
 
   if(!is.null(SDR)){
-    SDR <- subset(SDR,Dimension %in% CDR$Dimension & Problem %in% CDR$Problem)
+    SDR <- subset(SDR,Name %in% CDR$Name)
     SDR$xVar=SDR$SDR
+    levels(SDR$Set)=paste(levels(SDR$Set),'set')
   }
   p=ggplot(CDR,aes(x=as.factor(xVar),y=Rho))
 
@@ -104,7 +110,10 @@ pref.boxplot <- function(CDR,SDR=NULL,ColorVar,xVar='CDR',xText='CDR',tiltText=T
   else
     p=p+geom_boxplot(aes(color=ColorVar))
 
-  if(!is.null(SDR)){ p=p+geom_boxplot(data=SDR,aes(fill=SDR))+ggplotFill('SDR',length(sdrs));}
+  if(!is.null(SDR)){
+    p = p + geom_boxplot(data=SDR,aes(fill=SDR))+
+      ggplotFill('SDR',length(sdrs)) + guides(fill=guide_legend(nrow=2,byrow=FALSE))
+  }
   p=p+facet_grid(Set~Problem,scales='free_x', space = 'free_x') +
     ggplotColor(xText,length(unique(CDR$ColorVar))) +
     xlab('')+ylab(rhoLabel)+
