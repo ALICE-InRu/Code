@@ -89,8 +89,9 @@ factorTrack <- function(x){
   }
   ix=grepl('LOCOPT', x$Track)
   if(any(ix)){
-    x$Track[ix]='Perturbed\nLeader'
-    lvs=c(lvs,'Perturbed\nLeader')
+    PL=enc2utf8('OPT\U25B')
+    x$Track[ix]=PL
+    lvs=c(lvs,PL)
   }
   ix=grepl('CMA|ES', x$Track)
   if(any(ix)){
