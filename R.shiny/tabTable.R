@@ -21,6 +21,7 @@ output$stats.table <- renderDataTable({
                'SDR'=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension),
                'OPT'=subset(dataset.OPT,Problem %in% input$problems & Dimension %in% input$dimension))
 
+  dat$Problem <- factorProblem(dat,F)
   vars = switch(input$rawData,
                 'SDR'=input$variable.sdr,
                 'OPT'=input$variable.opt)
