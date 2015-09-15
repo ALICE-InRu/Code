@@ -23,7 +23,8 @@ plot.trainingDataSize <- function(trainingDataSize){
     geom_line(size=1,position=position_jitter(w=0.25, h=0))+
     facet_wrap(~Problem,ncol=3)+
     ylab(expression('Size of training set, |' * Phi * '|'))+
-    axisStep(trainingDataSize$Dimension[1])+axisCompact
+    axisStep(trainingDataSize$Dimension[1])+axisCompact +
+    guides(color=guide_legend(nrow=2,byrow=TRUE))
   return(p)
 }
 
