@@ -45,7 +45,7 @@ get.StepwiseExtremal <- function(problems,dim){
 }
 
 plot.StepwiseSDR.wrtTrack <- function(StepwiseOptimality,StepwiseExtremal,
-                                      dim,smooth,save=NA,onlyWrtOPT=F){
+                                      dim,smooth,save=NA,onlyWrtOPT=F,onlyWrtSDR=F){
   if(is.null(StepwiseOptimality)|is.null(StepwiseExtremal)) {return(NULL)}
 
   problems <- levels(StepwiseOptimality$Stats$Problem)
@@ -70,16 +70,20 @@ plot.StepwiseSDR.wrtTrack <- function(StepwiseOptimality,StepwiseExtremal,
       p=p+geom_line(data=stat,aes(y=mu,color=SDR,linetype='OPT'))
     }
 
-    p=p+ggplotColor('SDR',length(sdrs),values=sdrs)+
-      facet_wrap(~Problem,ncol=3)+
-      ylab('Probability of SDR being optimal')
+    p=p+ggplotColor('SDR',length(sdrs),values=sdrs)
 
     #if(length(problems)>1){ p <- p + cornerLegend(length(problems)) }
 
     return(p)
   }
 
-  p=plot.StepwiseSDR.wrtOPT()
+  if(!onlyWrtSDR){
+    p=plot.StepwiseSDR.wrtOPT()
+  } else {
+    p <- ggplot(NULL,aes(x=Step)) +
+      ggplotColor('Track',length(sdrs)+1) + axisStep(dim) + axisCompact
+  }
+  p = p + facet_wrap(~Problem,ncol=3)
 
   if(!onlyWrtOPT){
     SDR <- do.call(rbind, lapply(sdrs, function(sdr) { data.frame(Track = sdr, get.StepwiseOptimality(problems,dim,sdr)$Stats)} ))
@@ -88,9 +92,21 @@ plot.StepwiseSDR.wrtTrack <- function(StepwiseOptimality,StepwiseExtremal,
   if(!is.null(SDR)){
     SDR<- factorTrack(SDR)
     SDR$Problem <- factorProblem(SDR,F)
+    if(onlyWrtSDR){ SDR$rnd.mu = log(SDR$rnd.mu) }
     p=p+geom_line(data=SDR,aes(y=rnd.mu,color=Track,linetype='SDR'))
-    p=p+scale_linetype_manual('Track', values=c(1,2))
-  } else { p=p+scale_linetype_discrete(guide=F) }
+  }
+
+  if(onlyWrtOPT|onlyWrtSDR) {
+    if(onlyWrtOPT)
+      p <- p+ylab(expression(xi[SDR]))
+    else
+      p <- p+ylab(expression(log(hat(xi)[SDR])))
+    p=p+scale_linetype_discrete(guide=F)
+  } else {
+    p <- p + ylab('Probability of SDR being optimal')
+    p=p+scale_linetype_manual('Accuracy', values=c(1,2),
+                              labels=c(expression(xi),expression(hat(xi))))
+  }
 
   if(!is.na(save)){
     fname=ifelse(length(problems)>1,
