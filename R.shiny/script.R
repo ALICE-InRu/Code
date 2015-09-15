@@ -2,12 +2,11 @@ source('global.R')
 colorPalette='Greys';
 extension='pdf';subdir='../../Thesis/figures/'
 save=NA
-problem.structured=c('f.jc','f.mc','f.mxc')
 input=list(dimension='10x10',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd'))
 #input=list(dimension='6x5',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc','j.rnd_pj1doubled','j.rnd_p1mdoubled'))
 SDR=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension)
 input$timedependent=F
-input$smooth=F
+input$smooth=T
 input$testProblems='ORLIB'
 
 source('sdr.R')
@@ -45,10 +44,9 @@ plot.stepwiseOptimality(all.StepwiseOptimality,input$dimension,F,input$smooth,sa
 source('opt.SDR.R')
 StepwiseOptimality=get.StepwiseOptimality(input$problem,input$dimension,'OPT')
 StepwiseExtremal=get.StepwiseExtremal(input$problem,input$dimension)
-p=plot.StepwiseSDR.wrtTrack(StepwiseOptimality,StepwiseExtremal,input$dimension,input$smooth,save)
-zoom=p+theme(legend.position="none")+xlab(NULL)+ylab(NULL)+
-  scale_x_continuous(expand = c(0,0), limits=c(5,30))+
-  scale_y_continuous(expand = c(0,0), limits=c(0,.05))+
+p=plot.StepwiseSDR.wrtTrack(StepwiseOptimality,StepwiseExtremal,input$dimension,input$smooth,NA,onlyWrtSDR = T)
+zoom=p+theme(legend.position="none")+xlab(NULL)+scale_linetype_manual('',values=c(2))+
+  scale_x_continuous(expand = c(0,0), limits=c(0,30))+
   facet_grid(~Problem, labeller= function(variable,value){ return('Zoom') })
 
 source('opt.bw.R')
@@ -133,51 +131,38 @@ plot.imitationLearning.weights(input$problem,input$dimension)
 
 if(input$dimension=='6x5'){
   source('cmaes.R')
-  evolutionCMA1 = do.call(rbind, lapply(c('6x5','10x10'), function(dim) {
-    get.evolutionCMA(input$problem,dim)}))
-  p.w.step=plot.evolutionCMA.Weights(evolutionCMA1,T)+theme(legend.position='none')
-  p.w.one=plot.evolutionCMA.Weights(evolutionCMA1,F)
-
-  if(!is.na(save)){
-    ggsave('../../Thesis/figures/CMAES.weights.timeindependent.pdf',p.w.one,
-           width = Width*1.2,height = Height.half*1.2, dpi=dpi, units=units)
-    ggsave('../../Thesis/figures/CMAES.weights.timedependent.pdf',p.w.step,
-           width = Width*1.2,height = Height.half*1, dpi=dpi, units=units)
-  }
-
   evolutionCMA = do.call(rbind, lapply(c('6x5','10x10'), function(dim) {
     get.evolutionCMA(input$problems,dim)}))
-  print(last.evolutionCMA(evolutionCMA),include.rownames = F)
 
+  plot.evolutionCMA.Weights(subset(evolutionCMA,Timedependent==T &
+                                     Dimension==input$dimension),input$problem)
   p.fit <- plot.evolutionCMA.Fitness(evolutionCMA)
   if(!is.na(save)){
     fname=paste(paste0(subdir,'CMAES'),'generation','log','fitness',extension,sep='.')
     ggsave(fname,p.fit,width = Width, height = Height.half, dpi = dpi, units = units)
   }
+  last.evolutionCMA(evolutionCMA)
+
+  plot.CMAPREF.timedependentWeights(input$problem, input$dimension)
 
   CDR.CMA <- do.call(rbind, lapply(c('6x5','10x10'), function(dim) {
-    get.CDR.CMA(input$problems,dim) } ))
-  #CDR.CMA$Structure = factor(CDR.CMA$Problem %in% problem.structured,
-  #                      levels=c(F,T), labels=c('non-structured','structured'))
-  p.tr=plot.CMABoxplot(CDR.CMA)#+facet_wrap(~Set+Structure,scales ='free')
-
+    get.CDR.CMA(input$problems,dim,timedependent = input$timedependent) } ))
+  p.tr=plot.CMABoxplot(CDR.CMA)
   if(!is.na(save)){
     fname=paste(paste0(subdir,'boxplot'),'CMAES',extension,sep='.')
     ggsave(fname,p.tr,width = Width, height = Height.half, dpi = dpi, units = units)
   }
-  stat=ddply(CDR.CMA,~Problem+Dimension+Timedependent+ObjFun,function(x) summary(x$Rho))
+  stat=ddply(CDR.CMA,~Problem+Dimension+ObjFun,function(x) summary(x$Rho))
   stat$Problem <- factorProblem(stat,F)
-  print(xtable(arrange(stat,Dimension,Problem,ObjFun,Timedependent)),include.rownames = F)
+  print(xtable(stat),include.rownames = F)
 
   CDR.CMA.orlib <- do.call(rbind, lapply(c('6x5','10x10'), function(dim){
-    get.CDR.CMA(input$problems,dim,times = F, testProblems = 'ORLIB') }))
+    get.CDR.CMA(input$problems,dim,timedependent = F, testProblems = 'ORLIB') }))
   p.orb=plot.CMABoxplot(CDR.CMA.orlib)+theme(legend.position='none')
   if(!is.na(save)){
     fname=paste(paste0(subdir,'boxplot'),'CMAES','ORLIB',extension,sep='.')
     ggsave(fname,p.orb,width = Width, height = Height.half*0.95, dpi = dpi, units = units)
   }
-
-
 
 }
 
