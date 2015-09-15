@@ -93,7 +93,12 @@ plot.StepwiseSDR.wrtTrack <- function(StepwiseOptimality,StepwiseExtremal,
     SDR<- factorTrack(SDR)
     SDR$Problem <- factorProblem(SDR,F)
     if(onlyWrtSDR){ SDR$rnd.mu = log(SDR$rnd.mu) }
-    p=p+geom_line(data=SDR,aes(y=rnd.mu,color=Track,linetype='SDR'))
+
+    if(smooth){
+      p <- p+geom_smooth(data=SDR,aes(y=rnd.mu,color=Track,fill=Track,linetype='SDR'))
+    } else {
+      p <- p+geom_line(data=SDR,aes(y=rnd.mu,color=Track,linetype='SDR'))
+    }
   }
 
   if(onlyWrtOPT|onlyWrtSDR) {
