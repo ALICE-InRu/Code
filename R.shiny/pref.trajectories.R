@@ -1,4 +1,4 @@
-get.trainingDataSize <- function(problems,dim,tracks=c('ALL','CMAESMINRHO')){
+get.trainingDataSize <- function(problems,dim,tracks=c('ALL','CMAESMINRHO','CMAESMINCMAX')){
   get.trainingDataSize1 <- function(problem){
     fname=paste(paste0(DataDir,'Stepwise/size'),'trainingSet',problem,dim,'csv',sep='.')
     if(file.exists(fname)){ stat=read_csv(fname)
@@ -10,9 +10,7 @@ get.trainingDataSize <- function(problems,dim,tracks=c('ALL','CMAESMINRHO')){
     }
     return(stat)
   }
-
-  stats <- ldply(problems, get.trainingDataSize1)
-
+  stats <- as.data.frame(ldply(problems, get.trainingDataSize1))
   stats=factorTrack(stats)
   stats$Problem=factorProblem(stats)
   return(stats)
@@ -29,10 +27,12 @@ plot.trainingDataSize <- function(trainingDataSize){
   return(p)
 }
 
-get.preferenceSetSize <- function(problems,dim,tracks=c('ALL','CMAESMINRHO'),ranks=c('a','b','f','p')){
+get.preferenceSetSize <- function(problems,dim,tracks=c('ALL','CMAESMINRHO','CMAESMINCMAX'),
+                                  ranks=c('a','b','f','p')){
   get.preferenceSetSize1 <- function(problem,rank){
     fname=paste(paste0(DataDir,'Stepwise/size'),'prefSet',problem,dim,rank,'csv',sep='.')
-    if(file.exists(fname)){ stat=read_csv(fname)
+    if(file.exists(fname)){
+      stat=read_csv(fname)
     } else {
       stat <- get.files.TRDAT(problem,dim,tracks,rank,useDiff = T)
       if(is.null(stat)) { return(NULL) }
@@ -40,10 +40,11 @@ get.preferenceSetSize <- function(problems,dim,tracks=c('ALL','CMAESMINRHO'),ran
       stat=ddply(stat,~Problem+Step+Rank+Track,function(X) nrow(X))
       write.csv(stat, file = fname, row.names = F, quote = F)
     }
-    return(stat)
+    return(as.data.frame(stat))
   }
 
-  stats <- do.call(rbind, lapply(ranks, function(rank) { ldply(problems, get.preferenceSetSize1, rank) } ))
+  stats <- do.call(rbind, lapply(ranks, function(rank) {
+    ldply(problems, get.preferenceSetSize1, rank) } ))
 
   stats=factorTrack(stats)
   stats$Rank=factorRank(stats$Rank)
@@ -104,6 +105,7 @@ table.rhoTracksRanks <- function(problem,rhoTracksRanks,SDR=NULL,save=NA){
   rhoTracksRanks <- joinRhoSDR(rhoTracksRanks,SDR)
   stat <- ddply(rhoTracksRanks,~Problem+Model+Track+Rank+Set,function(x) summary(x$Rho))
   stat <- arrange(stat, Mean) # order w.r.t. lowest mean
+  stat$Problem <- factorProblem(stat, F)
   # table
   lbl <- paste0('stat.pref.',problem)
   tbl <- xtable(stat,label=(lbl),caption=paste('Main statistics for',problem))

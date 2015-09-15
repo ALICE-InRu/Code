@@ -4,7 +4,8 @@ output$tabPref.trajectories <- renderUI({
       box(title='Settings', collapsible = T,
           helpText('For main problem distribution.'),
           selectInput("plotTracks", "Trajectories:", multiple = T,
-                      c("OPT",sdrs,"RND","ALL","CMA-ES"), selected = c("OPT",sdrs,"RND","ALL","CMA-ES")),
+                      c("OPT",sdrs,"RND","ALL","CMAESMINRHO","CMAESMINCMAX"),
+                      selected = c("OPT",sdrs,"ALL","CMAESMINRHO","CMAESMINCMAX")),
           selectInput("plotRanks", "Rankings:", multiple = T,
                       c("p","f","b","a"), selected=c("p","f","b","a"))
       )
@@ -18,7 +19,7 @@ output$tabPref.trajectories <- renderUI({
           plotOutput('plot.rhoTracksRanks', height=500),
           checkboxInput('plotSDR','Display the trajectories the models are based on (white).', T)),
       box(title='Summary for Rho', width=9,
-          tableOutput('table.rhoTracksRanks'))
+          dataTableOutput('table.rhoTracksRanks'))
     )
   )
 })
@@ -28,7 +29,7 @@ trainingDataSize <- reactive({ get.trainingDataSize(input$problem,input$dimensio
 output$plot.trainingDataSize <- renderPlot({
   withProgress(message = 'Plotting training set size', value = 0, {
     plot.trainingDataSize(
-      subset(trainingDataSize(), Track %in% input$plotTracks))
+      subset(trainingDataSize(), Track %in% factorTrack(input$plotTracks)))
   })
 })
 
@@ -38,25 +39,32 @@ output$plot.preferenceSetSize <- renderPlot({
   withProgress(message = 'Plotting preference set size', value = 0, {
     plot.preferenceSetSize(
       subset(preferenceSetSize(),
-             Track %in% input$plotTracks & Rank %in% input$plotRanks))
+             Track %in% factorTrack(input$plotTracks) & Rank %in% input$plotRanks))
   })
 })
 
 all.rhoTracksRanks <- reactive({
-  file_list <- get.CDR.file_list(input$problem,input$dimension,c(sdrs,'ALL','OPT','CMAESMINRHO'),
+  file_list <- get.CDR.file_list(input$problem,input$dimension,
+                                 c(sdrs,'ALL','OPT','CMAESMINRHO','CMAESMINCMAX'),
                                  c('a','b','f','p'),F,'equal')
   get.many.CDR(file_list,'train')
 })
 
 rhoTracksRanks <- reactive({ subset(all.rhoTracksRanks(),
-                                    Track %in% input$plotTracks & Rank %in% input$plotRanks) })
+                                    Track %in% factorTrack(input$plotTracks)
+                                    & Rank %in% input$plotRanks) })
 
 comparison <- reactive({
   if(!input$plotSDR) return(NULL)
   SDR=SDR()
-  if(any(grepl('CMA-ES',rhoTracksRanks()$Track))){
+  if(any(grepl('ES.rho',rhoTracksRanks()$Track))){
     CMA <- get.CDR.CMA(input$problem, input$dimension, F, 'MinimumRho')
-    CMA$SDR = 'CMA-ES'
+    CMA$SDR = 'ES.rho'
+    SDR <- rbind(SDR,CMA[,names(CMA) %in% names(SDR)])
+  }
+  if(any(grepl('ES.Cmax',rhoTracksRanks()$Track))){
+    CMA <- get.CDR.CMA(input$problem, input$dimension, F, 'MinimumMakespan')
+    CMA$SDR = 'ES.Cmax'
     SDR <- rbind(SDR,CMA[,names(CMA) %in% names(SDR)])
   }
   return(SDR)
@@ -68,6 +76,6 @@ output$plot.rhoTracksRanks <- renderPlot({
   })
 })
 
-output$table.rhoTracksRanks <- renderTable({
+output$table.rhoTracksRanks <- renderDataTable({
   table.rhoTracksRanks(input$problem, subset(rhoTracksRanks()), comparison())
-}, include.rownames = FALSE)
+})
