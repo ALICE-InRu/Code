@@ -19,7 +19,16 @@ get.files.OPT <- function(){
   rownames(opt)=opt$Name
   opt=subset(opt,!is.na(Optimum))
   opt=factorFromName(opt)
-  return(opt)
+  opt = arrange(opt,Problem,Dimension,Set,PID)
+  ix=which(is.na(opt$GivenName))
+  opt$tmp = factor(substr(opt$Problem,3,100),
+                   levels=c('rnd','rndn','rnd_p1mdoubled','rnd_pj1doubled','jc','mc','mxc'),
+                   labels=c('random','random-narrow','random with job variation',
+                            'random with machine variation','job-correlated','machine-correlated',
+                            'mixed-correlated'))
+  opt$GivenName = factor(opt$GivenName, levels=c(levels(opt$tmp),unique(opt$GivenName)))
+  opt$GivenName[ix]=opt$tmp[ix]
+  return(opt[,c('Name','Problem','Dimension','Set','PID','Optimum','Solved','GivenName')])
 }
 
 get.files.SDR <- function(){
