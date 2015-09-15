@@ -1,3 +1,27 @@
+get.raw <- function(problem,numJobs=6,numMacs=5,PID=0){
+  dim <- paste(numJobs,numMacs,sep='x')
+  dat <- read.csv(paste0('../../Data/Raw/',problem,'.',dim,'.train.txt'))
+  dat <- dat[(5+PID*(numJobs+4)):(4+numJobs+PID*(numJobs+4)),]
+  dat <- stringr::str_split(dat,' ')
+  p <- matrix(NA,nrow = numJobs, ncol = numMacs)
+  for(job in 1:numJobs){
+    p[job,1:numMacs]=as.numeric(dat[[job]][seq(2,2*numMacs,by = 2)])
+  }
+  p <- as.data.frame(p)
+  colnames(p)=paste0('M',1:numMacs)
+  p$Job = factor(paste0('J',1:numJobs))
+  p$Problem <- problem
+  p$Dimension <- dim
+  return(melt(p,c('Problem','Dimension','Job'), variable.name = 'Machine', value.name = 'Proc'))
+}
+
+plot.raw <- function(problems=c('f.rnd','f.rndn','f.jc','f.mc','f.mxc'), PID=0){
+  dat <- do.call(rbind, lapply(problems, function(problem) {get.raw(problem,PID=PID)}))
+  dat$Problem <- factorProblem(dat,F)
+  ggplot(dat, aes(x=Machine,y=Proc,shape=Job))+geom_point()+xlab(NULL)+
+    facet_wrap(~Problem+Dimension,scales='free',nrow=1)+ylab(expression(p[ja]))
+}
+
 get.gantt <- function(problem,dim,SDR='ALL',plotPID=-1,all.trdat=NULL){
   if(is.null(all.trdat)){ trdat <- get.files.TRDAT(problem,dim,SDR) } else { trdat=all.trdat }
 
