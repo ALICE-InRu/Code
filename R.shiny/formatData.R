@@ -28,11 +28,12 @@ factorFromName <- function(x){
 }
 
 factorProblem <- function(x, simple=T, Problem='Problem'){
+  if(Problem!='Problem'){ x$Problem=x[,grep(Problem,colnames(x))] }
 
   if('Shop' %in% names(x) & 'Distribution' %in% names(x)) {
     x$Problem=interaction(x$Shop,x$Distribution)
   }
-  x$Problem=factor(x[,Problem], levels=c('j.rnd','j.rndn','j.rnd_p1mdoubled','j.rnd_pj1doubled',
+  x$Problem=factor(x$Problem, levels=c('j.rnd','j.rndn','j.rnd_p1mdoubled','j.rnd_pj1doubled',
                                          'f.rnd','f.rndn','f.jc','f.mc','f.mxc','jsp.orlib','fsp.orlib'))
   if(!simple) levels(x$Problem)=c('j.rnd','j.rndn','j.rnd,J1','j.rnd,M1','f.rnd','f.rndn','f.jc','f.mc','f.mxc',
                                   'JSP.ORLIB','FSP.ORLIB')
@@ -63,6 +64,10 @@ factorRank <- function(Rank,simple=T){
   droplevels(factor(Rank, levels=c('p','f','b','a'), labels=lbs)) }
 
 factorTrack <- function(x){
+  isDf = is.data.frame(x)
+  if(!isDf){ x=data.frame(Track=x) }
+  x$Track = as.character(x$Track)
+
   lvs=c(sdrs,'OPT','ALL')
   x$Extended=grepl('EXT',x$Track)
   ix=grepl('EXT', x$Track)
@@ -87,14 +92,23 @@ factorTrack <- function(x){
     x$Track[ix]='Perturbed\nLeader'
     lvs=c(lvs,'Perturbed\nLeader')
   }
-  ix=grepl('CMA', x$Track)
+  ix=grepl('CMA|ES', x$Track)
   if(any(ix)){
-    x$Track[ix]='CMA-ES'
-    lvs=c(lvs,'CMA-ES')
+    ix=grepl('rho', x$Track, ignore.case = T)
+    if(any(ix)){
+      x$Track[ix]='ES.rho'
+      lvs=c(lvs,'ES.rho')
+    }
+    ix=grepl('Cmax', x$Track, ignore.case = T)
+    if(any(ix)){
+      x$Track[ix]='ES.Cmax'
+      lvs=c(lvs,'ES.Cmax')
+    }
   }
-
   x$Track=factor(x$Track, levels=lvs)
-  droplevels(x)
+  x=droplevels(x)
+  if(!isDf) return(levels(x$Track))
+  return(x)
 }
 
 factorSDR <- function(SDR, simple=T){
