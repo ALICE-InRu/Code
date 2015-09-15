@@ -27,7 +27,7 @@ gantt=get.gantt(input$problem,input$dimension,'MWR',10)
 plot.gantt(gantt,'30')
 
 source('pref.trajectories.R')
-tracks=c(sdrs,'ALL','OPT','CMAESMINRHO'); ranks=c('a','b','f','p')
+tracks=c(sdrs,'ALL','OPT','CMAESMINRHO','CMAESMINCMAX'); ranks=c('a','b','f','p')
 trainingDataSize=get.trainingDataSize(input$problems,input$dimension,tracks)
 preferenceSetSize=get.preferenceSetSize(input$problems,input$dimension,tracks,ranks)
 CDR.full=get.many.CDR(get.CDR.file_list(input$problems,input$dimension,tracks,ranks,input$timedependent),'train')
