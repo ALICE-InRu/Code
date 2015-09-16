@@ -57,7 +57,7 @@ plot.evolutionCMA.Weights <- function(evolutionCMA,timedependent=F){
 
   p=ggplot(x,aes(y=value,color=Feature,linetype=Timedependent))+
     cornerLegend(nFacets,ncol = nCol)+
-    guides(linetype = guide_legend(title.position = 'top'),
+  guides(linetype = guide_legend(title.position = 'top'),
            color=guide_legend(ncol=4,byrow=TRUE, title.vjust=0.25,
                               title.theme = element_text(size=11, face="bold", angle = 90)))+
     ggplotColor('Feature',length(levels(x$Feature)))+

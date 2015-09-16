@@ -35,6 +35,9 @@ redoPlot=T;
 dpi=300
 #extension='pdf' # because if smooth is true eps doesn't work
 
+rhoLabel=expression("Deviation from optimality," * ~ rho * ~ " (%)")
+bksLabel=expression("Deviation from best known solution," * ~ rho * ~ " (%)")
+
 mytheme <- theme_set(theme_bw())
 mytheme <- theme_update(axis.text.y = element_blank(),
                         axis.line = element_blank(),
@@ -60,6 +63,9 @@ axisCompactX <- list(scale_x_continuous(expand=c(0,0)))
 axisCompact <- list(axisCompactX, axisCompactY)
 axisProbability <- list(axisCompactX, scale_y_continuous(limits=c(0,1), expand=c(0,0)))
 axisStep <- function(dim){ list(expand_limits(x = c(1,numericDimension(dim)))) }
+themeBoxplot <- list(xlab(NULL),ylab(rhoLabel),axisCompactY,expand_limits(y = 0),
+              # Hide all the vertical gridlines
+              theme(panel.grid.minor.x=element_blank(),panel.grid.major.x=element_blank()))
 
 #legend.justification='center',legend.position='right',legend.box = "vertical", # right
 #legend.justification = c(1, 0),legend.position = c(1, 0),legend.box = "horizontal", # lower right hand corner
@@ -117,13 +123,7 @@ pref.boxplot <- function(CDR,SDR=NULL,ColorVar,xVar='CDR',xText='CDR',tiltText=T
       ggplotFill('SDR',length(sdrs)) + guides(fill=guide_legend(nrow=2,byrow=FALSE))
   }
   p=p+facet_grid(Set~Problem,scales='free_x', space = 'free_x') +
-    ggplotColor(xText,length(unique(CDR$ColorVar))) +
-    xlab('')+ylab(rhoLabel)+
-    axisCompactY+expand_limits(y = 0)
-
-  # Hide all the vertical gridlines
-  p <- p + theme(panel.grid.minor.x=element_blank(),
-                 panel.grid.major.x=element_blank())
+    ggplotColor(xText,length(unique(CDR$ColorVar))) + themeBoxplot
 
   if(tiltText){ p=p+theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) }
   return(p)

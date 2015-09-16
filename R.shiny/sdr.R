@@ -5,13 +5,15 @@ plot.SDR <- function(SDR,type='boxplot',save=NA){
   p=ggplot(SDR,aes(fill=SDR,colour=Set))+
     ggplotColor("Data set",length(unique(SDR$Set)))+
     ggplotFill("Simple dispatching rule",length(sdrs),levels(SDR$Names))+
-    ylab(rhoLabel)+xlab('')+
+    xlab(NULL)+
     facet_wrap(ncol=2,~Problem+Dimension,scales='free_y')+
     cornerLegend(length(levels(droplevels(SDR$Problem))))
 
   p=p+switch(type,
              'boxplot'=geom_boxplot(aes(x=SDR,y=Rho)),
              'density'=geom_density(aes(x=Rho),alpha=0.25))
+
+  p <- p + themeBoxplot
 
   if(!is.na(save)){
     dir=paste(subdir,paste0(type,'Rho'),sep='/')
@@ -47,8 +49,7 @@ plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.splits,save=NA,wit
 
   p = ggplot(dat, aes(x=SDR,y=Rho,fill=BDR,color=Set))+geom_boxplot()+
     facet_wrap(~Problem+Dimension,ncol=2,scales='free_y')+
-    ylab(rhoLabel)+xlab('')+
-    ggplotColor('Data set',2)+
+    ggplotColor('Data set',2)+themeBoxplot+
     ggplotFill('Dispatching rule',3+length(bdr.splits), levels(dat$BDR))
 
   probs=length(levels(droplevels(dat$Problem)))

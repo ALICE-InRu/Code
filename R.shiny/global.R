@@ -16,8 +16,6 @@ source('myFigures.R')
 DataDir = '../../Data/'
 
 sdrs=c('SPT','LPT','LWR','MWR','RND');
-rhoLabel=expression("Deviation from optimality," * ~ rho * ~ " (%)")
-bksLabel=expression("Deviation from best known solution," * ~ rho * ~ " (%)")
 
 dataset.OPT=get.files.OPT()
 dataset.SDR=get.files.SDR()
