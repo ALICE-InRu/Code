@@ -26,6 +26,7 @@ gantt=get.gantt(input$problem,input$dimension,'MWR',10)
 plot.gantt(gantt,'30')
 
 source('pref.trajectories.R')
+input$problems=c('j.rnd','f.rnd'); input$dimension='6x5'
 tracks=c(sdrs,'ALL','OPT','CMAESMINRHO','CMAESMINCMAX'); ranks=c('a','b','f','p')
 trainingDataSize=get.trainingDataSize(input$problems,input$dimension,tracks)
 preferenceSetSize=get.preferenceSetSize(input$problems,input$dimension,tracks,ranks)
@@ -36,6 +37,19 @@ plot.preferenceSetSize(preferenceSetSize)
 plot.rhoTracksRanks(CDR.full, CDR.compare)
 if(!is.null(CDR.full))
   print(xtable(table.rhoTracksRanks(input$problem, CDR.full, SDR),rownames=F))
+
+
+ks=ks.CDR(CDR.full,'Rank',c('Problem','Dimension','Rank','Track'))
+any(ks[,grep('H:',colnames(ks))]==T); ks
+
+for(problem in input$problems){
+  CDR.full <- get.many.CDR(get.CDR.file_list(problem,input$dimension,tracks,'p',F),'train')
+  mu <- ddply(CDR.full,~Problem+Dimension+Track,summarise,Rho=mean(Rho))
+  print(arrange(mu,Problem,Dimension,Rho)$Track)
+  ks=ks.CDR(CDR.full,'Track',c('Problem','Dimension','Track'))
+  ks=melt(ks,c('Problem','Dimension'))
+  print(arrange(ks[ks$value==F,],Problem))
+}
 
 source('opt.uniqueness.R');
 all.StepwiseOptimality=get.StepwiseOptimality(input$problems,input$dimension,'OPT')
@@ -147,7 +161,7 @@ if(input$dimension=='6x5'){
   plot.CMAPREF.timedependentWeights(input$problem, input$dimension)
 
   CDR.CMA <- do.call(rbind, lapply(c('6x5','10x10'), function(dim) {
-    get.CDR.CMA(input$problems,dim,timedependent = input$timedependent) } ))
+    get.CDR.CMA(input$problems,dim) } ))
   p.tr=plot.CMABoxplot(CDR.CMA)
   if(!is.na(save)){
     fname=paste(paste0(subdir,'boxplot'),'CMAES',extension,sep='.')
@@ -157,13 +171,17 @@ if(input$dimension=='6x5'){
   stat$Problem <- factorProblem(stat,F)
   print(xtable(stat),include.rownames = F)
 
+  ks.CDR(CDR.CMA,'ObjFun',c('Problem','TrainingData','Timedependent','ObjFun'))
+  ks.CDR(CDR.CMA,'Timedependent',c('Problem','TrainingData','Timedependent','ObjFun'))
+
   CDR.CMA.orlib <- do.call(rbind, lapply(c('6x5','10x10'), function(dim){
-    get.CDR.CMA(input$problems,dim,timedependent = F, testProblems = 'ORLIB') }))
+    get.CDR.CMA(input$problems,dim,times = F, testProblems = 'ORLIB') }))
   p.orb=plot.CMABoxplot(CDR.CMA.orlib)+theme(legend.position='none')
   if(!is.na(save)){
     fname=paste(paste0(subdir,'boxplot'),'CMAES','ORLIB',extension,sep='.')
     ggsave(fname,p.orb,width = Width, height = Height.half*0.95, dpi = dpi, units = units)
   }
+  ks.CDR(CDR.CMA.orlib,'ObjFun',c('Problem','TrainingData','Timedependent','ObjFun'))
 
 }
 

@@ -167,6 +167,8 @@ get.CDR <- function(file_list,nrFeat=NULL,modelID=NULL,sets=c('train','test')){
     return(dat)
   }
 
+
+
   dat <- do.call(rbind, lapply(sets, function(set) { ldply(file_list, get.CDR1, set)} ))
   dat <- factorFromCDR(dat)
   if(!is.null(nrFeat) & !is.null(modelID)){ # otherwise whole set returned
@@ -187,6 +189,42 @@ get.CDR <- function(file_list,nrFeat=NULL,modelID=NULL,sets=c('train','test')){
 
   return(dat)
 }
+
+ks.CDR <- function(CDR,variable='Rank',variables=c('Problem','Dimension','Track','Rank'),
+                   alpha=0.05,set='train'){
+
+  CDR$Problem <- factorProblem(CDR,F)
+  if('train' %in% CDR$Set) {CDR=subset(CDR,Set==set)}
+  CDR=droplevels(CDR[,colnames(CDR) %in% c(variables,'variable','Rho','Name')])
+
+  colnames(CDR)[grep(variable,colnames(CDR))]='variable'
+  id.vars=setdiff(variables,variable)
+
+  vars = levels(factor(CDR$variable))
+  y=tidyr::spread(CDR,variable,'Rho')
+  y=y[rowSums(is.na(y))==0,]
+  nrow(y)
+
+  ks2 <- function(i,j){
+    suppressWarnings(
+      ks <- ddply(y,id.vars,
+                  function(x){
+                    ks.test2(x[,vars[i]], x[,vars[j]])
+                    }))
+    colnames(ks)[ncol(ks)]=paste('H:',vars[i],'!=',vars[j])
+    return(ks)
+  }
+
+  ks=ks2(1,2)
+  if(length(vars)>2){
+    comb=as.data.frame(t(combn(length(vars),2)))
+    for(k in 2:nrow(comb)){
+      ks = join(ks,ks2(comb[k,1],comb[k,2]),id.vars)
+    }
+  }
+  return(ks)
+}
+
 
 get.prefWeights <- function(model,asMatrix=F){
   m=regexpr("(?<Problem>[jf].[a-z0-9]+).(?<Dimension>[0-9]+x[0-9]+).",model,perl=T)
