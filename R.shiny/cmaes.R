@@ -161,23 +161,3 @@ plot.CMABoxplot <- function(CDR,SDR=NULL){
       facet_wrap(~Problem+Set,scales='free')+ylab(bksLabel)
   }
 }
-
-
-CDR.CMA.ks <- function(CDR,variable='ObjFun',alpha=0.05){
-  if('train' %in% CDR$Set) {CDR=subset(CDR,Set=='train')}
-  CDR$Makespan=NULL
-  CDR$Problem <- factorProblem(CDR,F)
-  colnames(CDR)[grep(variable,colnames(CDR))]='variable'
-
-  id.vars=setdiff(c('Problem','TrainingData','Timedependent','ObjFun'),variable)
-
-  vars = levels(factor(CDR$variable))
-  y=tidyr::spread(CDR,variable,'Rho')
-  y=y[rowSums(is.na(y))==0,]
-  suppressWarnings(
-  ks <- ddply(y,id.vars,
-                  function(x){
-                    ks.test2(x[,vars[1]], x[,vars[2]])}))
-  colnames(ks)[4]='H'
-  return(ks)
-}

@@ -136,3 +136,4 @@ stat.trainingDataSize <- function(trainingDataSize){
   mdat=ddply(trainingDataSize,~Problem+Track,function(x) sum(x$V1))
   dcast(mdat,Track~Problem,sum,value.var = 'V1')
 }
+

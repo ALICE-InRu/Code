@@ -24,7 +24,9 @@ mainPalette <- function(n) {
   } else if (n>9) {
     palette = getPalette(n)
   } else {
+    if(colorPalette=='Greys'){n=n+1}
     palette = brewer.pal(n, colorPalette)
+    if(colorPalette=='Greys'){palette=palette[2:n]}
   }
   return(palette)
 }
