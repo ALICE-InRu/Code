@@ -57,7 +57,7 @@ get.files.TRDAT <- function(problems,dim,tracks,rank='p',useDiff=F,Global=F){
   fileEnd = paste0(ifelse(Global,'Global','Local'),fileEnd,'.csv')
 
   ix = tracks=='ALL'
-  if(any(ix)){ tracks=c(tracks[-ix],paste(c('OPT','RND',sdrs))) }
+  if(any(ix)){ tracks=c(tracks[-ix],paste(c('OPT','RND',sdrs,'CMAESMINRHO','CMAESMINCMAX'))) }
   ix=substr(tracks,1,2)=='IL'
   if(any(ix)){
     m=regexpr('IL(?<Iter>[0-9]+)(?<Track>[A-Z]+)',tracks[ix],perl=T)
