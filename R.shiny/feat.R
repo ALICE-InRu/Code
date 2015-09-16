@@ -85,7 +85,7 @@ plot.StepwiseEvolution <- function(problem,dim,save=NA){
     geom_line(aes(y=mu),size=1)+
     facet_wrap(~Feature,ncol = 4, scales = 'free_y')+
     xlab('Step')+
-    ggplotColor(name='Trajectory',num=length(unique(stat$Track)))+
+    ggplotColor(name='Track',num=length(unique(stat$Track)))+
     axisStep(dim)+axisCompact
 
   txt=expression('Evolution of scaled feature ' * ~ tilde(bold(phi))[i])
