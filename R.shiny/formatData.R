@@ -68,7 +68,7 @@ factorTrack <- function(x){
   if(!isDf){ x=data.frame(Track=x) }
   x$Track = as.character(x$Track)
 
-  lvs=c(sdrs,'OPT','ALL')
+  lvs=c(sdrs,'OPT')
   x$Extended=grepl('EXT',x$Track)
   ix=grepl('EXT', x$Track)
   if(any(ix)){ x$Track[ix]=substr(x$Track[ix],1,stringr::str_length(x$Track[ix])-3) }
@@ -106,6 +106,7 @@ factorTrack <- function(x){
       lvs=c(lvs,'ES.Cmax')
     }
   }
+  lvs=c(lvs,'ALL')
   x$Track=factor(x$Track, levels=lvs)
   x=droplevels(x)
   if(!isDf) return(levels(x$Track))
