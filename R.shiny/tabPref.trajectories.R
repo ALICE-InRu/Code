@@ -18,7 +18,7 @@ output$tabPref.trajectories <- renderUI({
       box(title='Boxplot', width=12,
           plotOutput('plot.rhoTracksRanks', height=500),
           checkboxInput('plotSDR','Display the trajectories the models are based on (white).', T)),
-      box(title='Summary for Rho', width=9,
+      box(title='Summary for Rho', width=12,
           dataTableOutput('table.rhoTracksRanks'))
     )
   )
@@ -56,18 +56,7 @@ rhoTracksRanks <- reactive({ subset(all.rhoTracksRanks(),
 
 comparison <- reactive({
   if(!input$plotSDR) return(NULL)
-  SDR=SDR()
-  if(any(grepl('ES.rho',rhoTracksRanks()$Track))){
-    CMA <- get.CDR.CMA(input$problem, input$dimension, F, 'MinimumRho')
-    CMA$SDR = 'ES.rho'
-    SDR <- rbind(SDR,CMA[,names(CMA) %in% names(SDR)])
-  }
-  if(any(grepl('ES.Cmax',rhoTracksRanks()$Track))){
-    CMA <- get.CDR.CMA(input$problem, input$dimension, F, 'MinimumMakespan')
-    CMA$SDR = 'ES.Cmax'
-    SDR <- rbind(SDR,CMA[,names(CMA) %in% names(SDR)])
-  }
-  return(SDR)
+  get.CDRTracksRanksComparison(input$problem,input$dimension,input$plotTracks)
 })
 
 output$plot.rhoTracksRanks <- renderPlot({

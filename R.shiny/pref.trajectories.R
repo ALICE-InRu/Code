@@ -82,11 +82,26 @@ joinRhoSDR <- function(rhoTracksRanks,SDR){
   return(rhoTracksRanks)
 }
 
-plot.rhoTracksRanks <- function(rhoTracksRanks,SDR=NULL){
+get.CDRTracksRanksComparison <- function(problems,dim,tracks){
+  SDR=subset(dataset.SDR,Problem %in% problems & Dimension==dim & SDR%in%tracks)
+  if(any(grepl('ES.rho|CMAESMINRHO',tracks))){
+      CMA <- get.CDR.CMA(problems, dim, F, 'MinimumRho')
+      CMA$SDR = 'ES.rho'
+      SDR <- rbind(SDR,CMA[,names(CMA) %in% names(SDR)])
+  }
+  if(any(grepl('ES.Cmax|CMAESMINCMAX',tracks))){
+    CMA <- get.CDR.CMA(problems, dim, F, 'MinimumMakespan')
+    CMA$SDR = 'ES.Cmax'
+    SDR <- rbind(SDR,CMA[,names(CMA) %in% names(SDR)])
+  }
+  return(SDR)
+}
+
+plot.rhoTracksRanks <- function(rhoTracksRanks,CDR=NULL){
 
   if(is.null(rhoTracksRanks)){ return(NULL) }
-  #pref.boxplot(rhoTracksRanks,all.dataset.SDR,'Rank','Track',xText = 'Ranking')
-  rhoTracksRanks <- joinRhoSDR(rhoTracksRanks,SDR)
+
+  rhoTracksRanks <- joinRhoSDR(rhoTracksRanks,CDR)
   rhoTracksRanks$Rank <- factorRank(rhoTracksRanks$Rank,F)
   rhoTracksRanks <- factorTrack(rhoTracksRanks)
   rhoTracksRanks$Problem <- factorProblem(rhoTracksRanks,F)
