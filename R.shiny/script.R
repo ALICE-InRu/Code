@@ -25,8 +25,8 @@ source('gantt.R')
 gantt=get.gantt(input$problem,input$dimension,'MWR',10)
 plot.gantt(gantt,'30')
 
-source('pref.trajectories.R')
-input$problems=c('j.rnd','f.rnd'); input$dimension='6x5'
+source('pref.trajectories.R'); source('cmaes.R')
+input$dimension='6x5'
 tracks=c(sdrs,'ALL','OPT','CMAESMINRHO','CMAESMINCMAX'); ranks=c('a','b','f','p')
 trainingDataSize=get.trainingDataSize(input$problems,input$dimension,tracks)
 preferenceSetSize=get.preferenceSetSize(input$problems,input$dimension,tracks,ranks)
