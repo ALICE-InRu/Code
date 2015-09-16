@@ -42,7 +42,10 @@ plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.splits,save=NA,wit
   dat = rbind(SDR,BDR[,names(SDR)])
   dat <- subset(dat, PID <= 500)
 
-  mdat <- ddply(dat,~Problem+Dimension+BDR,function(x) summary(x$Rho))
+  mdat <- ddply(dat,~Problem+Dimension+BDR+SDR,function(x) summary(x$Rho))
+  mdat$Avg <- round(mdat$Mean,0)
+  mdat <- arrange(mdat,Avg,BDR)
+  dat$SDR <- factor(dat$SDR, levels=unique(mdat$SDR))
   print(mdat)
 
   p = ggplot(dat, aes(x=SDR,y=Rho,fill=BDR,color=Set))+geom_boxplot()+
@@ -53,7 +56,7 @@ plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.splits,save=NA,wit
 
   probs=length(levels(droplevels(dat$Problem)))
   if(probs==1){
-    p <- p + themeVerticalLegend
+    p <- p + themeVerticalLegend + guides(color=guide_legend(nrow=1))
   } else {
     p <- p + cornerLegend(probs)
   }
