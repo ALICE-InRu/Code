@@ -6,14 +6,13 @@ plot.SDR <- function(SDR,type='boxplot',save=NA){
     ggplotColor("Data set",length(unique(SDR$Set)))+
     ggplotFill("Simple dispatching rule",length(sdrs),levels(SDR$Names))+
     xlab(NULL)+
-    facet_wrap(ncol=2,~Problem+Dimension,scales='free_y')+
-    cornerLegend(length(levels(droplevels(SDR$Problem))))
+    facet_wrap(ncol=2,~Problem+Dimension,scales='free_y')
 
   p=p+switch(type,
              'boxplot'=geom_boxplot(aes(x=SDR,y=Rho)),
              'density'=geom_density(aes(x=Rho),alpha=0.25))
 
-  p <- p + themeBoxplot
+  p <- p + themeBoxplot + cornerLegend(length(levels(droplevels(SDR$Problem))))
 
   if(!is.na(save)){
     dir=paste(subdir,paste0(type,'Rho'),sep='/')
