@@ -137,3 +137,30 @@ stat.trainingDataSize <- function(trainingDataSize){
   dcast(mdat,Track~Problem,sum,value.var = 'V1')
 }
 
+compare.Baseline <- function(tracks,CDR.full,CDR.compare,rank='p',ReportBetter=T){
+  tracks <- setdiff(tracks,c('OPT','ALL'))
+  tracks <- factorTrack(tracks)
+  CDR.full <- subset(CDR.full,Rank==rank)
+  compare1 <- function(track){
+    CDR.f <- subset(CDR.full,Track==track);
+    CDR.c <- subset(CDR.compare,SDR==track);
+    vars=c('Name','Problem','Dimension','Rho')
+    CDR=merge(CDR.f[,vars],CDR.c[,vars],by=vars[1:3],suffixes = c('Track','SDR'))
+    CDR=melt(CDR,vars[1:3],value.name = 'Rho')
+    if(ReportBetter){
+      x=better.CDR(CDR,'variable',c('Problem','Dimension','variable'),ID = track)
+    } else {
+      x=ks.CDR(CDR,'variable',c('Problem','Dimension','variable'))
+    }
+    colnames(x)[3]=track
+    return(x)
+  }
+
+  ks <- compare1(tracks[1])
+  for(track in tracks[2:length(tracks)]){
+    ks <- join(ks,compare1(track),by=c('Problem','Dimension'))
+  }
+
+  return(ks)
+}
+

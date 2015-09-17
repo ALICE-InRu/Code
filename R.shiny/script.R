@@ -40,7 +40,6 @@ if(!is.null(CDR.full))
 
 ks <- compare.Baseline(tracks,CDR.full,CDR.compare)
 
-
 ks=ks.CDR(CDR.full,'Rank',c('Problem','Dimension','Rank','Track'))
 any(ks[,grep('H:',colnames(ks))]==T); ks
 
