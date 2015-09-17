@@ -19,7 +19,9 @@ print(xtable(dataset.diff$Split), include.rownames = FALSE)
 print(xtable(splitSDR(dataset.diff$Easy)))# first problem
 print(xtable(splitSDR(dataset.diff$Easy)))# first problem
 plot.SDR(SDR,'boxplot', save)
-plot.BDR(input$dimension,input$problem,'SPT','MWR',c(10,15,40),save,F)
+plot.BDR('10x10','j.rnd','SPT','MWR',c(10,15,20,30,40),save,F)
+BDR <- get.BDR('10x10','j.rnd','SPT','MWR',c(10,15,20,30,40),F)
+ddply(BDR,~Problem+Dimension+BDR+SDR+Set,function(x) summary(x$Rho))
 
 source('gantt.R')
 gantt=get.gantt(input$problem,input$dimension,'MWR',10)
@@ -37,6 +39,8 @@ plot.preferenceSetSize(preferenceSetSize)
 plot.rhoTracksRanks(CDR.full, CDR.compare)
 if(!is.null(CDR.full))
   print(xtable(table.rhoTracksRanks(input$problem, CDR.full, SDR),rownames=F))
+
+ks <- compare.Baseline(tracks,CDR.full,CDR.compare)
 
 
 ks=ks.CDR(CDR.full,'Rank',c('Problem','Dimension','Rank','Track'))

@@ -12,11 +12,10 @@ output$tabBDR <- renderUI({
   dashboardBody(
     fluidRow(
       box(title='Settings',
-          selectInput("bdr.firstSDR", "First SDR", choices = c('SPT','LPT','MWR','LWR')),
-          selectInput("bdr.secSDR", "Second SDR", choices = c('MWR','LWR','SPT','LPT')),
-          sliderInput("bdr.split", "Cut off point:", min=0, max=100, value=40),
-          helpText('Currently only applicable for 10x10',
-                   'and the current default settings.')
+          selectInput("bdr.firstSDR", "First SDR", choices = c('SPT')),
+          selectInput("bdr.secSDR", "Second SDR", choices = c('MWR')),
+          sliderInput("bdr.split", "Cut off point:", min=0, max=100, value=40, step = 5),
+          helpText('Currently only applicable for 10x10')
       ),
       box(title='Plot', plotOutput("plot.BDR"))
     )
@@ -65,7 +64,7 @@ output$plot.SDR <- renderPlot({
 
 output$plot.BDR <- renderPlot({
 
-  p=plot.BDR(input$dimension,input$problems,input$bdr.firstSDR,input$bdr.secSDR,input$bdr.split,input$save)
+  p=plot.BDR('10x10',input$problems,input$bdr.firstSDR,input$bdr.secSDR,input$bdr.split,input$save)
   print(p)
 
 }, height="auto")

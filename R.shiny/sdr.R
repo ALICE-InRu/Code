@@ -29,12 +29,28 @@ plot.SDR <- function(SDR,type='boxplot',save=NA){
   return(p)
 }
 
-plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.splits,save=NA,withRND=T){
+get.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.splits,fancyFactor=T){
+  get.BDR1 <- function(split=40){
+    files=list.files(paste0(DataDir,'BDR'),paste(paste0('(',paste(problems,collapse='|'),')'),dim,'(train|test)','csv',sep='.'))
+    BDR <- get.files(paste0(DataDir,'BDR'),files)
+    BDR = factorFromName(BDR)
+    BDR$SDR='BDR'
+    BDR <- subset(BDR, BDR == interaction(bdr.firstSDR,bdr.secSDR,split))
+    if(nrow(BDR)<1) return(NULL)
+    if(fancyFactor){
+      BDR$BDR=paste(bdr.firstSDR,'(first',split,'%),',bdr.secSDR,'(last',100-split,'%)')
+    }
+    BDR$Rho=factorRho(BDR)
+    BDR = subset(BDR,!is.na(Rho))
+    if(nrow(BDR)>1) return(BDR)
+    return(NULL)
+  }
+  BDR=do.call(rbind, lapply(bdr.splits, get.BDR1 ))
+}
 
-  BDR=do.call(rbind, lapply(bdr.splits, function(bdr.split){
-    get.BDR(dim, problems, bdr.firstSDR, bdr.secSDR, bdr.split)
-  }))
+plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.splits,save=NA,withRND=F){
 
+  BDR <- get.BDR(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.splits)
   if(is.null(BDR)) return()
   baseline = c(bdr.firstSDR,bdr.secSDR)
   if(withRND) {baseline=c(baseline,'RND') }
@@ -48,7 +64,6 @@ plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.splits,save=NA,wit
   mdat$Avg <- round(mdat$Mean,0)
   mdat <- arrange(mdat,Avg,BDR)
   dat$SDR <- factor(dat$SDR, levels=unique(mdat$SDR))
-  print(mdat)
 
   p = ggplot(dat, aes(x=SDR,y=Rho,fill=BDR,color=Set))+geom_boxplot()+
     facet_wrap(~Problem+Dimension,ncol=2,scales='free_y')+
@@ -115,18 +130,4 @@ splitSDR <- function(dat,problem,dim){
     }
   }
   return(as.data.frame(m))
-}
-
-get.BDR <- function(dim,problems,firstSDR='SPT',secSDR='MWR',split=40){
-  files=list.files(paste0(DataDir,'BDR'),paste(paste0('(',paste(problems,collapse='|'),')'),dim,'(train|test)','csv',sep='.'))
-  BDR <- get.files(paste0(DataDir,'BDR'),files)
-  BDR = factorFromName(BDR)
-  BDR$SDR='BDR'
-  BDR <- subset(BDR, BDR == interaction(firstSDR,secSDR,split))
-  if(nrow(BDR)<1) return(NULL)
-  BDR$BDR=paste(firstSDR,'(first',split,'%),',secSDR,'(last',100-split,'%)')
-  BDR$Rho=factorRho(BDR)
-  BDR = subset(BDR,!is.na(Rho))
-  if(nrow(BDR)>1) return(BDR)
-  return(NULL)
 }
