@@ -19,7 +19,7 @@ print(xtable(dataset.diff$Split), include.rownames = FALSE)
 print(xtable(splitSDR(dataset.diff$Easy)))# first problem
 print(xtable(splitSDR(dataset.diff$Easy)))# first problem
 plot.SDR(SDR,'boxplot', save)
-plot.BDR('10x10','j.rnd','SPT','MWR',c(10,15,20,30,40),save,F)
+plot.BDR('10x10','j.rnd','SPT','MWR',c(10,15,20,30,40),NA,F)
 BDR <- get.BDR('10x10','j.rnd','SPT','MWR',c(10,15,20,30,40),F)
 ddply(BDR,~Problem+Dimension+BDR+SDR+Set,function(x) summary(x$Rho))
 

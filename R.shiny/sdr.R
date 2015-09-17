@@ -37,9 +37,8 @@ get.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.splits,fancyFactor=
     BDR$SDR='BDR'
     BDR <- subset(BDR, BDR == interaction(bdr.firstSDR,bdr.secSDR,split))
     if(nrow(BDR)<1) return(NULL)
-    if(fancyFactor){
-      BDR$BDR=paste(bdr.firstSDR,'(first',split,'%),',bdr.secSDR,'(last',100-split,'%)')
-    }
+    BDR$BDR.lbl=paste(bdr.firstSDR,'(first',split,'%),',bdr.secSDR,'(last',100-split,'%)')
+    BDR$BDR=interaction(bdr.firstSDR,bdr.secSDR,split)
     BDR$Rho=factorRho(BDR)
     BDR = subset(BDR,!is.na(Rho))
     if(nrow(BDR)>1) return(BDR)
@@ -48,37 +47,38 @@ get.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.splits,fancyFactor=
   BDR=do.call(rbind, lapply(bdr.splits, get.BDR1 ))
 }
 
-plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.splits,save=NA,withRND=F){
+plot.BDR <- function(dim,problem,bdr.firstSDR,bdr.secSDR,bdr.splits,save=NA,withRND=F,BDR=NULL){
 
-  BDR <- get.BDR(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.splits)
+  if(is.null(BDR)){
+    BDR <- get.BDR(dim,problem,bdr.firstSDR,bdr.secSDR,bdr.splits)
+  } else {
+    BDR= subset(BDR,BDR==paste(bdr.firstSDR,bdr.secSDR,bdr.split,sep='.'))
+  }
+
   if(is.null(BDR)) return()
   baseline = c(bdr.firstSDR,bdr.secSDR)
   if(withRND) {baseline=c(baseline,'RND') }
   SDR=subset(dataset.SDR, (SDR %in% baseline)
              & Dimension %in% BDR$Dimension & Problem %in% BDR$Problem & Set %in% BDR$Set)
-  SDR$BDR=factorSDR(SDR$SDR,F)
+  SDR$BDR=factorSDR(SDR$SDR)
+  SDR$BDR.lbl=factorSDR(SDR$SDR,F)
   dat = rbind(SDR,BDR[,names(SDR)])
   dat <- subset(dat, PID <= 500)
+  dat <- droplevels(dat)
 
   mdat <- ddply(dat,~Problem+Dimension+BDR+SDR,function(x) summary(x$Rho))
   if(mdat[grep(bdr.firstSDR,mdat$SDR),'Mean']<mdat[grep(bdr.secSDR,mdat$SDR),'Mean']){
     lvs = c(bdr.firstSDR,'BDR',bdr.secSDR)
   } else {
-    lvs = c(bdr.firstSDR,'BDR',bdr.secSDR)
+    lvs = c(bdr.secSDR,'BDR',bdr.firstSDR)
   }
   dat$SDR <- factor(dat$SDR, levels=lvs)
 
-  p = ggplot(dat, aes(x=SDR,y=Rho,fill=BDR,color=Set))+geom_boxplot()+
+  p = ggplot(dat, aes(x=SDR,y=Rho,fill=BDR.lbl,color=Set))+geom_boxplot()+
     facet_wrap(~Problem+Dimension,ncol=2,scales='free_y')+
     ggplotColor('Data set',2)+themeBoxplot+
-    ggplotFill('Dispatching rule',3+length(bdr.splits), levels(dat$BDR))
-
-  probs=length(levels(droplevels(dat$Problem)))
-  if(probs==1){
-    p <- p + themeVerticalLegend + guides(color=guide_legend(nrow=1))
-  } else {
-    p <- p + cornerLegend(probs)
-  }
+    ggplotFill('Dispatching rule',3+length(bdr.splits), levels(dat$BDR.lbl))+
+    themeVerticalLegend + guides(color=guide_legend(nrow=1))
 
   if(!is.na(save)){
     fname=paste0(subdir,paste('boxplotRho.BDR',dim,extension,sep='.'))
@@ -95,9 +95,17 @@ plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.splits,save=NA,wit
 gif.BDR <- function(problem='j.rnd',dim='10x10',bdr.firstSDR='SPT',bdr.secSDR='MWR'){
   ## save images and convert them to a single GIF
 
+  bdr.splits=c(seq(0,numericDimension(dim),5))
+  BDR <- get.BDR(dim,problem,bdr.firstSDR,bdr.secSDR,bdr.splits)
+  ymax = max(BDR$Rho)
+
   #function to iterate over all dispatches
   BDR.animate <- function(splits) {
-    lapply(splits, function(split) { print(plot.BDR (dim,problems,bdr.firstSDR,bdr.secSDR,split))
+    lapply(splits, function(split) {
+      BDR1 <- subset(BDR,BDR==paste(bdr.firstSDR,bdr.secSDR,split,sep='.'))
+      p<-plot.BDR(dim,problem,bdr.firstSDR,bdr.secSDR,split,BDR=BDR1)
+      p<-p+expand_limits(y = ymax)
+      print(p)
     })
   }
 
@@ -105,9 +113,7 @@ gif.BDR <- function(problem='j.rnd',dim='10x10',bdr.firstSDR='SPT',bdr.secSDR='M
   library(animation)
   #ani.options(loop = FALSE) # doesn't seem to work!
 
-  steps=c(seq(0,numericDimension(dim),5))
-
-  saveGIF(BDR.animate(steps), movie.name='animate.gif', ani.width = 600, ani.height = 250, nmax=length(steps))
+  saveGIF(BDR.animate(bdr.splits), movie.name='animate.gif', ani.width = 600, ani.height = 250, nmax=length(bdr.splits))
   file.copy(from = 'animate.gif', to = paste(subdir,paste('animate',problem,dim,'BDR','gif',sep='.'),sep='/'))
   file.remove('animate.gif')
 }

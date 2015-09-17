@@ -62,9 +62,15 @@ output$plot.SDR <- renderPlot({
 
 }, height="auto")
 
+BDR <- reactive({
+  withProgress(message = 'Loading BDR data', value = 0, {
+    get.BDR('10x10','j.rnd',input$bdr.firstSDR,input$bdr.secSDR,seq(0,numericDimension('10x10'),by=5))
+  })
+})
+
 output$plot.BDR <- renderPlot({
 
-  p=plot.BDR('10x10',input$problems,input$bdr.firstSDR,input$bdr.secSDR,input$bdr.split,input$save)
+  p=plot.BDR('10x10','j.rnd',input$bdr.firstSDR,input$bdr.secSDR,input$bdr.split,BDR = BDR())
   print(p)
 
 }, height="auto")
