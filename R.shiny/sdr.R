@@ -61,9 +61,12 @@ plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.splits,save=NA,wit
   dat <- subset(dat, PID <= 500)
 
   mdat <- ddply(dat,~Problem+Dimension+BDR+SDR,function(x) summary(x$Rho))
-  mdat$Avg <- round(mdat$Mean,0)
-  mdat <- arrange(mdat,Avg,BDR)
-  dat$SDR <- factor(dat$SDR, levels=unique(mdat$SDR))
+  if(mdat[grep(bdr.firstSDR,mdat$SDR),'Mean']<mdat[grep(bdr.secSDR,mdat$SDR),'Mean']){
+    lvs = c(bdr.firstSDR,'BDR',bdr.secSDR)
+  } else {
+    lvs = c(bdr.firstSDR,'BDR',bdr.secSDR)
+  }
+  dat$SDR <- factor(dat$SDR, levels=lvs)
 
   p = ggplot(dat, aes(x=SDR,y=Rho,fill=BDR,color=Set))+geom_boxplot()+
     facet_wrap(~Problem+Dimension,ncol=2,scales='free_y')+
@@ -87,6 +90,28 @@ plot.BDR <- function(dim,problems,bdr.firstSDR,bdr.secSDR,bdr.splits,save=NA,wit
 
   return(p)
 }
+
+
+gif.BDR <- function(problem='j.rnd',dim='10x10',bdr.firstSDR='SPT',bdr.secSDR='MWR'){
+  ## save images and convert them to a single GIF
+
+  #function to iterate over all dispatches
+  BDR.animate <- function(splits) {
+    lapply(splits, function(split) { print(plot.BDR (dim,problems,bdr.firstSDR,bdr.secSDR,split))
+    })
+  }
+
+  #save all iterations into one GIF
+  library(animation)
+  #ani.options(loop = FALSE) # doesn't seem to work!
+
+  steps=c(seq(0,numericDimension(dim),5))
+
+  saveGIF(BDR.animate(steps), movie.name='animate.gif', ani.width = 600, ani.height = 250, nmax=length(steps))
+  file.copy(from = 'animate.gif', to = paste(subdir,paste('animate',problem,dim,'BDR','gif',sep='.'),sep='/'))
+  file.remove('animate.gif')
+}
+
 
 get.quartiles <- function(dat){
   quartiles=ddply(dat,~Problem+Dimension, summarise, Q1 = round(quantile(Rho,.25),digits = 2), Q3 = round(quantile(Rho,.75), digits = 2))
