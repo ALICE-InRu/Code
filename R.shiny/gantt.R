@@ -23,7 +23,11 @@ plot.raw <- function(problems=c('f.rnd','f.rndn','f.jc','f.mc','f.mxc'), PID=0){
 }
 
 get.gantt <- function(problem,dim,SDR='ALL',plotPID=-1,all.trdat=NULL){
-  if(is.null(all.trdat)){ trdat <- get.files.TRDAT(problem,dim,SDR) } else { trdat=all.trdat }
+  if(is.null(all.trdat)){
+    trdat <- get.files.TRDAT(problem,dim,SDR)
+  } else {
+    trdat=subset(all.trdat,Track==SDR)
+  }
 
   if(plotPID>0){ trdat <- subset(trdat,PID==plotPID) }
   if(nrow(trdat)<1){return(NULL)}
@@ -56,7 +60,7 @@ plot.gantt <- function(gantt,step,plotPhi=F,
     theme(legend.position="none")+facet_wrap(~Problem+Dimension+Track,ncol=2)
 
   if(nrow(fdat)>0){
-    cmax = ddply(fdat,~Problem+Dimension+Track,summarise,x=max(phi.endTime),Mac=0.7)
+    cmax = ddply(fdat,~Problem+Dimension+Track,summarise,x=max(phi.endTime),Mac=0.4)
     p=p+geom_rect(aes(fill=as.factor(Job),
                       xmin=phi.startTime,xmax=phi.endTime,
                       ymin=Mac-0.4,ymax=Mac+0.4))+
@@ -109,7 +113,7 @@ plot.gantt <- function(gantt,step,plotPhi=F,
   }
 
   if(plotStep){
-    p <- p+annotate("text", x = 5, y=0.7, vjust=1, hjust=0, size=4,
+    p <- p+annotate("text", x = 5, y=0.4, vjust=1, hjust=0, size=4,
                     label = ifelse(nrow(pdat)>0,paste0("k=",step),'complete schedule'))
   }
 

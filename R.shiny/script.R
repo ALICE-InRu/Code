@@ -23,9 +23,7 @@ plot.BDR('10x10','j.rnd','SPT','MWR',c(10,15,20,30,40),NA,F)
 BDR <- get.BDR('10x10','j.rnd','SPT','MWR',c(10,15,20,30,40),F)
 ddply(BDR,~Problem+Dimension+BDR+SDR+Set,function(x) summary(x$Rho))
 
-source('gantt.R')
-gantt=get.gantt(input$problem,input$dimension,'MWR',10)
-plot.gantt(gantt,'30')
+
 
 source('pref.trajectories.R'); source('cmaes.R')
 input$dimension='6x5'
