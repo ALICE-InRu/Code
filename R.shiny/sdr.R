@@ -52,7 +52,7 @@ plot.BDR <- function(dim,problem,bdr.firstSDR,bdr.secSDR,bdr.splits,save=NA,with
   if(is.null(BDR)){
     BDR <- get.BDR(dim,problem,bdr.firstSDR,bdr.secSDR,bdr.splits)
   } else {
-    BDR= subset(BDR,BDR==paste(bdr.firstSDR,bdr.secSDR,bdr.split,sep='.'))
+    BDR = subset(BDR,BDR %in% paste(bdr.firstSDR,bdr.secSDR,bdr.splits,sep='.'))
   }
 
   if(is.null(BDR)) return()
@@ -99,7 +99,7 @@ gif.BDR <- function(problem='j.rnd',dim='10x10',bdr.firstSDR='SPT',bdr.secSDR='M
   BDR <- get.BDR(dim,problem,bdr.firstSDR,bdr.secSDR,bdr.splits)
   ymax = max(BDR$Rho)
 
-  #function to iterate over all dispatches
+  #function to iterate over all splits
   BDR.animate <- function(splits) {
     lapply(splits, function(split) {
       BDR1 <- subset(BDR,BDR==paste(bdr.firstSDR,bdr.secSDR,split,sep='.'))
