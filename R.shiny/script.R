@@ -58,9 +58,9 @@ plot.stepwiseUniqueness(all.StepwiseOptimality,input$dimension,input$smooth,save
 plot.stepwiseOptimality(all.StepwiseOptimality,input$dimension,F,input$smooth,save)
 
 source('opt.SDR.R')
-StepwiseOptimality=get.StepwiseOptimality(input$problem,input$dimension,'OPT')
-StepwiseExtremal=get.StepwiseExtremal(input$problem,input$dimension)
-p=plot.StepwiseSDR.wrtTrack(StepwiseOptimality,StepwiseExtremal,input$dimension,input$smooth,NA,onlyWrtSDR = T)
+StepwiseOptimality=get.StepwiseOptimality(input$problems,input$dimension,'OPT')
+StepwiseExtremal=get.StepwiseExtremal(input$problems,input$dimension)
+p=plot.StepwiseSDR.wrtTrack(StepwiseOptimality,StepwiseExtremal,input$dimension,F,NA,onlyWrtSDR = T)
 zoom=p+theme(legend.position="none")+xlab(NULL)+scale_linetype_manual('',values=c(2))+
   scale_x_continuous(expand = c(0,0), limits=c(0,30))+
   facet_grid(~Problem, labeller= function(variable,value){ return('Zoom') })
