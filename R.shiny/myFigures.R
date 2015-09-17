@@ -66,6 +66,9 @@ axisCompact <- list(axisCompactX, axisCompactY)
 axisProbability <- list(axisCompactX, scale_y_continuous(limits=c(0,1), expand=c(0,0)))
 axisStep <- function(dim){ list(expand_limits(x = c(1,numericDimension(dim)))) }
 themeBoxplot <- list(xlab(NULL),ylab(rhoLabel),axisCompactY,expand_limits(y = 0),
+                     guides(fill = guide_legend(order=1),
+                            color = guide_legend(order=2),
+                            linetype = guide_legend(order=3)),
               # Hide all the vertical gridlines
               theme(panel.grid.minor.x=element_blank(),panel.grid.major.x=element_blank()))
 
