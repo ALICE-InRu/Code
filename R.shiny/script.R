@@ -69,6 +69,10 @@ source('opt.bw.R')
 plot.BestWorst(input$problems,input$dimension,'OPT',save)
 plot.BestWorst(input$problem,input$dimension,'ALL',save)
 
+lapply(input$problems, function(problem){
+  print(bw.spread(problem,'10x10',orderTrack=T))
+})
+
 source('pref.exhaustive.R'); source('pref.settings.R')
 prefSummary=get.prefSummary(input$problems,input$dimension,'OPT','p',F)
 paretoFront=get.paretoFront(prefSummary)

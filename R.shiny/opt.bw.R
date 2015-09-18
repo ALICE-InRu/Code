@@ -79,3 +79,40 @@ plot.BestWorst <- function(problems,dim,tracks,save=NA,stat=NULL){
 
   return(p)
 }
+
+
+bw.spread <- function(problem,dim,variable='best.mu',orderTrack=F){
+  bw <- get.BestWorst(problem,dim)
+  if(is.null(bw)) return(NULL)
+  bw$Problem <- factorProblem(bw,F)
+  bw$Followed <- factor(bw$Followed, levels=c(F,T), labels=c('false','true'))
+  colnames(bw)[grepl(variable,colnames(bw))]='variable'
+  bw=bw[,grep('mu',colnames(bw),invert = T)]
+  bw=tidyr::spread(bw,Followed,variable)
+  bw=ddply(bw,~Problem+Track,summarise,
+           TotalSpread=sum(true-false,na.rm = T),
+           MeanSpread=mean(true-false,na.rm = T))
+
+  bw=factorTrack(bw); bw$Extended=NULL
+  tracks=setdiff(levels(bw$Track),'OPT')
+  if(length(tracks)==0) return(NULL)
+  tracks[grep('ES.rho',tracks)]='CMAESMINRHO'
+  tracks[grep('ES.Cmax',tracks)]='CMAESMINCMAX'
+  CDR.full <- get.many.CDR(get.CDR.file_list(problem,dim,tracks,'p',F),'train')
+  CDR.full <- ddply(CDR.full,~Problem+Track,summarise,Rho=mean(Rho))
+  CDR.compare <- subset(get.CDRTracksRanksComparison(problem,dim,tracks),Set=='train')
+  CDR.compare <- ddply(CDR.compare,~Problem+SDR,summarise,Rho=mean(Rho))
+  colnames(CDR.compare)[2]='Track'
+  CDR <- merge(CDR.full,CDR.compare,by=c('Problem','Track'),type='inner',suffixes = c('Track','SDR'))
+  CDR$TrackBoost <- CDR$RhoSDR-CDR$RhoTrack
+  bw=merge(bw,CDR[,c('Problem','Track','TrackBoost')])
+
+  if(orderTrack){
+    bw$TotalSpread = bw$Track[order(bw$TotalSpread,decreasing = T)]
+    bw$MeanSpread = bw$Track[order(bw$MeanSpread,decreasing = T)]
+    bw$TrackBoost = bw$Track[order(bw$TrackBoost,decreasing = T)]
+    bw$Track=NULL
+  }
+
+  return(bw)
+}
