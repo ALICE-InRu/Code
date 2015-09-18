@@ -1,12 +1,10 @@
 get.BestWorst <- function(problems,dim){
-
   stats=NULL
   for(problem in problems){
     fname = paste(paste0(DataDir,'Stepwise/bw'),problem,dim,'csv',sep='.')
     if(file.exists(fname)){
       stat=read_csv(fname)
     } else {
-
       trdat=get.files.TRDAT(problem,dim,'ALL')
       if(!is.null(trdat)){
         trdat=ddply(trdat,~Track,transform,Followed=(Track!='OPT' & Followed==T) | (Track=='OPT' & Rho==0))
@@ -27,14 +25,19 @@ get.BestWorst <- function(problems,dim){
   return(stats)
 }
 
-plot.BestWorst <- function(problems,dim,track,save=NA){
+plot.BestWorst <- function(problems,dim,tracks,save=NA,stat=NULL){
+  if(any(grepl('ALL',tracks))|is.null(tracks)){ tracks=union(tracks,c(sdrs,'OPT'))}
 
-  stat=get.BestWorst(problems,dim)
+  if(is.null(stat)){
+    stat=get.BestWorst(problems,dim)
+  }
+  stat <- subset(stat,Track %in% tracks)
   stat$Problem <- factorProblem(stat,F)
   if(is.null(stat)){return(NULL)}
 
-  if(track=='OPT')
+  if(tracks=='OPT')
   {
+    track='OPT'
     stat=subset(stat,Track=='OPT' & Followed==F)
 
     stat$Shop=factor(substr(stat$Problem,1,1),levels=c('j','f'),labels=c('JSP','FSP'))
@@ -50,11 +53,12 @@ plot.BestWorst <- function(problems,dim,track,save=NA){
     p=p+geom_line(aes(y=mu,color=Problem),size=1,linetype='dashed')
 
   } else {
+    track='ALL'
     stat=factorTrack(stat)
 
     p = ggplot(subset(stat,Followed==F), aes(x=Step))+
-      ggplotColor(name='Trajectory',num=length(levels(stat$Track)))+
-      ggplotFill(name='Trajectory',num=length(levels(stat$Track)))+
+      ggplotColor(name=expression(pi*~' '),num=length(levels(stat$Track)))+
+      ggplotFill(name=expression(pi*~' '),num=length(levels(stat$Track)))+
       facet_wrap(~Problem,ncol=3,scales= 'free_y')+
       axisStep(dim)+axisCompact
 
