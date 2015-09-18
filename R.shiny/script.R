@@ -6,7 +6,7 @@ input=list(dimension='10x10',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd'
 #input=list(dimension='6x5',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc','j.rnd_pj1doubled','j.rnd_p1mdoubled'))
 SDR=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension)
 input$timedependent=F
-input$smooth=T
+input$smooth=F
 input$testProblems='ORLIB'
 
 source('sdr.R')
@@ -38,9 +38,9 @@ plot.rhoTracksRanks(CDR.full, CDR.compare)
 if(!is.null(CDR.full))
   print(xtable(table.rhoTracksRanks(input$problem, CDR.full, SDR),rownames=F))
 
-ks <- compare.Baseline(tracks,CDR.full,CDR.compare)
+ks <- compare.Baseline(tracks,subset(CDR.full,Rank=='p'),CDR.compare)
 
-ks=ks.CDR(CDR.full,'Rank',c('Problem','Dimension','Rank','Track'))
+ks=ks.CDR(CDR.full,'Rank',c('Problem','Dimension','Track'))
 any(ks[,grep('H:',colnames(ks))]==T); ks
 
 for(problem in input$problems){

@@ -189,21 +189,18 @@ get.CDR <- function(file_list,nrFeat=NULL,modelID=NULL,sets=c('train','test')){
 }
 
 format.CDR.comparison <- function(CDR,variable,id.vars,set){
-  variables=union(id.vars,variable)
-
   CDR$Problem <- factorProblem(CDR,F)
   if('train' %in% CDR$Set) {CDR=subset(CDR,Set==set)}
-  CDR=droplevels(CDR[,colnames(CDR) %in% c(id.vars,'variable','Rho','Name')])
   colnames(CDR)[grep(variable,colnames(CDR))]='variable'
-
-  y=tidyr::spread(CDR,variable,'Rho')
+  CDR=droplevels(CDR[,colnames(CDR) %in% c(id.vars,'variable','Rho','Name')])
+  y=tidyr::spread(unique(CDR),variable,'Rho')
   y=y[rowSums(is.na(y))==0,]
   return(y)
 }
 
 ks.CDR <- function(CDR,variable,id.vars,set='train'){
   id.vars=setdiff(id.vars,variable)
-  vars = levels(factor(CDR$variable))
+  vars = levels(factor(CDR[,variable]))
   y <- format.CDR.comparison(CDR,variable,id.vars,set)
   ks2 <- function(i,j){
     suppressWarnings(
