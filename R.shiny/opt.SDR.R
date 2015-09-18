@@ -103,7 +103,7 @@ plot.StepwiseSDR.wrtTrack <- function(StepwiseOptimality,StepwiseExtremal,
 
   if(onlyWrtOPT|onlyWrtSDR) {
     if(onlyWrtOPT)
-      p <- p+ylab(expression(xi^'*'[SDR]))
+      p <- p+ylab(expression(xi[SDR]^'*'))
     else
       p <- p+ylab(expression(log(xi[SDR])))
     p=p+scale_linetype_discrete(guide=F)
