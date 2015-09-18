@@ -2,8 +2,8 @@ plot.SDR <- function(SDR,type='boxplot',save=NA){
 
   SDR$Problem=factorProblem(SDR,F)
   SDR$Names=droplevels(factorSDR(SDR$SDR,F))
-  p=ggplot(SDR,aes(fill=SDR,colour=Set))+
-    ggplotColor("Data set",length(unique(SDR$Set)))+
+  p=ggplot(SDR,aes(fill=SDR,linetype=Set))+
+    scale_linetype("Data set")+
     ggplotFill("Simple dispatching rule",length(sdrs),levels(SDR$Names))+
     xlab(NULL)+
     facet_wrap(ncol=2,~Problem+Dimension,scales='free_y')
@@ -73,11 +73,11 @@ plot.BDR <- function(dim,problem,bdr.firstSDR,bdr.secSDR,bdr.splits,save=NA,with
   }
   dat$SDR <- factor(dat$SDR, levels=lvs)
 
-  p = ggplot(dat, aes(x=SDR,y=Rho,fill=BDR.lbl,color=Set))+geom_boxplot()+
+  p = ggplot(dat, aes(x=SDR,y=Rho,fill=BDR.lbl,linetype=Set))+geom_boxplot()+
     facet_wrap(~Problem+Dimension,ncol=2,scales='free_y')+
-    ggplotColor('Data set',2)+themeBoxplot+
+    scale_linetype('Data set')+
     ggplotFill('Dispatching rule',3+length(bdr.splits), levels(dat$BDR.lbl))+
-    themeVerticalLegend + guides(color=guide_legend(nrow=1))
+    themeVerticalLegend + themeBoxplot + guides(linetype=guide_legend(nrow=1))
 
   if(!is.na(save)){
     fname=paste0(subdir,paste('boxplotRho.BDR',dim,extension,sep='.'))

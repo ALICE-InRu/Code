@@ -57,7 +57,8 @@ cornerLegend <- function(n,ncol=2){
   l <- list(guides(fill = guide_legend(order=1, direction = "vertical", title.position = "top"),
                    colour = guide_legend(order=2, direction = "vertical", title.position = "top")))
   if(n%%ncol==0|n==1){ return(l) }
-    list(l, theme(legend.position = c(0.75, 1/(n*1.5)), legend.direction = "horizontal"))
+    list(l, theme(legend.position = c(0.75, 1/(n*1.5)), legend.direction = "horizontal"),
+         guides(linetype=guide_legend(ncol=1,title.position = 'top')))
 }
 mytheme <- theme_update(legend.justification='center',legend.position='bottom',legend.box = "horizontal")
 axisCompactY <- list(scale_y_continuous(expand=c(0,0)))
