@@ -4,7 +4,7 @@ output$tabOpt.bw <- renderUI({
       box(title='Following optimal trajectory',plotOutput('plot.stepwiseBestWorst.opt')),
       box(title='Following SDR trajectory',plotOutput('plot.stepwiseBestWorst.sdr'),
           selectInput("bw.tracks", "Trajectories:",
-                      c("OPT",sdrs,"ALL"), multiple = T, selected = 'ALL'),
+                      c("OPT",sdrs,"ES.rho","ES.Cmax","ALL"), multiple = T, selected = 'ALL'),
           sliderInput('bw.k',"Guideline at step k:", min=0, max=100, value=0, step=1),
           sliderInput('bw.y',"Guideline at rho:", min=0, max=100, value=0, step=1),
           helpText('Only main problem space considered.'))

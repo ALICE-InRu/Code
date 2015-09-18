@@ -26,16 +26,17 @@ get.BestWorst <- function(problems,dim){
 }
 
 plot.BestWorst <- function(problems,dim,tracks,save=NA,stat=NULL){
-  if(any(grepl('ALL',tracks))|is.null(tracks)){ tracks=union(tracks,c(sdrs,'OPT'))}
+  if(is.null(tracks)){ tracks='ALL' }
 
-  if(is.null(stat)){
-    stat=get.BestWorst(problems,dim)
+  if(is.null(stat)){ stat=get.BestWorst(problems,dim) }
+  if(!any(grepl('ALL',tracks))){
+    stat <- subset(stat,Track %in% tracks)
   }
-  stat <- subset(stat,Track %in% tracks)
+
   stat$Problem <- factorProblem(stat,F)
   if(is.null(stat)){return(NULL)}
 
-  if(tracks=='OPT')
+  if(length(tracks)==1 & tracks[1]=='OPT')
   {
     track='OPT'
     stat=subset(stat,Track=='OPT' & Followed==F)
