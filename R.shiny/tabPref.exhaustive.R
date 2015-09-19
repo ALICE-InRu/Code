@@ -38,7 +38,7 @@ output$tabPref.exhaustive <- renderUI({
 
 prefSummary <- reactive({
   withProgress(message = 'Loading exhaustive data', value = 0, {
-    get.prefSummary(input$problems,input$dimension,'OPT','p',F)
+    get.prefSummary(input$problem,input$dimension,'OPT','p',F)
   })
 })
 

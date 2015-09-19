@@ -81,7 +81,10 @@ bestPrefModel=get.bestPrefModel(paretoFront)
 plot.exhaust.paretoFront(prefSummary,paretoFront,T,save)
 plot.exhaust.acc(prefSummary,save,bestPrefModel$Summary)
 #plot.exhaust.paretoWeights(subset(prefSummary,NrFeat==1 & Problem==input$problem),rhoTxt = T)
-plot.exhaust.paretoWeights(paretoFront,save,F)
+for(problem in input$problems){
+  print(plot.exhaust.paretoWeights(subset(paretoFront,Problem==problem),'save',F))
+}
+
 plot.exhaust.bestAcc(all.StepwiseOptimality,bestPrefModel)
 plot.exhaust.bestBoxplot(bestPrefModel,SDR)
 print(table.exhaust.paretoFront(paretoFront),

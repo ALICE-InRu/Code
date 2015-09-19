@@ -13,7 +13,7 @@ table.exhaust.paretoFront = function(paretoFront,onlyPareto=F){
   return(xtable(tmp))#,include.rownames=FALSE,sanitize.text.function=function(x){x})
 }
 
-plot.exhaust.paretoWeights <- function(paretoFront,save=NA,tiltText=T,rhoTxt=F){
+plot.exhaust.paretoWeights <- function(paretoFront,save=NA,tiltText=T,rhoTxt=T){
   if(is.null(paretoFront$File)){return(NULL)}
 
   weights=NULL
@@ -33,38 +33,40 @@ plot.exhaust.paretoWeights <- function(paretoFront,save=NA,tiltText=T,rhoTxt=F){
 
   p=ggplot(mdat, aes(fill=sc.value,x=CDR,y=Feature))+
     geom_tile(color='black')+
-    scale_fill_gradient2(name='Normalised\nweights', low = scales::muted("red"), mid = "white",
+    scale_fill_gradient2(name='Scaled\nweights', low = scales::muted("red"), mid = "white",
                          high = scales::muted("blue"), midpoint = 0, space = "rgb",
                          na.value = "grey50", guide = "colourbar")+
-    facet_grid(Problem~NrFeat,scales='free_x',space='free_x',labeller = ifelse(is.na(save),'label_both','label_value'))+
-    ylab(expression('Feature'*~phi))+xlab('')
+    facet_grid(Problem~NrFeat,scales='free_x',space='free_x',
+               labeller = ifelse(is.na(save),'label_both','label_value'))+
+    ylab(expression('Feature'*~phi))+scale_y_discrete(expand = c(0,0))+
+    xlab(NULL)+scale_x_discrete(expand = c(0,0))+themeVerticalLegend
 
   if(any(mdat$Pareto.front)){
     p=p+geom_point(data=subset(mdat,Pareto.front==T),aes(label='pareto'),shape=17)
   }
   if(rhoTxt){
-    p <- p+geom_text(y=0,aes(label=paste0('Rho: ',round(Validation.Rho,0),'\n',
-                                          'Acc: ',round(Validation.Accuracy.Optimality,0),
-                                          ' / ',round(Validation.Accuracy.Classification,0))
-                             ),size=3) + expand_limits(y=-0.5)
+    txtDat <- ddply(mdat,~Problem+Dimension+NrFeat+Model+CDR,function(x) c(
+      sc.value=0,
+      Rho=round(unique(x$Validation.Rho),0),
+      AccOpt=round(unique(x$Validation.Accuracy.Optimality),0),
+      AccClass=round(unique(x$Validation.Accuracy.Classification),0)))
+    p <- p+geom_text(data=txtDat,y=-.1,size=3,aes(label=paste0('  ',Rho,'\n',AccOpt,'/',AccClass)),
+                     hjust=0) + expand_limits(y=-1)
+    p <- p + annotate("text", label = paste0('Rho:\nAcc:'), x = 1, y = -0.1, size = 3, hjust=1)
   }
-
 
   if(tiltText)
     p <- p+theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
                legend.position = 'right', legend.direction='vertical')
 
   if(!is.na(save)){
+    p <- p + ylab(NULL)
     problem = ifelse(length(levels(mdat$Problem))>1,'ALL',mdat$Problem[1])
     dim=ifelse(length(levels(mdat$Dimension))>1,'ALL',as.character(mdat$Dimension[1]))
-    fname=paste(paste0(subdir,'/pareto'),dim,'phi',problem,extension,sep='.')
-    if(save=='full')
-      ggsave(p,filename=fname,width=Width,height=Height.full,units=units,dpi=dpi)
-    else if (save=='half')
+    fname=paste(paste(subdir,problem,'pareto',sep='/'),dim,'phi',extension,sep='.')
+    if (save=='half')
       ggsave(p,filename=fname,width=Width,height=Height.half,units=units,dpi=dpi)
   }
-
-
   return(p)
 }
 
@@ -80,7 +82,7 @@ plot.exhaust.bestAcc <- function(StepwiseOptimality,bestPrefModel,save=NA){
 
   p=p0+facet_wrap(~Problem)+
     geom_line(data=bestPrefModel$Stepwise,aes(y=value,color=variable,size=Accuracy))+
-    ggplotColor("Best",2)+scale_size_discrete(range=c(0.5,1.2))+ylab('Probability of CDR being optimal')
+    ggplotColor("Best",2)+scale_size_discrete(range=c(0.5,1.2))+ylab('CDR validation accuracy (%)')
 
   if(!is.na(save)){
     fname=paste(paste(subdir,'trdat',sep='/'),'prob.moveIsOptimal',dim,'OPT','best',extension,sep='.')
@@ -129,15 +131,16 @@ plot.exhaust.acc <- function(prefSummary,save=NA,best=NULL){
   if(is.null(prefSummary)) return(NULL)
 
   p=ggplot(prefSummary,aes(y=Validation.Rho))+
-    facet_grid(~Problem, scales='free')+
+    facet_wrap(~Problem+Dimension, scales='free',nrow=1)+
     geom_point(aes(x=Validation.Accuracy.Classification,color='classification'))+
     geom_point(aes(x=Validation.Accuracy.Optimality,color='optimality'))+
     ggplotColor(name = "Mean stepwise", num=2)+
-    ylab(expression('Expected mean for'*~rho*~'(%)'))+
+    ylab(expression('Expected mean for,'*~rho*~'(%)'))+
     xlab('Validation accuracy (%)')
 
   if(!is.null(best)){
     p <- p+geom_segment(data=best,
+                        arrow = arrow(length = unit(6, "points"),type='closed',ends='both'),
                         aes(x=Validation.Accuracy.Classification,
                             xend=Validation.Accuracy.Optimality,
                             yend=Validation.Rho,linetype=variable),color='red')+
@@ -159,7 +162,7 @@ plot.exhaust.paretoFront <- function(prefSummary,paretoFront,plotAllSolutions=T,
   p=ggplot(prefSummary,aes(x=Validation.Accuracy.Optimality,
                            y=Validation.Rho,
                            color=as.factor(NrFeat)))+
-    facet_grid(~Problem,scales='free_y')
+    facet_wrap(~Problem+Dimension,scales='free',nrow=1)
 
   if(plotAllSolutions){p=p+geom_point()}
   p=p+geom_point(data=paretoFront,aes(shape=Pareto.front),size=5)
@@ -167,20 +170,21 @@ plot.exhaust.paretoFront <- function(prefSummary,paretoFront,plotAllSolutions=T,
   p=p+geom_line(data=paretoFront,size=1)+
     guides(size=FALSE)+ggplotColor('Feature count',4)+
     geom_text(data=paretoFront,aes(label=Model),color='black',size=3)+
-    xlab('Mean stepwise optimality accuracy (%)')+
-    ylab(expression('Expected mean for'*~rho*~'(%)'))+
-    guides(
-      colour = guide_legend(ncol = 2, byrow = T),
-      shape = guide_legend(ncol = 1, byrow = T)
-    ) + themeVerticalLegend
+    xlab(expression('Mean stepwise optimality accuracy,'*~ bar(xi[pi]^'*') *~'(%)'))+
+    ylab(expression('Expected mean for,'*~rho*~'(%)'))
 
   if(!is.na(save)){
     Problem=ifelse(length(levels(prefSummary$Problem))>1,'ALL',prefSummary$Problem[1])
-    fname=paste(subdir,paste('pareto',Problem,extension,sep='.'),sep='/')
+    fname=paste(subdir,paste('pareto',Problem,'png',sep='.'),sep='/')
     if(save=='full')
       ggsave(fname,p,units=units,width=Width,height=Height.full)
     else if (save=='half')
       ggsave(fname,p,units=units,width=Width,height=Height.half)
+  } else {
+    p <- p + guides(colour = guide_legend(ncol = 2, byrow = T),
+                    shape = guide_legend(ncol = 1, byrow = T)
+                    ) + themeVerticalLegend
+
   }
 
 
