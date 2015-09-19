@@ -77,10 +77,12 @@ plot.exhaust.bestAcc <- function(StepwiseOptimality,bestPrefModel,save=NA){
   StepwiseOptimality$Raw = subset(StepwiseOptimality$Raw,Problem %in% bestPrefModel$Summary$Problem)
 
   dim=ifelse(length(levels(bestPrefModel$Summary$Dimension))>1,'ALL',as.character(bestPrefModel$Summary$Dimension[1]))
+  StepwiseOptimality$Stats$Dimension=dim
+  bestPrefModel$Stepwise$Dimension=dim
 
   p0=plot.stepwiseOptimality(StepwiseOptimality,dim,T,F)
 
-  p=p0+facet_wrap(~Problem)+
+  p=p0+facet_wrap(~Problem+Dimension)+
     geom_line(data=bestPrefModel$Stepwise,aes(y=value,color=variable,size=Accuracy))+
     ggplotColor("Best",2)+scale_size_discrete(range=c(0.5,1.2))+ylab('CDR validation accuracy (%)')
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -152,8 +153,8 @@ namespace ALICE
         }
 
         public LinearModel(string distribution, string dimension, TrainingSet.Trajectory track, bool extended,
-            PreferenceSet.Ranking rank, bool timedependent, DirectoryInfo dataDir, int iter = -1,
-            string stepwiseBias = "equal", int numFeatures = 16, int modelID = 1)
+            PreferenceSet.Ranking rank, bool timedependent, DirectoryInfo dataDir,
+            int numFeatures = 16, int modelID = 1, string stepwiseBias = "equal", int iter = -1)
             : this(null, Features.Mode.Local, numFeatures, modelID, !timedependent, distribution, dimension, Model.PREF)
         {
             switch (track)
@@ -163,7 +164,7 @@ namespace ALICE
                 case TrainingSet.Trajectory.ILSUP:
                     LinearModel model;
                     Iteration = GetImitationLearningFile(out model, distribution, dimension, track, extended,
-                        dataDir.FullName, timedependent, iter);
+                        numFeatures, modelID, dataDir.FullName, timedependent, iter);
                     FileInfo = model.FileInfo;
                     LocalWeights = model.LocalWeights;
                     return;
@@ -194,14 +195,18 @@ namespace ALICE
         }
 
         private int GetImitationLearningFile(out LinearModel model, string distribution, string dimension,
-            TrainingSet.Trajectory track, bool extended, string directoryName, bool timedependent = false,
-            int iter = -1, int numFeatures = 16, int modelID = 1, string stepwiseBias = "equal")
+            TrainingSet.Trajectory track, bool extended, int numFeatures, int modelID, string directoryName, 
+            bool timedependent = false, int iter = -1, string stepwiseBias = "equal")
         {
             DirectoryInfo dir = new DirectoryInfo(String.Format(@"{0}\PREF\weights", directoryName));
 
-            string pat = String.Format("\\b(exhaust|full)\\.{0}.{1}.{2}.(OPT|IL([0-9]+){3}{4}).{5}.weights.{6}",
-                distribution, dimension, (char) PreferenceSet.Ranking.PartialPareto, track.ToString().Substring(2),
-                extended ? "EXT" : "", stepwiseBias, timedependent ? "timedependent" : "timeindependent");
+            string pat = String.Format("\\b(exhaust|full)\\.{0}.{1}.{2}.(OPT|IL([0-9]+){3}{4}{5}).{6}.weights.{7}",
+                distribution, dimension,
+                (char) PreferenceSet.Ranking.PartialPareto, track.ToString().Substring(2),
+                numFeatures < Features.LocalCount ? String.Format("_F{0}M{1}", numFeatures, modelID) : "",
+                extended ? "EXT" : "",
+                stepwiseBias,
+                timedependent ? "timedependent" : "timeindependent");
 
             Regex reg = new Regex(pat);
 

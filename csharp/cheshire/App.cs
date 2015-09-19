@@ -360,13 +360,16 @@ namespace Cheshire
 
         private void startAsyncButtonTrSet_Click(object sender, EventArgs e)
         {
+            int numFeatures = Convert.ToInt32(NumFeatures.Value);
+            int modelID = Convert.ToInt32(ModelIndex.Value);
+
             TrainingSet[] sets = (from track in Tracks.CheckedItems.Cast<string>()
                 from dim in Dimension.CheckedItems.Cast<string>()
                 from problem in Problems.CheckedItems.Cast<string>()
                 select
                     new TrainingSet(problem, dim,
                         (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
-                        Extended.CheckedItems.Count > 0, DataDir)).ToArray();
+                        Extended.CheckedItems.Count > 0, DataDir, numFeatures, modelID)).ToArray();
 
             if (sets.Length == 0)
             {
@@ -849,7 +852,7 @@ namespace Cheshire
                                 (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
                                 Extended.CheckedItems.Count > 0,
                                 (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank), dependentModel,
-                                DataDir, iter, stepwiseBias, numFeatures, modelID)).ToArray();
+                                DataDir, numFeatures, modelID, stepwiseBias, iter)).ToArray();
                         break;
                     case "PREF-exhaust":
                         models = GetAllPrefModels(stepwiseBias, iter, LinearModel.GetAllExhaustiveModels);

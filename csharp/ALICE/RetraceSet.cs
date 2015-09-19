@@ -11,7 +11,7 @@ namespace ALICE
 
         public RetraceSet(string distribution, string dimension, Trajectory track, int iter, bool extended,
             Features.Mode featureMode, DirectoryInfo data)
-            : base(distribution, dimension, track, iter, extended, data)
+            : base(distribution, dimension, track, iter, extended, Features.LocalCount, 1, data)
         {
             Read();
             FeatureMode = featureMode;
