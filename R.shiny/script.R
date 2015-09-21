@@ -94,6 +94,9 @@ if(!is.null(ks)){
   plot.ks.test2(ks$Rho.train,ks$Acc)
   plot.ks.test2(ks$Rho.test)
 }
+CDR.exhaust = get.bestExhaustCDR(bestPrefModel$Summary)
+rho.statistic(CDR,c('CDR','Best'))
+
 
 source('feat.R')
 CDR.singleFeat <- get.SingleFeat.CDR(input$problem, input$dimension)
@@ -192,7 +195,9 @@ if(input$dimension=='6x5'){
 
 }
 
-source('pref.stepwiseBias.R')
+source('pref.stepwiseBias.R');source('pref.settings.R');source('opt.uniqueness.R');source('opt.bw.R')
 CDR.stepwiseBias<-get.CDR.stepwiseBias(input$problems,input$dimension)
+plot.stepwiseBiases(input$problems,input$dimension,levels(CDR.stepwiseBias$Bias),'OPT','p',adjust2PrefSet = F)
 plot.CDR.stepwiseBias(CDR.stepwiseBias)
-stats.CDR.stepwiseBias(CDR.stepwiseBias)
+print(xtable(stats.CDR.stepwiseBias(CDR.stepwiseBias)), include.rownames=F)
+

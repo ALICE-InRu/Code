@@ -117,7 +117,11 @@ pref.boxplot <- function(CDR,SDR=NULL,ColorVar,xVar='CDR',xText='CDR',tiltText=T
     SDR$xVar=SDR$SDR
     levels(SDR$Set)=paste(levels(SDR$Set),'set')
   }
-  p=ggplot(CDR,aes(x=as.factor(xVar),y=Rho))
+
+  if(is.numeric(CDR$xVar))
+    p=ggplot(CDR,aes(x=xVar,group=xVar,y=Rho))
+  else
+    p=ggplot(CDR,aes(x=factor(xVar),y=Rho))
 
   if(!is.na(lineTypeVar))
     p=p+geom_boxplot(aes(color=ColorVar,linetype=lineTypeVar))+scale_linetype(lineTypeVar)

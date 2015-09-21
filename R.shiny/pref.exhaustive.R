@@ -96,24 +96,29 @@ plot.exhaust.bestAcc <- function(StepwiseOptimality,bestPrefModel,save=NA){
   return(p)
 }
 
+get.bestExhaustCDR <- function(bestSummary){
+  CDR=NULL
+  for(r in 1:nrow(bestSummary)){
+    problem=bestSummary[r,'Problem']
+    dat=get.CDR(bestSummary[r,'File'],bestSummary[r,'NrFeat'],bestSummary[r,'Model'])
+    if(!is.null(dat)){
+      dat$Best=factor(bestSummary[r,'variable'])
+      CDR <- rbind(CDR,dat)
+    }
+  }
+  return(CDR)
+}
+
+stat.exhaust.bestCDR <- function(CDR){
+  dat=ddply(CDR,~Problem+Dimension+NrFeat+Model+Best+Set,function(x) c(summary(x$Rho),N=nrow(x)))
+  dat$Problem <- factorProblem(dat,F)
+  arrange(dat,Problem)
+}
+
 plot.exhaust.bestBoxplot <- function(bestPrefModel,SDR=NULL,save=NA,tiltText=T){
   if(is.null(bestPrefModel)){return(NULL)}
 
-  getBestCDR=function(bestSummary){
-    CDR=NULL
-
-    for(r in 1:nrow(bestSummary)){
-      problem=bestSummary[r,'Problem']
-      dat=get.CDR(bestSummary[r,'File'],bestSummary[r,'NrFeat'],bestSummary[r,'Model'])
-      if(!is.null(dat)){
-        dat$Best=factor(bestSummary[r,'variable'])
-        CDR <- rbind(CDR,dat)
-      }
-    }
-    return(CDR)
-  }
-
-  CDR = getBestCDR(bestPrefModel$Summary)
+  CDR = get.bestExhaustCDR(bestPrefModel$Summary)
   if(is.null(CDR)){return(NULL)}
 
   if(!is.null(SDR)){   SDR <- subset(SDR, Set %in% CDR$Set) }

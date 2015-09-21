@@ -1,8 +1,8 @@
-create.prefModel.varyLMAX <- function(problem,dim,track,rank,stepSize=50000){
+create.prefModel.varyLMAX <- function(problem,dim,track,rank,bias,adjust,stepSize=50000){
   bias='equal'
   timedependent=F
   all.trdat <- liblinear.pref.TRDAT(problem,dim,formatTrack(track,problem,dim,rank),rank)
-  Bias = get.stepwiseBias(all.trdat$STEP, problem, dim, bias)
+  Bias = get.stepwiseBias(all.trdat$STEP, problem, dim, bias, adjust)
 
   fullSet <- length(all.trdat$Y)
   for(lmax in c(seq(stepSize,fullSet,stepSize),fullSet)){
@@ -29,7 +29,13 @@ CDR.prefModel.varyLMAX <- function(problem,dim,track,rank){
 
 plot.prefModel.varyLMAX <- function(CDR){
   #CDR <- CDR.prefModel.varyLMAX(problem,dim,track,rank)
-  CDR$lmax <- as.factor(CDR$lmax)
+  CDR$lmax <- as.numeric(CDR$lmax)
+  lvs=as.numeric(levels(as.factor(CDR$lmax)))
+  lvs=lvs[seq(1,length(lvs),length.out = 10)]
+
+  p <- pref.boxplot(CDR,SDR=NULL,'Default',xVar='lmax','Default',tiltText = F)
+  p <- p + xlab(expression(l[max])) + scale_x_continuous(breaks=lvs,expand = c(0,0))
+
   p <- pref.boxplot(CDR,SDR=NULL,'Default',xVar='lmax','Default')
   return(p)
 }

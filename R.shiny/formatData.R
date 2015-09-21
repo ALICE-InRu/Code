@@ -189,7 +189,9 @@ factorFromCDR <- function(x){
   return(x)
 }
 
-factorBias <- function(Bias){
-  Bias = factor(Bias, levels = c('equal','opt','bcs','wcs','dbl1st','dbl2nd'))
-  return(droplevels(Bias))
+factorBias <- function(x){
+  x$Adjusted=grepl('adj',x$Bias)
+  x$Bias[x$Adjusted]=substr(x$Bias[x$Adjusted],4,100)
+  x$Bias = factor(x$Bias, levels = c('equal','opt','bcs','wcs','featsize','prefsize','dbl1st','dbl2nd'))
+  return(droplevels(x))
 }

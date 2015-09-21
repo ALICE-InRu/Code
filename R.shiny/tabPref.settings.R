@@ -15,11 +15,13 @@ output$tabPref.settings <- renderUI({
                         "OPTEXT","ILUNSUPEXT","LOCOPT","CMAESMINRHO","CMAESMINCMAX"),
                       multiple = T, selected = 'OPT'),
           selectInput("rank", "Ranking:", c("p","f","b","a")),
-          selectInput("bias", "Stepwise bias:", c('equal','opt','wcs','bcs','dbl1st','dbl2nd')),
+          selectInput("bias", "Stepwise bias:", c('equal','opt','wcs','bcs','featsize','prefsize',
+                                                  'dbl1st','dbl2nd')),
           checkboxInput("exhaustive",
                         "Exhaustive search for models, i.e., 1,2,3 or all d features"),
           checkboxInput("timedependent","Stepwise dependent:"),
           checkboxInput("varyLMAX","Vary size of preference set:"),
+          checkboxInput("adjust2PrefSet","Adjust bias to size of preference set:"),
           actionButton("create", "Create:")
       ),
       box(title = "Stepwise bias",
@@ -36,7 +38,7 @@ dataset.training <- reactive({
 })
 
 output$plot.stepwiseBias <- renderPlot({
-  plot.stepwiseBiases(input$problem,input$dimension,input$bias)
+  plot.stepwiseBiases(input$problem,input$dimension,input$bias,'OPT',input$rank,input$adjust2PrefSet)
 })
 
 output$output.liblinearModel <- renderPrint({
@@ -50,6 +52,7 @@ output$output.liblinearModel <- renderPrint({
   exhaustive=isolate(input$exhaustive)
   bias=isolate(input$bias)
   timedependent=isolate(input$timedependent)
+  adjust2PrefSet = isolate(input$adjust2PrefSet)
 
   patTracks=tracks
   ix=grep('IL',patTracks)
@@ -58,7 +61,10 @@ output$output.liblinearModel <- renderPrint({
   }
   patTracks=paste0('(',paste(patTracks,collapse='|'),')')
   fT=list.files(paste0(DataDir,'Training'),paste('^trdat',problem,dimension,patTracks,'Local','diff',rank,'csv',sep='.'))
-  fW=list.files(paste0(DataDir,'PREF/weights'),paste(ifelse(exhaustive,'exhaust','full'),problem,dimension,rank,tracks,bias,'weights',ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.'))
+  fW=list.files(paste0(DataDir,'PREF/weights'),
+                paste(ifelse(exhaustive,'exhaust','full'),problem,dimension,rank,tracks,
+                      ifelse(adjust2PrefSet,paste0('adj',bias),bias),'weights',
+                      ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.'))
   if(length(fT)+any(grepl('ALL',tracks))>length(fW)){
 
     lmax=sizePreferenceSet(dimension,timedependent)
@@ -66,9 +72,9 @@ output$output.liblinearModel <- renderPrint({
     for(track in tracks)
       withProgress(message = paste('Create model for',track), value = 0, {
         if(isolate(input$varyLMAX))
-          create.prefModel.varyLMAX(problem,dimension,track,rank)
+          create.prefModel.varyLMAX(problem,dimension,track,rank,bias,adjust2PrefSet)
         else
-          create.prefModel(problem,dimension,track,rank,bias,timedependent,exhaustive,lmax)
+          create.prefModel(problem,dimension,track,rank,bias,adjust2PrefSet,timedependent,exhaustive,lmax)
       })
   } else { return(paste(length(fW),'LIBLINEAR models exist for current setting')) }
 })

@@ -1,7 +1,17 @@
-get.stepwiseBias <- function(steps,problem,dim,bias){
+get.stepwiseBias <- function(steps,problem,dim,bias,rank,track,adjust2PrefSet){
   nDim=numericDimension(dim)
   half=round(nDim/2,digit=0)
   last=nDim-half
+  size <- function(fname){
+    dat=read.csv(fname)
+    dat=subset(dat,Track=='OPT')
+    N=dat$V1
+    return(N)
+  }
+  proptoSize <- function(fname){
+    N=size(fname)
+    max(N)-N+min(N)
+  }
   w=switch(bias,
            'linear'=1:max(steps),
            'opt'=1-get.StepwiseOptimality(problem,dim,'OPT')$Stats$rnd.mu,
@@ -9,7 +19,12 @@ get.stepwiseBias <- function(steps,problem,dim,bias){
            'wcs'=subset(get.BestWorst(problem,dim),Track=='OPT' & Followed==F)$worst.mu,
            'dbl1st'=c(rep(2,half),rep(1,last)),
            'dbl2nd'=c(rep(1,half),rep(2,last)),
+           'featsize'=proptoSize(paste(paste0(DataDir,'Stepwise/size.trainingSet'),problem,dim,'csv',sep='.')),
+           'prefsize'=proptoSize(paste(paste0(DataDir,'Stepwise/size.prefSet'),problem,dim,rank,'csv',sep='.')),
            rep(1,nDim))
+  if(adjust2PrefSet){
+    w=w/size(paste(paste0(DataDir,'Stepwise/size.prefSet'),problem,dim,rank,'csv',sep='.'))
+  }
   w=w/sum(w); # normalize
   return(w[steps])
 }
@@ -54,13 +69,13 @@ sizePreferenceSet <- function(dim,timedependent){
          ifelse(timedependent,100000,500000))
 }
 
-create.prefModel <- function(problem,dim,track,rank,bias,timedependent,exhaustive,lmax,trdat=NULL){
+create.prefModel <- function(problem,dim,track,rank,bias,adjust2PrefSet,timedependent,exhaustive,lmax,trdat=NULL){
   library('LiblineaR')
 
   track = formatTrack(track,problem,dim,rank)
 
   logFile <- function(exhaustive){
-    file = paste(problem,dim,rank,track,bias,'weights',
+    file = paste(problem,dim,rank,track,ifelse(adjust2PrefSet,paste0('adj',bias),bias),'weights',
                  ifelse(timedependent,'timedependent','timeindependent'),sep='.')
     if(!is.null(trdat)){ file=paste0(file,'_lmax',ifelse(lmax>0,lmax,length(trdat$Y))) }
     file=paste0(file,'.csv')
@@ -192,7 +207,7 @@ create.prefModel <- function(problem,dim,track,rank,bias,timedependent,exhaustiv
       }
     }
 
-    trdat$Bias = get.stepwiseBias(trdat$STEP, problem, dim, bias)
+    trdat$Bias = get.stepwiseBias(trdat$STEP, problem, dim, bias, rank, track, adjust2PrefSet)
     phiCol = grep('phi',colnames(trdat$X));
 
     # use all features
