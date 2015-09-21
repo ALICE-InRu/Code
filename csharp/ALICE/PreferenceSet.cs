@@ -23,9 +23,9 @@ namespace ALICE
             All = 'a'
         };
 
-        public PreferenceSet(string distribution, string dimension, Trajectory track, int iter, bool extended,
-            Ranking rank, DirectoryInfo data)
-            : base(distribution, dimension, track, iter, extended, Features.Mode.Local, data)
+        public PreferenceSet(string distribution, string dimension, Trajectory track, int iter, 
+            bool extended, int numFeat, int model, string stepwiseBias, Ranking rank, DirectoryInfo data)
+            : base(distribution, dimension, track, iter, extended, numFeat, model, stepwiseBias, Features.Mode.Local, data)
         {
             FileInfo =
                 new FileInfo(string.Format(

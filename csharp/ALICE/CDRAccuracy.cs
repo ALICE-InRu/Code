@@ -11,7 +11,9 @@ namespace ALICE
         private int[] _isOptimal;
 
         public CDRAccuracy(LinearModel model, DirectoryInfo data)
-            : base(model.Distribution, model.Dimension, Trajectory.OPT, 0, false, Features.Mode.Local, data)
+            : base(
+                model.Distribution, model.Dimension, Trajectory.OPT, 0, false, Features.LocalCount, 1, "equal",
+                Features.Mode.Local, data)
         {
             Model = model;
 

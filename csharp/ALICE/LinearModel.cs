@@ -154,7 +154,7 @@ namespace ALICE
 
         public LinearModel(string distribution, string dimension, TrainingSet.Trajectory track, bool extended,
             PreferenceSet.Ranking rank, bool timedependent, DirectoryInfo dataDir,
-            int numFeatures = 16, int modelID = 1, string stepwiseBias = "equal", int iter = -1)
+            int numFeatures, int modelID, string stepwiseBias, int iter = -1)
             : this(null, Features.Mode.Local, numFeatures, modelID, !timedependent, distribution, dimension, Model.PREF)
         {
             switch (track)
@@ -164,7 +164,7 @@ namespace ALICE
                 case TrainingSet.Trajectory.ILSUP:
                     LinearModel model;
                     Iteration = GetImitationLearningFile(out model, distribution, dimension, track, extended,
-                        numFeatures, modelID, dataDir.FullName, timedependent, iter);
+                        numFeatures, modelID, dataDir.FullName, stepwiseBias, timedependent, iter);
                     FileInfo = model.FileInfo;
                     LocalWeights = model.LocalWeights;
                     return;
@@ -195,8 +195,8 @@ namespace ALICE
         }
 
         private int GetImitationLearningFile(out LinearModel model, string distribution, string dimension,
-            TrainingSet.Trajectory track, bool extended, int numFeatures, int modelID, string directoryName, 
-            bool timedependent = false, int iter = -1, string stepwiseBias = "equal")
+            TrainingSet.Trajectory track, bool extended, int numFeatures, int modelID, string directoryName, string stepwiseBias,
+            bool timedependent = false, int iter = -1)
         {
             DirectoryInfo dir = new DirectoryInfo(String.Format(@"{0}\PREF\weights", directoryName));
 

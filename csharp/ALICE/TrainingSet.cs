@@ -87,14 +87,14 @@ namespace ALICE
         }
 
         public TrainingSet(string distribution, string dimension, Trajectory track, bool extended, DirectoryInfo data,
-            int numFeatures, int modelID = -1)
-            : this(distribution, dimension, track, -1, extended, numFeatures, modelID, data)
+            int numFeatures, int modelID, string stepwiseBias)
+            : this(distribution, dimension, track, -1, extended, numFeatures, modelID, stepwiseBias, data)
         {
 
         }
 
-        internal TrainingSet(string distribution, string dimension, Trajectory track, int iter, bool extended, int numFeatures, int modelID,
-            DirectoryInfo data)
+        internal TrainingSet(string distribution, string dimension, Trajectory track, int iter, bool extended, 
+            int numFeatures, int modelID, string stepwiseBias, DirectoryInfo data)
             : base(distribution, dimension, DataSet.train, extended, data)
         {
             Track = track;
@@ -107,7 +107,7 @@ namespace ALICE
                 case Trajectory.ILFIXSUP:
                 case Trajectory.ILSUP:
                 case Trajectory.ILUNSUP:
-                    strTrack = GetImitationModel(out Model, out _beta, ref iter, extended, numFeatures, modelID);
+                    strTrack = GetImitationModel(out Model, out _beta, ref iter, extended, numFeatures, modelID, stepwiseBias);
                     if (Track == Trajectory.ILUNSUP)
                         _trajectory = ChooseWeightedJob;
                     else
@@ -161,10 +161,10 @@ namespace ALICE
         }
 
         private string GetImitationModel(out LinearModel model, out double beta, ref int currentIter, bool extended,
-            int numFeatures, int modelID)
+            int numFeatures, int modelID, string stepwiseBias)
         {
             model = new LinearModel(Distribution, Dimension, Track, extended, PreferenceSet.Ranking.PartialPareto, false,
-                new DirectoryInfo(String.Format(@"{0}\..", FileInfo.DirectoryName)), numFeatures, modelID);
+                new DirectoryInfo(String.Format(@"{0}\..", FileInfo.DirectoryName)), numFeatures, modelID, stepwiseBias);
 
             if (currentIter < 0) // use latest iteration
                 currentIter = model.Iteration + 1;
@@ -183,8 +183,9 @@ namespace ALICE
                 default:
                     throw new Exception(String.Format("{0} is not supported as imitation learning!", Track));
             }
-
             string track = String.Format("IL{0}{1}", currentIter, Track.ToString().Substring(2));
+            if (stepwiseBias != "equal")
+                track += "_" + stepwiseBias;
             return numFeatures < Features.LocalCount
                 ? String.Format("{0}_{1}", track, model.Name.Replace(".", ""))
                 : track;

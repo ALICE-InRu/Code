@@ -360,6 +360,7 @@ namespace Cheshire
 
         private void startAsyncButtonTrSet_Click(object sender, EventArgs e)
         {
+            string stepwiseBias = StepwiseBias.SelectedItem.ToString();
             int numFeatures = Convert.ToInt32(NumFeatures.Value);
             int modelID = Convert.ToInt32(ModelIndex.Value);
 
@@ -369,7 +370,7 @@ namespace Cheshire
                 select
                     new TrainingSet(problem, dim,
                         (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
-                        Extended.CheckedItems.Count > 0, DataDir, numFeatures, modelID)).ToArray();
+                        Extended.CheckedItems.Count > 0, DataDir, numFeatures, modelID,stepwiseBias)).ToArray();
 
             if (sets.Length == 0)
             {
@@ -532,14 +533,18 @@ namespace Cheshire
                 textContent.AppendText("\n\tPlease choose a feature mode.");
             }
 
+            string stepwiseBias = StepwiseBias.SelectedItem.ToString();
             int iter = Convert.ToInt32(Iteration.Value);
+            int numFeatures = Convert.ToInt32(NumFeatures.Value);
+            int modelID = Convert.ToInt32(ModelIndex.Value);
+
             RetraceSet[] sets = (from problem in Problems.CheckedItems.Cast<string>()
                 from dim in Dimension.CheckedItems.Cast<string>()
                 from track in Tracks.CheckedItems.Cast<string>()
                 select
                     new RetraceSet(problem, dim,
                         (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track), iter,
-                        Extended.CheckedItems.Count > 0, featureMode, DataDir)).ToArray();
+                        Extended.CheckedItems.Count > 0, numFeatures, modelID, stepwiseBias, featureMode, DataDir)).ToArray();
 
             if (sets.Length == 0)
             {
@@ -612,7 +617,10 @@ namespace Cheshire
 
         private void startAsyncButtonPrefSet_Click(object sender, EventArgs e)
         {
+            string stepwiseBias = StepwiseBias.SelectedItem.ToString();
             int iter = Convert.ToInt32(Iteration.Value);
+            int numFeatures = Convert.ToInt32(NumFeatures.Value);
+            int modelID = Convert.ToInt32(ModelIndex.Value);
 
             PreferenceSet[] sets = (from rank in Ranks.CheckedItems.Cast<string>()
                 from track in Tracks.CheckedItems.Cast<string>()
@@ -621,7 +629,7 @@ namespace Cheshire
                 select
                     new PreferenceSet(problem, dim,
                         (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track), iter,
-                        Extended.CheckedItems.Count > 0,
+                        Extended.CheckedItems.Count > 0, numFeatures, modelID, stepwiseBias,
                         (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank), DataDir))
                 .ToArray();
 
