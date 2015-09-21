@@ -86,7 +86,10 @@ for(problem in input$problems){
 }
 
 plot.exhaust.bestAcc(all.StepwiseOptimality,bestPrefModel)
-plot.exhaust.bestBoxplot(bestPrefModel,SDR)
+CDR.compare <- get.CDRTracksRanksComparison(input$problems,input$dimension,c('LWR','MWR','CMAESMINRHO'))
+CDR.compare <- subset(CDR.compare, (Problem=='j.rnd' & SDR %in% c('MWR','ES.rho'))
+                      |(Problem=='j.rndn' & SDR=='MWR')|(Problem=='f.rnd' & SDR=='LWR'))
+plot.exhaust.bestBoxplot(bestPrefModel,CDR.compare)
 print(table.exhaust.paretoFront(paretoFront),
       include.rownames=FALSE, sanitize.text.function=function(x){x})
 ks=suppressWarnings(get.pareto.ks(paretoFront,input$problem, onlyPareto = F, SDR=NULL))
@@ -95,7 +98,7 @@ if(!is.null(ks)){
   plot.ks.test2(ks$Rho.test)
 }
 CDR.exhaust = get.bestExhaustCDR(bestPrefModel$Summary)
-rho.statistic(CDR,c('CDR','Best'))
+rho.statistic(CDR.exhaust,c('CDR','Best'))
 
 
 source('feat.R')
