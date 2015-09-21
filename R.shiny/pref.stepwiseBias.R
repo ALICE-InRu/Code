@@ -1,11 +1,11 @@
 get.CDR.stepwiseBias <- function(problems,dim,track='OPT',rank='p'){
-  CDR.independent=get.CDR(get.CDR.file_list(problems,dim,track,rank,F,'*'),16,1)
+  files=get.CDR.file_list(problems,dim,track,rank,F,'*')
+  CDR.independent=get.CDR(files,16,1)
   CDR.independent=subset(CDR.independent,Extended==F)
   CDR.independent$Stepwise = F
   CDR.dependent=get.CDR(get.CDR.file_list(problems,dim,track,rank,T,'*'),16,1)
   CDR.dependent=subset(CDR.dependent,Extended==F)
   CDR.dependent$Stepwise = T
-
   CDR=rbind(CDR.independent,CDR.dependent)
   CDR$Stepwise <- factor(CDR$Stepwise,levels=c(T,F))
   CDR<-factorBias(CDR)
@@ -62,16 +62,15 @@ plot.stepwiseBiases <- function(problems,dim,biases,track='OPT',rank='p',adjust2
 }
 
 ks.CDR.stepwiseBias <- function(CDR,variable='Bias'){
-  CDR=subset(CDR,Set=='train')
   levels(CDR$Bias)=c(levels(CDR$Bias),'Stepwise')
   CDR$Bias[CDR$Stepwise==T]='Stepwise'
-  id.vars=setdiff(c('Problem','Dimension','Adjusted','Bias'),variable)
-  ks=ks.CDR(CDR,variable,c('CDR',id.vars))
-  print(tidyr::spread(melt(ks,id.vars),'Problem','value'))
+  id.vars=setdiff(c('CDR','Problem','Dimension','Adjusted','Bias'),variable)
+  ks=ks.CDR(CDR,variable,id.vars)
+  tidyr::spread(melt(ks,id.vars),'Problem','value')
 }
 
 stats.CDR.stepwiseBias <- function(CDR){
   CDR=subset(CDR,Set=='train')
-  stat=arrange(ddply(CDR,~Problem+Stepwise+Bias+Adjusted,function(x) summary(x$Rho)),Problem,Mean)
+  stat=arrange(ddply(CDR,~Problem+Stepwise+Bias+Adjusted,function(x) c(summary(x$Rho),nrow(x))),Problem,Mean)
   return(stat)
 }

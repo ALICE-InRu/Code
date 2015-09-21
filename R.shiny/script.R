@@ -3,9 +3,9 @@ colorPalette='Greys';
 extension='pdf';subdir='../../Thesis/figures/'
 save=NA
 input=list(dimension='10x10',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd'))
+input$timedependent=F
 #input=list(dimension='6x5',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc','j.rnd_pj1doubled','j.rnd_p1mdoubled'))
 SDR=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension)
-input$timedependent=F
 input$smooth=F
 input$testProblems='ORLIB'
 
@@ -30,7 +30,7 @@ input$dimension='6x5'
 tracks=c(sdrs,'ALL','OPT','CMAESMINRHO','CMAESMINCMAX'); ranks=c('a','b','f','p')
 trainingDataSize=get.trainingDataSize(input$problems,input$dimension,tracks)
 preferenceSetSize=get.preferenceSetSize(input$problems,input$dimension,tracks,ranks)
-CDR.full <- get.many.CDR(get.CDR.file_list(input$problems,input$dimension,tracks,ranks,input$timedependent),'train')
+CDR.full <- get.many.CDR(get.CDR.file_list(input$problems,input$dimension,tracks,ranks,F),'train')
 CDR.compare <- get.CDRTracksRanksComparison(input$problems,input$dimension,tracks)
 plot.trainingDataSize(trainingDataSize)
 plot.preferenceSetSize(preferenceSetSize)
@@ -201,3 +201,10 @@ plot.stepwiseBiases(input$problems,input$dimension,levels(CDR.stepwiseBias$Bias)
 plot.CDR.stepwiseBias(CDR.stepwiseBias)
 print(xtable(stats.CDR.stepwiseBias(CDR.stepwiseBias)), include.rownames=F)
 
+CDR.cmax <- get.CDR(get.CDR.file_list(input$problem,input$dimension,'CMAESMINCMAX','p',F,'*'),
+                    nrFeat = 16,modelID = 1)
+CDR.cmax = factorBias(CDR.cmax)
+stats = ddply(CDR.cmax,~Problem+Rank+Track+Bias+Adjusted+Set,function(x) summary(x$Rho))
+arrange(stats,Problem,Mean)
+CDR.compare <- get.CDRTracksRanksComparison(input$problems,input$dimension,tracks)
+ddply(CDR.compare,~Problem+SDR+Set,summarise, mu=mean(Rho))

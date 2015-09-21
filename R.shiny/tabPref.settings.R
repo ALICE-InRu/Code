@@ -12,7 +12,7 @@ output$tabPref.settings <- renderUI({
       box(title = "Settings", status = "primary", solidHeader = TRUE,
           selectInput("tracks", "Trajectories:",
                       c("OPT",sdrs,"RND","ALL","ILSUP","ILUNSUP","ILFIXSUP",
-                        "OPTEXT","ILUNSUPEXT","LOCOPT","CMAESMINRHO","CMAESMINCMAX"),
+                        "OPTEXT","ILUNSUPEXT","LOCOPT","CMAESMINRHO","CMAESMINCMAX",'ILUNSUP_F3M524EXT'),
                       multiple = T, selected = 'OPT'),
           selectInput("rank", "Ranking:", c("p","f","b","a")),
           selectInput("bias", "Stepwise bias:", c('equal','opt','wcs','bcs','featsize','prefsize',
