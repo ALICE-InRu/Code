@@ -768,8 +768,18 @@ namespace Cheshire
             "opt",
             "wcs",
             "bcs",
+            "featsize",
+            "prefsize",
             "dbl1st",
-            "dbl2nd"});
+            "dbl2nd",
+            "adjequal",
+            "adjopt",
+            "adjwcs",
+            "adjbcs",
+            "adjfeatsize",
+            "adjprefsize",
+            "adjdbl1st",
+            "adjdbl2nd"});
             this.StepwiseBias.Location = new System.Drawing.Point(5, 71);
             this.StepwiseBias.Name = "StepwiseBias";
             this.StepwiseBias.Size = new System.Drawing.Size(60, 21);
