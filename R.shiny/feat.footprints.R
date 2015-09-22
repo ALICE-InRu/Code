@@ -66,6 +66,8 @@ correlation.matrix.stepwise <- function(f.trdat,fixedColumnName='FinalRho',bonfe
 {
   correlation.matrix.stepwise1 <- function(df){
 
+    if(nrow(df)==0){return(df)}
+
     df$Step=as.numeric(df$Step)
     TotalSteps=max(df$Step)
     rename=grep(fixedColumnName,colnames(df))
@@ -122,7 +124,10 @@ correlation.matrix.stepwise <- function(f.trdat,fixedColumnName='FinalRho',bonfe
 
   cor.dat <- do.call(rbind, lapply(c('Easy','Hard'), function(diff){
     tmp <- correlation.matrix.stepwise1(subset(f.trdat,Difficulty==diff))
-    if(nrow(tmp)>0){ tmp$Difficulty=diff }
+    if(nrow(tmp)>0){
+      tmp$Difficulty=diff
+      tmp$Bonferroni=bonferroniAdjust
+    }
     return(tmp)
   }))
 
@@ -136,16 +141,17 @@ plot.stepwise.test <- function(df){
 
   df = factorTrack(df)
   df$Difficulty=factor(df$Difficulty)
+  df$Bonferroni = factor(df$Bonferroni,levels=c(T,F))
 
-  p=ggplot(df, aes(x=Step, y=Feature)) + facet_wrap(~Track,nrow=2) +
+  p=ggplot(df, aes(x=Step, y=Feature, size=Bonferroni)) + facet_wrap(~Track,nrow=2) +
     geom_point(data=subset(df,Significant==T), aes(Step, Feature, shape = Difficulty), color = 'black') +
-    axisCompactX
+    axisCompactX+scale_size_manual(values=c(3,1.5))
 
   return(p)
 }
 
 plot.correlation.matrix.stepwise <- function(cor.df){
-  plot.stepwise.test(cor.df) + scale_shape_manual('Significant difficulty', values = c(3, 4)) +
+  plot.stepwise.test(cor.df) + scale_shape_manual('Significant', values = c(3, 4)) +
     ylab(expression('Correlation between' *~ phi^(k) *~ ' and ' * ~ rho))
 }
 

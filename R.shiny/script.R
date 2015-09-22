@@ -107,29 +107,37 @@ stats.singleFeat(CDR.singleFeat)
 plot.StepwiseExtremal(StepwiseOptimality,StepwiseExtremal,CDR.singleFeat,input$dimension,F)
 plot.StepwiseEvolution(input$problem,input$dimension)
 
-source('feat.footprints.R')
+source('feat.footprints.R');source('sdr.R')
+SDR=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension)
+dat<-subset(SDR, Set=='train' & Dimension==input$dimension & Problem==input$problem)
+quartiles <- get.quartiles(dat)
 trdat <- get.files.TRDAT(input$problem, input$dimension, 'ALL', useDiff = F)
 trdat <- subset(trdat,Followed==T)
 trdat <- label.trdat(trdat,quartiles)
 trdat <- subset(trdat,Difficulty %in% c('Easy','Hard'))
 
-corr.rho.sdr <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
-  df <- correlation.matrix.stepwise(subset(trdat,Track==sdr),'FinalRho',F)
+corr.rho.sdr.F <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
+  df <- correlation.matrix.stepwise(subset(trdat,Track==sdr),'FinalRho',bonferroniAdjust = F)
   df$Track = sdr
   return(df) } ))
+corr.rho.sdr.B <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
+  df <- correlation.matrix.stepwise(subset(trdat,Track==sdr),'FinalRho',bonferroniAdjust = T)
+  df$Track = sdr
+  return(df) } ))
+corr.rho.sdr=rbind(corr.rho.sdr.B,corr.rho.sdr.F)
 
-p.sdr=plot.correlation.matrix.stepwise(corr.rho.sdr)+theme(legend.position='none')+xlab(NULL)
+p.sdr=plot.correlation.matrix.stepwise(corr.rho.sdr)
 if(!is.na(save)){
   fname = paste(paste(subdir,input$problem,'phi',sep='/'),'corr','SDR',input$dimension,extension,sep = '.')
-  ggsave(fname,p.sdr,width = Width, height = Height.half, dpi = dpi, units = units)
+  ggsave(fname,p.sdr,width = Width, height = Height.half*1.2, dpi = dpi, units = units)
 }
 
-corr.rho.all <- correlation.matrix.stepwise(trdat,'FinalRho')
+corr.rho.all <- correlation.matrix.stepwise(trdat,'FinalRho',bonferroniAdjust = T)
 corr.rho.all$Track='ALL'
-p.all=plot.correlation.matrix.stepwise(corr.rho.all)
+p.all=plot.correlation.matrix.stepwise(corr.rho.all)+theme(legend.position='none')+xlab(NULL)
 if(!is.na(save)){
   fname = paste(paste(subdir,input$problem,'phi',sep='/'),'corr','ALL',input$dimension,extension,sep = '.')
-  ggsave(fname,p.all,width = Width, height = Height.half, dpi = dpi, units = units)
+  ggsave(fname,p.all,width = Width, height = Height.half*0.8, dpi = dpi, units = units)
 }
 
 mdat=ddply(rbind(corr.rho.sdr,corr.rho.all),~Track,summarise,
@@ -189,6 +197,7 @@ if(input$dimension=='6x5'){
 
   CDR.CMA.orlib <- do.call(rbind, lapply(c('6x5','10x10'), function(dim){
     get.CDR.CMA(input$problems,dim,times = F, testProblems = 'ORLIB') }))
+  CDR.CMA.orlib=subset(CDR.CMA.orlib,Rho>=0)
   p.orb=plot.CMABoxplot(CDR.CMA.orlib)+theme(legend.position='none')
   if(!is.na(save)){
     fname=paste(paste0(subdir,'boxplot'),'CMAES','ORLIB',extension,sep='.')
@@ -211,3 +220,23 @@ stats = ddply(CDR.cmax,~Problem+Rank+Track+Bias+Adjusted+Set,function(x) summary
 arrange(stats,Problem,Mean)
 CDR.compare <- get.CDRTracksRanksComparison(input$problems,input$dimension,tracks)
 ddply(CDR.compare,~Problem+SDR+Set,summarise, mu=mean(Rho))
+
+
+
+
+source('global.R');source('cmaes.R')
+OR.opt <- get.files.OPT(list.files('../../Data/OPT/','ORLIB.test.csv$'))
+OR.opt=subset(OR.opt,!is.na(Optimum))
+colnames(OR.opt)[grep('Optimum',colnames(OR.opt))]='BKS'
+
+CDR.CMA.orlib <- do.call(rbind, lapply(c('6x5','10x10'), function(dim){
+  get.CDR.CMA(input$problems,dim,times = F, testProblems = 'ORLIB') }))
+best=ddply(subset(CDR.CMA.orlib,!is.nan(Rho)),~Problem+ORSet+GivenName,
+           function(x) head(x[x$Rho==min(x$Rho),],1))
+best=join(OR.opt,best,type='right',by = c('Name','Problem','Set','PID','GivenName'))
+fix = subset(best,Rho<0)
+fix[,c('Problem','ORSet','GivenName','Dimension','BKS','TrainingData','ObjFun','Makespan','Rho')]
+best=subset(best,Rho>=0)
+best=best[,c('ORSet','GivenName','Dimension','BKS','TrainingData','ObjFun','Rho')]
+print(xtable(arrange(best,ORSet,GivenName)),include.rownames=F)
+

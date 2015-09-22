@@ -14,8 +14,8 @@ get.files <- function(dir, files=NULL, addFileNameColumn=F){
   return(dat)
 }
 
-get.files.OPT <- function(){
-  opt=get.files(paste0(DataDir,'OPT'))
+get.files.OPT <- function(files=NULL){
+  opt=get.files(paste0(DataDir,'OPT'),files = files)
   rownames(opt)=opt$Name
   opt=subset(opt,!is.na(Optimum))
   opt=factorFromName(opt)
