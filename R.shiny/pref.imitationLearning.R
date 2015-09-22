@@ -15,12 +15,10 @@ fixUnsupIL <- function(){
   }
 }
 
-getFileNamesIL <- function(problem,dim,CDR=T,rank='p',probability='equal',timedependent=F){
-  times=ifelse(timedependent,'timedependent','timeindependent')
-  files=list.files(paste0(DataDir,'PREF/CDR'),paste('(full|exhaust)',problem,dim,rank,'*',probability,'weights',times,sep='.'))
-  files=files[grep('OPT|IL',files)]
-  files=files[grep('lmax',files,invert = T)]
-  return(files)
+getFileNamesIL <- function(problems,dim,rank='p',bias='equal',timedependent=F){
+  tracks=c('OPT','LOCOPT','ILSUP','ILUNSUP','ILFIXSUP')
+  tracks=c(tracks,paste0(tracks,'EXT'))
+  get.CDR.file_list(problems,dim,tracks,rank,timedependent,bias,lmax = F)
 }
 
 get.CDR.IL <- function(problems,dim){
@@ -36,7 +34,7 @@ stats.imitationLearning <- function(CDR){
 }
 
 plot.imitationLearning.boxplot <- function(CDR){
-  p <- pref.boxplot(CDR,NULL,'Supervision','Track','Imitation learning',F,ifelse(any(CDR$Extended),'Extended',NA))
+  p <- pref.boxplot(CDR,NULL,'Supervision','Track',expression(beta[i]),F,ifelse(any(CDR$Extended),'Extended',NA))
   return(p)
 }
 
@@ -87,5 +85,87 @@ plot.imitationLearning.weights <- function(problem,dim){
   }
 
   return(p)
+}
+
+plot.passive.IL <- function(CDR.IL,height=0){
+  CDR.OPT <- subset(CDR.IL, Iter==0)
+  CDR.OPT$Type <- 'Passive Imitation Learning'
+  p=plot.imitationLearning.boxplot(CDR.OPT)+guides(colour=FALSE)+
+    facet_wrap(~Problem+Dimension+Set,ncol=3,scales='free_y')
+  if(height>0){
+    problem=ifelse(length(levels(CDR.OPT$Problem))>1,'ALL',as.character(CDR.OPT$Problem[1]))
+    dim=ifelse(length(levels(CDR.OPT$Dimension))>1,'ALL',as.character(CDR.OPT$Dimension[1]))
+    ggsave(paste(paste(subdir,problem,'boxplot',sep='/'),'passive',dim,'png',sep='.'),p,
+           width = Width, height = height, units = units, dpi = dpi)
+    # to get epsilon right: gm convert boxplot_passive_10x10.png boxplot_passive_10x10.pdf
+  }
+  return(p)
+}
+plot.active.IL <- function(CDR.IL,height=0){
+  CDR.DA.EXT <- subset(CDR.IL, (Iter>0) | (Extended==0 & Track=='OPT'))
+  CDR.DA.EXT$Type <- 'Active Imitation Learning'
+  CDR.DA.EXT$Type <- paste(CDR.DA.EXT$Problem,CDR.DA.EXT$Dimension)
+  levels(CDR.DA.EXT$Track)[1]='DA0'
+  p=plot.imitationLearning.boxplot(CDR.DA.EXT)+facet_grid(Set~Type)+
+    xlab(expression('iteration,' *~i))
+  if(height>0){
+    CDR.DA.EXT=droplevels(CDR.DA.EXT)
+    problem=ifelse(length(levels(CDR.DA.EXT$Problem))>1,'ALL',as.character(CDR.DA.EXT$Problem[1]))
+    dim=ifelse(length(levels(CDR.DA.EXT$Dimension))>1,'ALL',as.character(CDR.DA.EXT$Dimension[1]))
+    fname=paste(paste(subdir,problem,'boxplot',sep='/'),'active',dim,extension,sep='.')
+    print(fname)
+    ggsave(fname,p,width = Width, height = height, units = units, dpi = dpi)
+  }
+  mu = ddply(subset(CDR.DA.EXT,Set=='train'),~Type+Extended+Iter+Supervision,summarise,Rho=mean(Rho))
+  mu0 = mu[mu$Iter==0,]
+  for(sup in setdiff(levels(mu$Supervision),'Fixed')){
+    mu0$Supervision=sup
+    for(ext in unique(mu$Extended[mu$Supervision==sup])){
+      mu0$Extended=ext
+      mu=rbind(mu,mu0)
+    }
+  }
+  m <- ggplot(mu,aes(x=Iter,y=Rho,color=Supervision,linetype=Extended))+geom_line()+
+    facet_wrap(~Type)+xlab(expression('iteration,' *~i))+ggplotColor('Supervision',3)+
+    ylab(expression("Expected mean" * ~rho * ~" (%)"))+axisCompact
+  print(m)
+  return(p)
+}
+
+tmp <- function(problems,dim,iterT=7,save=NA){
+  problem=problems[1]
+  CDR.IL.10x10 <- get.CDR.IL(problem,'10x10')
+  CDR.IL.6x5 <- get.CDR.IL(problems,'6x5')
+
+  plot.passive.IL(CDR.IL.6x5,Height.third*2)
+  plot.passive.IL(CDR.IL.10x10,Height.third)
+
+  plot.active.IL(subset(CDR.IL.6x5,Problem %in% problems[1:1]),Height.half)
+  plot.active.IL(subset(CDR.IL.10x10),Height.half)
+
+  dim='10x10'
+  CDR.IL <- subset(CDR.IL.10x10, (Supervision=='Unsupervised' & Extended==T) |
+                     (Supervision!='Unsupervised' & Extended==F))
+  CDR.IL$Type = 'Imitation Learning'
+
+  source('pref.trajectories.R'); source('cmaes.R')
+  CDR.compare <- get.CDRTracksRanksComparison(problem,dim,c('CMAESMINCMAX',ifelse(substring(problem,1,1)=='j','MWR','LWR')))
+  CDR.compare$Supervision='Fixed'; CDR.compare$Iter=0;
+  CDR.compare$Track=CDR.compare$SDR; CDR.compare$CDR=CDR.compare$SDR;
+  CDR.compare$NrFeat=1; CDR.compare$Model=1; CDR.compare$Extended=F; CDR.compare$Bias=NA;
+  CDR.compare$Type=ifelse(CDR.compare$SDR %in% sdrs,'SDR','CMA-ES')
+  CDR.compare$Rank=NA; CDR.compare$SDR=NULL;
+
+  CDR=rbind(CDR.IL,CDR.compare)
+  CDR$Type <- factor(CDR$Type,levels=c('Imitation Learning','CMA-ES','SDR'))
+  p=plot.imitationLearning.boxplot(CDR)
+  p=p + facet_grid(Set~Type, scales='free',space = 'free')
+  if(!is.na(save)){
+    ggsave(paste0(paste(subdir,problem,'boxplot',sep='/'),'summary',dim,'png',sep='.'),
+         width = Width, height = Height.half, units = units, dpi = dpi)
+    # to get epsilon right: gm convert boxplot_summary_10x10.png boxplot_summary_10x10.pdf
+  }
+  stats.imitationLearning(CDR.IL)
+  plot.imitationLearning.weights(problem,dimension)
 }
 

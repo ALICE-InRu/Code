@@ -160,7 +160,7 @@ print(xtable(mdat), include.rownames = FALSE)
 print(colSums(mdat[,2:4]))
 
 source('pref.imitationLearning.R')
-CDR.IL <- get.CDR.IL(input$problem,input$dimension)
+CDR.IL <- get.CDR.IL(input$problems,input$dimension)
 plot.imitationLearning.boxplot(CDR.IL)
 stats.imitationLearning(CDR.IL)
 plot.imitationLearning.weights(input$problem,input$dimension)
