@@ -294,10 +294,7 @@ set.optAccuracy <- function(model){
   return(opt.acc)
 }
 
-
-
-
-get.prefSummary <- function(problems,dim,track,rank,timedependent){
+get.prefSummary <- function(problems,dim,track,rank,timedependent,bias){
 
   get.CDR.Exhaust  <- function(model){
     CDR <- get.CDR(model,'train')
@@ -332,7 +329,7 @@ get.prefSummary <- function(problems,dim,track,rank,timedependent){
     return(pref)
   }
 
-  file_list <- get.CDR.file_list(problems, dim, track, rank, timedependent)
+  file_list <- get.CDR.file_list(problems, dim, track, rank, timedependent,bias = bias)
   file_list = file_list[grep('exhaust',file_list)]
 
   prefSummary <- ldply(file_list, get.prefSummary1)
