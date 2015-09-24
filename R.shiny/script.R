@@ -107,56 +107,37 @@ plot.StepwiseExtremal(StepwiseOptimality,StepwiseExtremal,CDR.singleFeat,input$d
 plot.StepwiseEvolution(input$problem,input$dimension)
 
 source('feat.footprints.R');source('sdr.R')
-SDR=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension)
-dat<-subset(SDR, Set=='train' & Dimension==input$dimension & Problem==input$problem)
-quartiles <- get.quartiles(dat)
-trdat <- get.files.TRDAT(input$problem, input$dimension, 'ALL', useDiff = F)
-trdat <- subset(trdat,Followed==T)
-trdat <- label.trdat(trdat,quartiles)
-trdat <- subset(trdat,Difficulty %in% c('Easy','Hard'))
+input$dimension='6x5'
+input$problem='j.rnd'
+trdat.sdr = get.footprint.dat(input$problem,input$dimension,F)
+trdat.all = get.footprint.dat(input$problem,input$dimension,T)
 
-corr.rho.sdr.F <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
-  df <- correlation.matrix.stepwise(subset(trdat,Track==sdr),'FinalRho',bonferroniAdjust = F)
-  df$Track = sdr
-  return(df) } ))
-corr.rho.sdr.B <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
-  df <- correlation.matrix.stepwise(subset(trdat,Track==sdr),'FinalRho',bonferroniAdjust = T)
-  df$Track = sdr
-  return(df) } ))
-corr.rho.sdr=rbind(corr.rho.sdr.B,corr.rho.sdr.F)
-
-p.sdr=plot.correlation.matrix.stepwise(corr.rho.sdr)
+corr.rho.sdr = get.footprint.corr.rho(trdat.sdr,F)
+p.sdr=plot.correlation.matrix.stepwise(corr.rho.sdr)+ylab(NULL)
 if(!is.na(save)){
   fname = paste(paste(subdir,input$problem,'phi',sep='/'),'corr','SDR',input$dimension,extension,sep = '.')
-  ggsave(fname,p.sdr,width = Width, height = Height.half*1.2, dpi = dpi, units = units)
+  ggsave(fname,p.sdr,width = Width, height = Height.half*1.3, dpi = dpi, units = units)
 }
 
-corr.rho.all <- correlation.matrix.stepwise(trdat,'FinalRho',bonferroniAdjust = T)
+corr.rho.all = get.footprint.corr.rho(trdat.all,F)
 corr.rho.all$Track='ALL'
-p.all=plot.correlation.matrix.stepwise(corr.rho.all)+theme(legend.position='none')+xlab(NULL)
+p.all=plot.correlation.matrix.stepwise(corr.rho.all)+theme(legend.position='none')+xlab(NULL)+ylab(NULL)
 if(!is.na(save)){
   fname = paste(paste(subdir,input$problem,'phi',sep='/'),'corr','ALL',input$dimension,extension,sep = '.')
   ggsave(fname,p.all,width = Width, height = Height.half*0.8, dpi = dpi, units = units)
 }
 
-mdat=ddply(rbind(corr.rho.sdr,corr.rho.all),~Track,summarise,
-           N.Easy=sum(Significant & Difficulty=='Easy'),
-           N.Hard=sum(Significant & Difficulty=='Hard'))
-print(xtable(mdat), include.rownames = FALSE)
-print(colSums(mdat[,2:3]))
+mdat=rbind(stat.corr.Significant(corr.rho.sdr)[1:4,],stat.corr.Significant(corr.rho.all))
+mdat[6,2:3]=c(sum(as.numeric(mdat$N.Easy)),sum(as.numeric(mdat$N.Hard)))
+mdat
 
-ks.rho <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
-  df <- ks.matrix.stepwise(subset(trdat,Track==sdr),T)
-  df$Track = sdr
-  return(df) } ))
-p=plot.ks.matrix.stepwise(ks.rho)
+ks.rho.sdr <- get.footprint.ks(trdat.sdr,F)
+stat.ks.Significant(ks.rho.sdr)
+p.ks=plot.ks.matrix.stepwise(ks.rho.sdr)+ylab(NULL)
 if(!is.na(save)){
   fname = paste(paste(subdir,input$problem,'phi',sep='/'),'ks','SDR',input$dimension,extension,sep = '.')
-  ggsave(fname,p,width = Width*1.2, height = Height.half*1.2, dpi = dpi, units = units)
+  ggsave(fname,p.ks,width = Width*1.2, height = Height.half*1.5, dpi = dpi, units = units)
 }
-mdat=ddply(ks.rho,~Track+N.Easy+N.Hard,summarise,Significant=sum(Significant))
-print(xtable(mdat), include.rownames = FALSE)
-print(colSums(mdat[,2:4]))
 
 source('pref.imitationLearning.R')
 CDR.IL <- get.CDR.IL(input$problems,input$dimension)

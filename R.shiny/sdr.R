@@ -90,7 +90,6 @@ plot.BDR <- function(dim,problem,bdr.firstSDR,bdr.secSDR,bdr.splits,save=NA,with
   return(p)
 }
 
-
 gif.BDR <- function(problem='j.rnd',dim='10x10',bdr.firstSDR='SPT',bdr.secSDR='MWR'){
   ## save images and convert them to a single GIF
 
@@ -117,47 +116,3 @@ gif.BDR <- function(problem='j.rnd',dim='10x10',bdr.firstSDR='SPT',bdr.secSDR='M
   file.remove('animate.gif')
 }
 
-
-get.quartiles <- function(dat){
-  quartiles=ddply(dat,~Problem+Dimension, summarise, Q1 = round(quantile(Rho,.25),digits = 2), Q3 = round(quantile(Rho,.75), digits = 2))
-  rownames(quartiles)=interaction(quartiles$Problem,quartiles$Dimension)
-  return(quartiles)
-}
-
-checkDifficulty <- function(dat, quartiles){
-
-  dat=merge(dat,quartiles)
-
-  split = ddply(dat,~Problem+Dimension+SDR, summarise, Easy = round(mean(Rho<=Q1)*100,digits = 2), Hard = round(mean(Rho>Q3)*100,digits = 2))
-
-  Easy = ddply(dat,~Problem+Dimension+SDR,summarise,PIDs=list(PID[Rho<=Q1]),N=length(PID))
-  Hard = ddply(dat,~Problem+Dimension+SDR,summarise,PIDs=list(PID[Rho>=Q3]),N=length(PID))
-
-  return(list('Quartiles'=quartiles,'Split'=split,'Easy'=Easy,'Hard'=Hard))
-}
-
-labelDifficulty <- function(dat,quartiles){
-  dat=merge(dat,quartiles)
-  dat = ddply(dat,~Problem+Dimension,mutate,Difficulty=ifelse(Rho<=Q1,'Easy',ifelse(Rho>=Q3,'Hard','Medium')))
-  dat$Difficulty <- factor(dat$Difficulty, levels=c('Easy','Medium','Hard'))
-  dat$Q1=NULL
-  dat$Q3=NULL
-  return(dat)
-}
-
-splitSDR <- function(dat,problem,dim){
-  sdrs=unique(dat$SDR)
-  N=length(sdrs)
-
-  if(nrow(dat)==0){return(NULL)}
-  m=matrix(nrow = N, ncol = N);
-  colnames(m)=sdrs; rownames(m)=sdrs
-  for(i in 1:N){
-    iPID=subset(dat,SDR==sdrs[i])$PIDs[[1]]
-    for(j in 1:N){
-      jPID=subset(dat,SDR==sdrs[j])$PIDs[[1]]
-      m[i,j]=round(length(intersect(jPID,iPID))/dat$N[i]*100,digits = 2)
-    }
-  }
-  return(as.data.frame(m))
-}

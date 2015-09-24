@@ -1,12 +1,127 @@
-label.trdat <- function(trdat,quartiles){
-  trdat.lbl=labelDifficulty(subset(trdat,Step==max(trdat$Step)-1), # might be missing last step
-                            quartiles)
-  trdat.lbl$FinalRho = trdat.lbl$Rho
-  trdat <- merge(trdat,trdat.lbl[,c('Problem','Track','PID','FinalRho','Difficulty')],
-                 by=c('Problem','Track','PID'))
-  trdat <- trdat[,grep('Track|PID|Step|phi|Difficulty|Rho',colnames(trdat))]
-  trdat$Rho=NULL
+get.quartiles <- function(dat){
+  quartiles=ddply(dat,~Problem+Dimension, summarise,
+                  Q1 = round(quantile(Rho,.25),digits = 2),
+                  Q3 = round(quantile(Rho,.75), digits = 2))
+  rownames(quartiles)=interaction(quartiles$Problem,quartiles$Dimension)
+  return(quartiles)
+}
+
+checkDifficulty <- function(dat, quartiles){
+
+  dat=merge(dat,quartiles)
+
+  split = ddply(dat,~Problem+Dimension+SDR, summarise,
+                Easy = round(mean(Rho<=Q1)*100,digits = 2),
+                Hard = round(mean(Rho>Q3)*100,digits = 2))
+
+  Easy = ddply(dat,~Problem+Dimension+SDR,summarise,PIDs=list(PID[Rho<=Q1]),N=length(PID))
+  Hard = ddply(dat,~Problem+Dimension+SDR,summarise,PIDs=list(PID[Rho>=Q3]),N=length(PID))
+
+  return(list('Quartiles'=quartiles,'Split'=split,'Easy'=Easy,'Hard'=Hard))
+}
+
+
+splitSDR <- function(dat,problem,dim){
+  sdrs=unique(dat$SDR)
+  N=length(sdrs)
+
+  if(nrow(dat)==0){return(NULL)}
+  m=matrix(nrow = N, ncol = N);
+  colnames(m)=sdrs; rownames(m)=sdrs
+  for(i in 1:N){
+    iPID=subset(dat,SDR==sdrs[i])$PIDs[[1]]
+    for(j in 1:N){
+      jPID=subset(dat,SDR==sdrs[j])$PIDs[[1]]
+      m[i,j]=round(length(intersect(jPID,iPID))/dat$N[i]*100,digits = 2)
+    }
+  }
+  return(as.data.frame(m))
+}
+
+get.footprint.dat <- function(problem,dim,sameQuartiles=T,trdat=NULL){
+  label <- function(trdat,quartiles){
+    labelDifficulty <- function(dat,quartiles){
+      dat = merge(dat,quartiles)
+      dat = ddply(dat,~Problem+Dimension,mutate,
+                  Difficulty=ifelse(Rho<=Q1,'Easy',ifelse(Rho>=Q3,'Hard','Medium')))
+      dat$Difficulty <- factor(dat$Difficulty, levels=c('Easy','Medium','Hard'))
+      dat$Q1=NULL
+      dat$Q3=NULL
+      return(dat)
+    }
+    trdat.lbl=labelDifficulty(subset(trdat,Step==max(trdat$Step)-1), # might be missing last step
+                              quartiles)
+    trdat.lbl$FinalRho = trdat.lbl$Rho
+    trdat <- merge(trdat,trdat.lbl[,c('Problem','Track','PID','FinalRho','Difficulty')],
+                   by=c('Problem','Track','PID'))
+    trdat <- trdat[,grep('Track|PID|Step|phi|Difficulty|Rho',colnames(trdat))]
+    trdat$Rho=NULL
+    return(trdat)
+  }
+
+  if(is.null(trdat)){
+    trdat <- get.files.TRDAT(problem, dim, 'ALL', useDiff = F)
+  }
+  trdat=subset(trdat,Followed==T)
+
+  if(sameQuartiles){
+    SDR=subset(dataset.SDR,Problem == problem & Dimension == dim & Set=='train')
+    quartiles <- get.quartiles(SDR)
+    trdat <- label(trdat,quartiles)
+  } else {
+    trdat = do.call(rbind, lapply(sdrs[1:4], function(sdr){
+      SDR=subset(dataset.SDR,Problem == problem & Dimension == dim & Set=='train' & SDR==sdr)
+      trdat1 <- subset(trdat, Track==sdr)
+      tmp <- subset(trdat1,Step==max(Step)-1)
+      tmp$Problem=problem
+      tmp$Dimension=dim
+      #quartiles <- get.quartiles(SDR)
+      quartiles <- get.quartiles(tmp)
+      trdat1 <- label(trdat1, quartiles)
+      return(trdat1)
+    }))
+  }
+  trdat <- subset(trdat,Difficulty %in% c('Easy','Hard'))
   return(trdat)
+}
+
+get.footprint.corr.rho <- function(trdat,withoutBonferroni=T,window=0){
+  get.footprint.corr.rho1 <- function(bonferroniAdjust){
+    do.call(rbind, lapply(sdrs[1:4], function(sdr) {
+      df <- correlation.matrix.stepwise(subset(trdat,Track==sdr),'FinalRho',
+                                        bonferroniAdjust = bonferroniAdjust, window = window)
+      df$Track = sdr
+      return(df) } ))
+  }
+  if(withoutBonferroni){
+    corr.rho=get.footprint.corr.rho1(T)
+  } else {
+    B=get.footprint.corr.rho1(T)
+    NB=get.footprint.corr.rho1(F)
+    corr.rho=NB
+    corr.rho[B$Significant,]=B[B$Significant,]
+  }
+  return(corr.rho)
+}
+
+get.footprint.ks <- function(trdat,withoutBonferroni=T,window=0,printTable=F){
+  get.footprint.ks1 <- function(bonferroniAdjust){
+    ks.rho <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
+      df <- ks.matrix.stepwise(subset(trdat,Track==sdr),bonferroniAdjust,window)
+      df$Track = sdr
+      return(df) } ))
+    ks.rho$Bonferroni=bonferroniAdjust
+    return(ks.rho)
+  }
+  if(withoutBonferroni){
+    ks=get.footprint.ks1(T)
+  } else {
+    B=get.footprint.ks1(T)
+    NB=get.footprint.ks1(F)
+    ks=NB
+    ks[B$Significant,]=B[B$Significant,]
+  }
+  return(ks)
 }
 
 ks.matrix.stepwise <- function(df, bonferroniAdjust=T,window=0)
@@ -159,5 +274,19 @@ plot.ks.matrix.stepwise <- function(ks.df){
   plot.stepwise.test(ks.df) + scale_shape_manual(
     expression(H[0] *~ ': Easy and Hard are drawn from the same continuous distribution'),
     values=c(8))+ylab('Kolmogorov-Smirnov Test')
+}
+
+stat.ks.Significant <- function(ks){
+  mdat=ddply(ks,~Track+N.Easy+N.Hard,summarise,Significant=sum(Significant))
+  if(nrow(mdat)>1){ mdat[nrow(mdat)+1,]=c('SUM',colSums(mdat[,2:4])) }
+  return(mdat)
+}
+
+stat.corr.Significant <- function(corr.rho){
+  mdat=ddply(corr.rho,~Track,summarise,
+             N.Easy=sum(Significant & Difficulty=='Easy'),
+             N.Hard=sum(Significant & Difficulty=='Hard'))
+  if(nrow(mdat)>1){ mdat[nrow(mdat)+1,]=c('SUM',colSums(mdat[,2:3])) }
+  return(mdat)
 }
 

@@ -1,13 +1,25 @@
 output$tabFeat.footprints <- renderUI({
   dashboardBody(
     fluidRow(
+      checkboxInput("sameQuartiles","Use same quartiles for all SDR (otherwise on corresponding Q1 and Q3)")
+    ),
+    fluidRow(
+      box(title="Stepwise K-S test for difficulty", width = 9, collapsible = T,
+          plotOutput("plot.kstest.SDR")),
+      box(title='Settings', width=3, collapsible = T,
+          checkboxInput("BonferroniKS","Only display Bonferroni adjustment"),
+          sliderInput("KSWindowSDR","Sliding window for k",min=0,max=10,value=0),
+          tableOutput("stat.kstest.SDR"))
+      ),
+    fluidRow(
       box(title="Stepwise correlation for difficulty w.r.t. SDR", width = 9, collapsible = T,
           plotOutput("plot.correlation.SDR")),
       box(title='Settings', width=3, collapsible = T,
-          checkboxInput("BonferroniSDR","Bonferroni adjustment",value=F),
+          checkboxInput("BonferroniSDR","Only display Bonferroni adjustment",value=F),
           sliderInput("CorrWindowSDR","Sliding window for k",min=0,max=10,value=0),
           selectInput("DisplayDifficulty",'Display difficulties:',c('Both','Easy','Hard')),
-          tableOutput("stat.correlation.SDR"))),
+          tableOutput("stat.correlation.SDR"))
+      ),
     fluidRow(
       box(title="Stepwise correlation for difficulty over all trajectories", width = 9, collapsible = T,
           plotOutput("plot.correlation.all")),
@@ -15,45 +27,56 @@ output$tabFeat.footprints <- renderUI({
           checkboxInput("BonferroniALL","Bonferroni adjustment",value=T),
           sliderInput("CorrWindowALL","Sliding window for k",min=0,max=10,value=0),
           checkboxInput("PlotJointlyALL","Plot difficulties jointly",value=T),
-          tableOutput("stat.correlation.all"))),
-    fluidRow(
-      box(title="Stepwise K-S test for difficulty", width = 9, collapsible = T,
-          plotOutput("plot.kstest.SDR")),
-      box(title='Settings', width=3, collapsible = T,
-          checkboxInput("BonferroniKS","Bonferroni adjustment"),
-          sliderInput("KSWindowSDR","Sliding window for k",min=0,max=10,value=0),
-          tableOutput("stat.kstest.SDR")))
+          tableOutput("stat.correlation.all"))
+      )
   )
 })
 
 
 footprint.dat <- reactive({
   withProgress(message = 'Retrieving data', value = 0, {
-
-    trdat <- subset(all.trdat(),Followed==T)
-    trdat.lbl=labelDifficulty(subset(trdat,Step==max(trdat$Step)-1), # might be missing last step
-                              quartiles())
-    trdat.lbl$FinalRho = trdat.lbl$Rho
-    trdat <- merge(trdat,trdat.lbl[,c('Problem','Track','PID','FinalRho','Difficulty')],
-                   by=c('Problem','Track','PID'))
-    trdat <- trdat[,grep('Track|PID|Step|phi|Difficulty|Rho',colnames(trdat))]
-    trdat$Rho=NULL
+    dat=get.footprint.dat(input$problem,input$dimension,input$sameQuartiles,all.trdat())
+    return(dat)
   })
-  return(trdat)
+})
+
+corr.rho.SDR1 <- reactive({
+  get.footprint.corr.rho(footprint.dat(),F,input$CorrWindowSDR)
 })
 
 corr.rho.SDR <- reactive({
-  corr.rho <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
-    df <- correlation.matrix.stepwise(subset(footprint.dat(),Track==sdr),'FinalRho',
-                                      input$BonferroniSDR,input$CorrWindowSDR)
-    df$Track = sdr
-    return(df) } ))
+  if(input$BonferroniSDR)
+    subset(corr.rho.SDR1(),Bonferroni==T)
+  else
+    corr.rho.SDR1()
+})
+
+corr.rho.all1 <- reactive({
+  corr.rho <- get.footprint.corr.rho(footprint.dat(),F,input$CorrWindowALL)
+  corr.rho$Track='ALL'
   return(corr.rho)
+})
+
+corr.rho.all <- reactive({
+  if(input$BonferroniALL)
+    subset(corr.rho.all1(),Bonferroni==T)
+  else
+    corr.rho.all1()
+})
+
+ks.rho.SDR1 <- reactive({
+  get.footprint.ks(footprint.dat(),F,input$KSWindowSDR)
+})
+
+ks.rho.SDR <- reactive({
+  if(input$BonferroniKS)
+    subset(ks.rho.SDR1(),Bonferroni==T)
+  else
+    ks.rho.SDR1()
 })
 
 output$plot.correlation.SDR <- renderPlot({
   withProgress(message = 'Correlation w.r.t. SDR', value = 0, {
-
     corr.rho = switch(input$DisplayDifficulty,
                       'Both'=corr.rho.SDR(),
                       'Easy'=subset(corr.rho.SDR(),Difficulty=='Easy'),
@@ -63,18 +86,8 @@ output$plot.correlation.SDR <- renderPlot({
 })
 
 output$stat.correlation.SDR <- renderTable({
-  mdat=ddply(corr.rho.SDR(),~Track+Difficulty+N,summarise,Significant=sum(Significant))
-  mdat$Track <- factor(mdat$Track, levels=sdrs)
-  mdat = arrange(mdat, Track, Difficulty)
-  xtable(mdat)
+  xtable(stat.corr.Significant(corr.rho.SDR()))
 }, include.rownames = FALSE)
-
-corr.rho.all <- reactive({
-  corr.rho <- correlation.matrix.stepwise(footprint.dat(),'FinalRho',
-                                          input$BonferroniALL,input$CorrWindowALL)
-  corr.rho$Track='ALL'
-  return(corr.rho)
-})
 
 output$plot.correlation.all <- renderPlot({
   withProgress(message = 'Testing correlation significance', value = 0, {
@@ -85,29 +98,13 @@ output$plot.correlation.all <- renderPlot({
 })
 
 output$stat.correlation.all <- renderTable({
-  mdat=ddply(corr.rho.all(),~Track+Difficulty+N,summarise,Significant=sum(Significant))
-  xtable(mdat)
+  xtable(stat.corr.Significant(corr.rho.all()))
 }, include.rownames = FALSE)
-
-
-# ks.rho.all <- reactive({ ks.matrix.stepwise(footprint.dat(), input$BonferroniKS) })
-
-ks.rho.SDR <- reactive({
-  ks.rho <- do.call(rbind, lapply(sdrs[1:4], function(sdr) {
-    df <- ks.matrix.stepwise(subset(footprint.dat(),Track==sdr),
-                             input$BonferroniKS,input$KSWindowSDR)
-    df$Track = sdr
-    return(df) } ))
-  return(ks.rho)
-})
 
 output$plot.kstest.SDR <- renderPlot({
   plot.ks.matrix.stepwise(ks.rho.SDR())
 })
 
 output$stat.kstest.SDR <- renderTable({
-  mdat=ddply(ks.rho.SDR(),~Track+N.Easy+N.Hard,summarise,Significant=sum(Significant))
-  mdat$Track <- factor(mdat$Track, levels=sdrs)
-  mdat = arrange(mdat, Track)
-  xtable(mdat)
+  xtable(stat.ks.Significant(ks.rho.SDR()))
 }, include.rownames = FALSE)
