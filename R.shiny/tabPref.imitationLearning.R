@@ -8,7 +8,8 @@ output$tabPref.imitationLearning <- renderUI({
       valueBoxOutput("progressBoxSup", width = 3),
       valueBoxOutput("progressBoxFixsup", width = 3)
     ),
-    fluidRow(helpText('Using main problem distribution...')),
+    fluidRow(column(6,helpText('Using main problem distribution...')),
+             column(6, selectInput('ilBias','Bias',c('equal','adjdbl2nd')))),
     fluidRow(
       box(width = 6, plotOutput("compareImitationLearning.boxplot")),
       box(width = 6, plotOutput("compareImitationLearning.weights")),
@@ -18,20 +19,20 @@ output$tabPref.imitationLearning <- renderUI({
 })
 
 output$progressBoxSup <- renderValueBox({
-  files = getFileNamesIL(input$problem,input$dimension)
+  files = getFileNamesIL(input$problem,input$dimension,bias=input$ilBias)
   valueBox( paste0('#',sum(grepl('[0-9]+SUP',files))), "Decreased supervision", color = "purple", icon = icon("eye"))
 })
 output$progressBoxUnsup <- renderValueBox({
-  files = getFileNamesIL(input$problem,input$dimension)
+  files = getFileNamesIL(input$problem,input$dimension,bias=input$ilBias)
   valueBox( paste0('#',sum(grepl('[0-9]+UNSUP',files))), "Unsupervised", color = "yellow", icon = icon("eye-slash"))
 })
 output$progressBoxFixsup <- renderValueBox({
-  files = getFileNamesIL(input$problem,input$dimension)
+  files = getFileNamesIL(input$problem,input$dimension,bias=input$ilBias)
   valueBox( paste0('#',sum(grepl('[0-9]+FIXSUP',files))), "Fixed supervision", color = "maroon", icon = icon("eyedropper"))
 })
 
 CDR.IL <- reactive({
-  get.CDR.IL(input$problem,input$dimension)
+  get.CDR.IL(input$problem,input$dimension,bias=input$ilBias)
 })
 
 output$compareImitationLearning.stats <- renderDataTable({
@@ -48,7 +49,7 @@ output$compareImitationLearning.boxplot <- renderPlot({
 
 output$compareImitationLearning.weights <- renderPlot({
   withProgress(message = 'Plotting weights', value = 0, {
-    plot.imitationLearning.weights(input$problem,input$dimension)
+    plot.imitationLearning.weights(input$problem,input$dimension,input$ilBias)
   })
 })
 

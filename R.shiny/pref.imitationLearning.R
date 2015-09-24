@@ -1,6 +1,6 @@
 fixUnsupIL <- function(){
   for(dir in list.files('../../Data/PREF/CDR/','IL',full.names = T)){
-    m=regexpr('full.(?<Problem>[j|f].[a-z]+).(?<Dimension>[0-9]+x[0-9]+).[a-z].IL(?<Iter>[0-9]+)',dir,perl=T)
+    m=regexpr('full.(?<Problem>[j|f].[a-z_1]+).(?<Dimension>[0-9]+x[0-9]+).[a-z].IL(?<Iter>[0-9]+)',dir,perl=T)
     file=paste(dir,paste(getAttribute(dir,m,'Problem'),getAttribute(dir,m,'Dimension'),'train','csv',sep='.'),sep='/')
     dat=read_csv(file)
     iter=getAttribute(dir,m,'Iter',F)
@@ -15,14 +15,14 @@ fixUnsupIL <- function(){
   }
 }
 
-getFileNamesIL <- function(problems,dim,rank='p',bias='equal',timedependent=F){
+getFileNamesIL <- function(problems,dim,rank='p',bias,timedependent=F){
   tracks=c('OPT','LOCOPT','ILSUP','ILUNSUP','ILFIXSUP')
   tracks=c(tracks,paste0(tracks,'EXT'))
   get.CDR.file_list(problems,dim,tracks,rank,timedependent,bias,lmax = F)
 }
 
-get.CDR.IL <- function(problems,dim){
-  files = getFileNamesIL(problems,dim)
+get.CDR.IL <- function(problems,dim,bias){
+  files = getFileNamesIL(problems,dim,bias=bias)
   if(length(files)<=1) return(NULL)
   return(get.CDR(files,16,1,c('train','test')))
 }
@@ -38,8 +38,8 @@ plot.imitationLearning.boxplot <- function(CDR){
   return(p)
 }
 
-plot.imitationLearning.weights <- function(problem,dim){
-  file_list = getFileNamesIL(problem,dim)
+plot.imitationLearning.weights <- function(problem,dim,bias){
+  file_list = getFileNamesIL(problem,dim,bias=bias)
   if(length(file_list)<=1) return(NULL)
 
   w <- do.call(rbind, lapply(file_list, function(X) {
@@ -87,7 +87,7 @@ plot.imitationLearning.weights <- function(problem,dim){
   return(p)
 }
 
-plot.passive.IL <- function(CDR.IL,height=0){
+plot.passive.IL <- function(CDR.IL,height=0,stats=F){
   CDR.OPT <- subset(CDR.IL, Iter==0)
   CDR.OPT$Type <- 'Passive Imitation Learning'
   p=plot.imitationLearning.boxplot(CDR.OPT)+guides(colour=FALSE)+
@@ -98,6 +98,11 @@ plot.passive.IL <- function(CDR.IL,height=0){
     ggsave(paste(paste(subdir,problem,'boxplot',sep='/'),'passive',dim,'png',sep='.'),p,
            width = Width, height = height, units = units, dpi = dpi)
     # to get epsilon right: gm convert boxplot_passive_10x10.png boxplot_passive_10x10.pdf
+  }
+  if(stats){
+    stat=ddply(CDR.OPT,~Problem+Dimension+Set+Track+Extended,function(x) summary(x$Rho))
+    stat$Problem <- factorProblem(stat,F)
+    print(xtable(stat),include.rownames=F)
   }
   return(p)
 }
@@ -133,12 +138,19 @@ plot.active.IL <- function(CDR.IL,height=0){
 }
 
 tmp <- function(problems,dim,iterT=7,save=NA){
+  problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc','j.rnd_pj1doubled','j.rnd_p1mdoubled')
   problem=problems[1]
-  CDR.IL.10x10 <- get.CDR.IL(problem,'10x10')
-  CDR.IL.6x5 <- get.CDR.IL(problems,'6x5')
+  CDR.IL.10x10 <- do.call(rbind, lapply(c('equal','adjdbl2nd'), function(bias) {get.CDR.IL(problem,'10x10',bias=bias)}))
+  CDR.IL.6x5 <-  do.call(rbind, lapply(c('equal','adjdbl2nd'), function(bias) {get.CDR.IL(problems,'6x5',bias=bias)}))
 
-  plot.passive.IL(CDR.IL.6x5,Height.third*2)
-  plot.passive.IL(CDR.IL.10x10,Height.third)
+  mdat.10x10=ddply(CDR.IL.10x10,~Problem+Dimension+Bias+Supervision+Extended+Iter+Set,summarise,mu=mean(Rho))
+  arrange(mdat.10x10,Set,mu)
+  mdat.6x5=ddply(CDR.IL.6x5,~Problem+Dimension+Bias+Supervision+Extended+Iter+Set,summarise,mu=mean(Rho))
+  mdat.6x5$Problem <- factorProblem(mdat.6x5,F)
+  ddply(arrange(mdat.6x5,Set,mu),~Problem+Set,function(x){head(x,1)})
+
+  plot.passive.IL(subset(CDR.IL.6x5,Set=='train'),Height.third*2,T)
+  plot.passive.IL(CDR.IL.10x10,Height.third,T)
 
   plot.active.IL(subset(CDR.IL.6x5,Problem %in% problems[1:1]),Height.half)
   plot.active.IL(subset(CDR.IL.10x10),Height.half)
@@ -166,6 +178,6 @@ tmp <- function(problems,dim,iterT=7,save=NA){
     # to get epsilon right: gm convert boxplot_summary_10x10.png boxplot_summary_10x10.pdf
   }
   stats.imitationLearning(CDR.IL)
-  plot.imitationLearning.weights(problem,dimension)
+  plot.imitationLearning.weights(problem,dimension,bias=bias)
 }
 

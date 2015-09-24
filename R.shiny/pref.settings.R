@@ -54,11 +54,15 @@ rho.statistic <- function(dat,variables,useValidationSet=F,rhoValue='rho'){
   return(rho.stats)
 }
 
-formatTrack <- function(track,problem,dim,rank){
+formatTrack <- function(track,problem,dim,rank,bias){
   if(substr(track,1,2)=='IL')
   {
+    if(bias!='equal'){
+      track=stringr::str_replace(track,'SUP',paste0('SUP_',bias))
+    }
     supstr=substr(track,3,100)
-    track=paste0('IL',length(list.files(path = paste0(DataDir,'Training'),paste('trdat',problem,dim,paste0('IL[0-9]+',supstr),'Local','diff',rank,'csv',sep='.'))),supstr)
+    pat=paste('trdat',problem,dim,paste0('IL[0-9]+',supstr),'Local','diff',rank,'csv',sep='.')
+    track=paste0('IL',length(list.files(path = paste0(DataDir,'Training'),pat)),supstr)
   }
   return(track)
 }
@@ -71,11 +75,12 @@ sizePreferenceSet <- function(dim,timedependent){
 
 create.prefModel <- function(problem,dim,track,rank,bias,adjust2PrefSet,timedependent,exhaustive,lmax,trdat=NULL){
   library('LiblineaR')
-
-  track = formatTrack(track,problem,dim,rank)
+  strBias=ifelse(adjust2PrefSet,paste0('adj',bias),bias)
+  track = formatTrack(track,problem,dim,rank,strBias)
 
   logFile <- function(exhaustive){
-    file = paste(problem,dim,rank,track,ifelse(adjust2PrefSet,paste0('adj',bias),bias),'weights',
+    tr=stringr::str_replace(track,paste0('_',strBias),'')
+    file = paste(problem,dim,rank,tr,strBias,'weights',
                  ifelse(timedependent,'timedependent','timeindependent'),sep='.')
     if(!is.null(trdat)){ file=paste0(file,'_lmax',ifelse(lmax>0,lmax,length(trdat$Y))) }
     file=paste0(file,'.csv')

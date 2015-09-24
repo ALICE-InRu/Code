@@ -4,8 +4,7 @@ extension='pdf';subdir='../../Thesis/figures/'
 save=NA
 input=list(dimension='10x10',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd'))
 input$timedependent=F
-#input=list(dimension='6x5',problem='j.rnd',problems=c('j.rnd','j.rndn','f.rnd','f.rndn','f.jc','f.mc','f.mxc','j.rnd_pj1doubled','j.rnd_p1mdoubled'))
-SDR=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension)
+#SDR=subset(dataset.SDR,Problem %in% input$problems & Dimension %in% input$dimension)
 input$smooth=F
 input$testProblems='ORLIB'
 

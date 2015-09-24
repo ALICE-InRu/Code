@@ -58,7 +58,11 @@ output$output.liblinearModel <- renderPrint({
   ix=grep('IL',patTracks)
   if(any(ix)){
     patTracks[ix]=paste0('IL[0-9]+',stringr::str_sub(patTracks[ix],3))
+    if(adjust2PrefSet & bias!='equal'){
+      patTracks[ix]=stringr::str_replace(patTracks[ix],'SUP',paste0('SUP_adj',bias))
+    }
   }
+
   patTracks=paste0('(',paste(patTracks,collapse='|'),')')
   fT=list.files(paste0(DataDir,'Training'),paste('^trdat',problem,dimension,patTracks,'Local','diff',rank,'csv',sep='.'))
   fW=list.files(paste0(DataDir,'PREF/weights'),
