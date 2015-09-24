@@ -236,11 +236,12 @@ get.optAccuracy <- function(model,reportMean=T){
   fname=paste0(DataDir,'Stepwise/accuracy/',paste0(model,'.csv'))
   if(!file.exists(fname)){ set.optAccuracy(model) }
   acc = read_csv(fname)
+  colnames(acc)[1]='CDR'
 
-  m=regexpr("F(?<NrFeat>[0-9]+).M(?<Model>[0-9]+)", acc$variable, perl=T)
-  acc$NrFeat=getAttribute(acc$variable,m,'NrFeat',F)
-  acc$Model=getAttribute(acc$variable,m,'Model',F)
-  acc$variable=NULL
+  m=regexpr("F(?<NrFeat>[0-9]+).M(?<Model>[0-9]+)", acc$CDR, perl=T)
+  acc$NrFeat=getAttribute(acc$CDR,m,'NrFeat',F)
+  acc$Model=getAttribute(acc$CDR,m,'Model',F)
+  acc$CDR=NULL
   acc=melt(acc,id.vars = c('NrFeat','Model'), variable.name = 'Step', value.name = 'validation.isOptimal')
   acc$Step=as.numeric(substr(acc$Step,6,100))
   acc$test.isOptimal=NA
