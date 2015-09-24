@@ -60,7 +60,7 @@ get.files.TRDAT <- function(problems,dim,tracks,rank='p',useDiff=F,Global=F){
   if(any(ix)){ tracks=c(tracks[-ix],paste(c('OPT','RND',sdrs,'CMAESMINRHO','CMAESMINCMAX'))) }
   ix=substr(tracks,1,2)=='IL'
   if(any(ix)){
-    m=regexpr('IL(?<Iter>[0-9]+)(?<Track>[A-Z_0-9]+)',tracks[ix],perl=T)
+    m=regexpr('IL(?<Iter>[0-9]+)(?<Track>[A-Z]+[_2a-z]*[EXT]*)',tracks[ix],perl=T)
     iter=getAttribute(tracks[ix],m,'Iter')
     super=getAttribute(tracks[ix],m,'Track')
     tracks=c('OPT',tracks[-ix],paste0('IL',1:iter,super))
