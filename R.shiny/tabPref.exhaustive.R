@@ -21,7 +21,10 @@ output$tabPref.exhaustive <- renderUI({
           plotOutput("plot.exhaust.bestBoxplot", height = 250)
       ),
       box(title='Pareto front', collapsible=TRUE, width=6,
-          tableOutput("table.exhaust.paretoFront"))
+          tableOutput("table.exhaust.paretoFront")),
+      box(title = "Statistics", collapsible = TRUE, width=12,
+          dataTableOutput("stat.exhaust.CDR")
+      )
 #      ,
 #      box(title='Kolmogorov-Smirnov Tests', collapsible = TRUE, width=12, height=1000,
 #          helpText('H0: Models are drawn  drawn from the same continuous distribution.',
@@ -79,11 +82,22 @@ output$plot.exhaust.bestAcc <- renderPlot({
   })
 }, height="auto")
 
+exhaustCDR <- reactive({
+  if(is.null(paretoFront())) { return(NULL) }
+  withProgress(message = 'Loading CDR', value = 0, {
+    get.CDR(unique(paretoFront()$File))
+  })
+})
+
 output$plot.exhaust.bestBoxplot <- renderPlot({
-  withProgress(message = 'Plotting boxplot', value = 0, {
+  withProgress(message = 'Loading CDR', value = 0, {
     plot.exhaust.bestBoxplot(bestPrefModel(), SDR())+themeVerticalLegend
   })
 }, height="auto")
+
+output$stat.exhaust.CDR <- renderDataTable({
+  stat.exhaust.CDR(exhaustCDR())
+},  options = list(paging = FALSE, searching = T))
 
 output$table.exhaust.paretoFront <- renderTable({
   table.exhaust.paretoFront(paretoFront())

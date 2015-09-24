@@ -109,15 +109,15 @@ get.bestExhaustCDR <- function(bestSummary){
   return(CDR)
 }
 
-stat.exhaust.bestCDR <- function(CDR){
-  dat=ddply(CDR,~Problem+Dimension+NrFeat+Model+Best+Set,function(x) c(summary(x$Rho),N=nrow(x)))
-  dat$Problem <- factorProblem(dat,F)
-  arrange(dat,Problem)
+stat.exhaust.CDR <- function(CDR){
+  if(is.null(CDR)) return(NULL)
+  stat <- rho.statistic(CDR,c('Bias','Track','NrFeat','Model'))
+  stat <- arrange(stat, Training.Rho, Test.Rho) # order w.r.t. lowest mean
+  return(stat)
 }
 
 plot.exhaust.bestBoxplot <- function(bestPrefModel,SDR=NULL,save=NA,tiltText=T){
-  if(is.null(bestPrefModel)){return(NULL)}
-
+  if(is.null(bestPrefModel)) {return(NULL)}
   CDR = get.bestExhaustCDR(bestPrefModel$Summary)
   if(is.null(CDR)){return(NULL)}
 
