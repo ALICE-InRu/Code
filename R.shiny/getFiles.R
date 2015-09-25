@@ -125,7 +125,7 @@ get.SingleFeat.CDR <- function(problems,dim,set='train'){
   CDR <- factorFromName(CDR)
 
   CDR$Rho <- factorRho(CDR)
-  CDR$RhoFortified <- factorRho(CDR,var = 'BestFoundMakespan')
+  CDR$BestRho <- factorRho(CDR,var = 'BestFoundMakespan')
   CDR <- subset(CDR, !is.na(Rho))
 
   model.rex="phi.(?<Feature>[a-zA-Z]+).E(?<Extremal>-?[0-9])"
@@ -147,7 +147,7 @@ get.many.CDR <- function(file_list,sets,NrFeat=16,ModelID=1){
 get.CDR <- function(file_list,nrFeat=NULL,modelID=NULL,sets=c('train','test')){
 
   get.CDR1 <- function(file,set){
-    model.rex="(?<Problem>[a-z].[a-z_1]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Bias>[a-z0-9]+).weights.time"
+    model.rex="(?<Problem>[a-z].[a-z_1]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Bias>[a-z0-9]+).(?<Global>[Global]*)weights.time"
     m=regexpr(model.rex,file,perl=T)
     problem = getAttribute(file,m,'Problem')
     dim=getAttribute(file,m,'Dimension')

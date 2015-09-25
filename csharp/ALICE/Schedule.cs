@@ -312,21 +312,16 @@ namespace ALICE
                 ReadyJobs.Remove(job);
             Makespan = _macs.Max(x => x.Makespan);
 
-            switch (mode)
-            {
-                case Features.Mode.Global:
-                    phi.GetGlobalPhi(this, model);
-                    return phi;
+            if (mode == Features.Mode.None) return null;
 
-                case Features.Mode.Local:
-                    phi.GetLocalPhi(_jobs[job], _macs[dispatch.Mac], _prob.Procs[job, dispatch.Mac],
-                        _jobs.Sum(p => p.WorkRemaining), _macs.Sum(p => p.TotSlack), Makespan, Sequence.Count,
-                        dispatch.StartTime, arrivalTime, slotReduced, _totProcTime);
-                    return phi;
+            phi.GetLocalPhi(_jobs[job], _macs[dispatch.Mac], _prob.Procs[job, dispatch.Mac],
+                _jobs.Sum(p => p.WorkRemaining), _macs.Sum(p => p.TotSlack), Makespan, Sequence.Count,
+                dispatch.StartTime, arrivalTime, slotReduced, _totProcTime);
 
-                default:
-                    return null;
-            }
+            if (mode == Features.Mode.Global)
+                phi.GetGlobalPhi(this, model);
+
+            return phi;
         }
 
         public void ApplySDR(SDRData.SDR sdr)

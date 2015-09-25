@@ -54,14 +54,14 @@ rho.statistic <- function(dat,variables,useValidationSet=F,rhoValue='rho'){
   return(rho.stats)
 }
 
-formatTrack <- function(track,problem,dim,rank,bias){
+formatTrack <- function(track,problem,dim,rank,bias,featType){
   if(substr(track,1,2)=='IL')
   {
     if(bias!='equal'){
       track=stringr::str_replace(track,'SUP',paste0('SUP_',bias))
     }
     supstr=substr(track,3,100)
-    pat=paste('trdat',problem,dim,paste0('IL[0-9]+',supstr),'Local','diff',rank,'csv',sep='.')
+    pat=paste('trdat',problem,dim,paste0('IL[0-9]+',supstr),featType,'diff',rank,'csv',sep='.')
     track=paste0('IL',length(list.files(path = paste0(DataDir,'Training'),pat)),supstr)
   }
   return(track)
@@ -73,14 +73,15 @@ sizePreferenceSet <- function(dim,timedependent){
          ifelse(timedependent,100000,500000))
 }
 
-create.prefModel <- function(problem,dim,track,rank,bias,adjust2PrefSet,timedependent,exhaustive,lmax,trdat=NULL){
+create.prefModel <- function(problem,dim,track,rank,bias,adjust2PrefSet,timedependent,exhaustive,lmax,trdat=NULL,featType='Local'){
   library('LiblineaR')
   strBias=ifelse(adjust2PrefSet,paste0('adj',bias),bias)
-  track = formatTrack(track,problem,dim,rank,strBias)
+  track = formatTrack(track,problem,dim,rank,strBias,featType)
 
   logFile <- function(exhaustive){
     tr=stringr::str_replace(track,paste0('_',strBias),'')
-    file = paste(problem,dim,rank,tr,strBias,'weights',
+    weights=ifelse(featType=='Local','weights',paste0(featType,'weights'))
+    file = paste(problem,dim,rank,tr,strBias,weights,
                  ifelse(timedependent,'timedependent','timeindependent'),sep='.')
     if(!is.null(trdat)){ file=paste0(file,'_lmax',ifelse(lmax>0,lmax,length(trdat$Y))) }
     file=paste0(file,'.csv')
@@ -95,7 +96,7 @@ create.prefModel <- function(problem,dim,track,rank,bias,adjust2PrefSet,timedepe
   }
   print(fileName)
 
-  if(is.null(trdat)){trdat = liblinear.pref.TRDAT(problem,dim,track,rank)}
+  if(is.null(trdat)){trdat = liblinear.pref.TRDAT(problem,dim,track,rank,featType)}
   if(is.null(trdat)){return('Data is null! Check if trainingdata exists for chosen trajectory.')}
 
   linearWeights <- function(trdat){
@@ -263,10 +264,17 @@ create.prefModel <- function(problem,dim,track,rank,bias,adjust2PrefSet,timedepe
   return(paste('Trained on',round(100*lmax/nrow(trdat$X)),'% of the total preference set'))
 }
 
-liblinear.pref.TRDAT <- function(problem,dim,track,rank,scale=F){
+liblinear.pref.TRDAT <- function(problem,dim,track,rank,featType,scale=F){
 
   useDiff=T
   trdat <- get.files.TRDAT(problem,dim,track,rank,useDiff)
+  if(featType!='Local'){
+    trdatG <- get.files.TRDAT(problem,dim,track,rank,useDiff,Global = T)
+    if(nrow(trdatG)!=nrow(trdat)) {return(NULL)}
+    if(featType=='SDR'){ trdatG=trdatG[,grep('RND',colnames(trdatG),invert=T)] }
+    trdat <- join(trdat,trdatG,by=intersect(colnames(trdatG),colnames(trdat)))
+  }
+
   if(is.null(trdat)){ return(NULL) }
 
   if(useDiff) { label = sign(trdat$ResultingOptMakespan) } else { label = as.numeric(trdat$Rho == 0); }

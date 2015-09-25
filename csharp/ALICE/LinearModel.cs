@@ -58,17 +58,13 @@ namespace ALICE
             int modelID, string distribution, string dimension, Model type)
             : this(file, featureMode, numFeatures, modelID, timeDependentSteps == 1, distribution, dimension, type)
         {
-            switch (featureMode)
-            {
-                case Features.Mode.Global:
-                    for (int i = 0; i < Features.GlobalCount; i++)
-                        GlobalWeights[i] = new double[timeDependentSteps];
-                    break;
-                case Features.Mode.Local:
-                    for (int i = 0; i < Features.LocalCount; i++)
-                        LocalWeights[i] = new double[timeDependentSteps];
-                    break;
-            }
+            for (int i = 0; i < Features.LocalCount; i++)
+                LocalWeights[i] = new double[timeDependentSteps];
+            
+            if (featureMode != Features.Mode.Global) return;
+
+            for (int i = 0; i < Features.GlobalCount; i++)
+                GlobalWeights[i] = new double[timeDependentSteps];
         }
 
         public LinearModel(SDRData.SDR sdr, string distribution, string dimension)
@@ -154,8 +150,8 @@ namespace ALICE
 
         public LinearModel(string distribution, string dimension, TrainingSet.Trajectory track, bool extended,
             PreferenceSet.Ranking rank, bool timedependent, DirectoryInfo dataDir,
-            int numFeatures, int modelID, string stepwiseBias, int iter = -1)
-            : this(null, Features.Mode.Local, numFeatures, modelID, !timedependent, distribution, dimension, Model.PREF)
+            int numFeatures, int modelID, string stepwiseBias, int iter = -1, Features.Mode featMode = Features.Mode.Local)
+            : this(null, featMode, numFeatures, modelID, !timedependent, distribution, dimension, Model.PREF)
         {
             switch (track)
             {
@@ -169,9 +165,11 @@ namespace ALICE
                     LocalWeights = model.LocalWeights;
                     return;
                 default:
-                    string pat = String.Format("\\b(exhaust|full)\\.{0}.{1}.{2}.{3}{4}.{5}.weights.{6}.csv",
+                    string pat = String.Format("\\b(exhaust|full)\\.{0}.{1}.{2}.{3}{4}.{5}.{6}weights.{7}.csv",
                         distribution, dimension, (char) rank,
-                        track, extended ? "EXT" : "", stepwiseBias, timedependent ? "timedependent" : "timeindependent");
+                        track, extended ? "EXT" : "", stepwiseBias,
+                        FeatureMode == Features.Mode.Global ? "(Global|SDR)" : "",
+                        timedependent ? "timedependent" : "timeindependent");
 
                     DirectoryInfo dir = new DirectoryInfo(String.Format(@"{0}\PREF\weights", dataDir.FullName));
                     Regex reg = new Regex(pat);
@@ -180,14 +178,18 @@ namespace ALICE
                     if (files.Count <= 0)
                         throw new Exception(String.Format("Cannot find any weights belonging to {0}!", pat));
 
-                    LinearModel[] loggedWeights = ReadLoggedLinearWeights(files[0], distribution, dimension, Model.PREF);
-                    FileInfo = files[0];
-
-                    foreach (var w in loggedWeights.Where(w => w._numFeatures == _numFeatures && w._modelID == _modelID)
-                        )
+                    foreach (var file in files)
                     {
-                        LocalWeights = w.LocalWeights;
-                        return;
+                        LinearModel[] logWeights = ReadLoggedLinearWeights(file, distribution, dimension, Model.PREF);
+                        FileInfo = file;
+
+                        foreach (
+                            var w in logWeights.Where(w => w._numFeatures == _numFeatures && w._modelID == _modelID))
+                        {
+                            LocalWeights = w.LocalWeights;
+                            GlobalWeights = w.GlobalWeights;
+                            return;
+                        }
                     }
                     throw new Exception(String.Format("Cannot find weights {0} to user requirements from {1}!", Name,
                         files[0].Name));
@@ -237,17 +239,14 @@ namespace ALICE
         {
             var step = TimeIndependent ? 0 : phi.XiExplanatory[(int) Features.Explanatory.step] - 1;
             double index = 0;
-            switch (FeatureMode)
-            {
-                case Features.Mode.Local:
-                    for (var i = 0; i < Features.LocalCount; i++)
-                        index += LocalWeights[i][step]*phi.PhiLocal[i];
-                    break;
-                case Features.Mode.Global:
-                    for (var i = 0; i < Features.GlobalCount; i++)
-                        index += GlobalWeights[i][step]*phi.PhiGlobal[i];
-                    break;
-            }
+
+            for (var i = 0; i < Features.LocalCount; i++)
+                index += LocalWeights[i][step]*phi.PhiLocal[i];
+
+            if (FeatureMode != Features.Mode.Global) return index;
+
+            for (var i = 0; i < Features.GlobalCount; i++)
+                index += GlobalWeights[i][step]*phi.PhiGlobal[i];
             return index;
         }
 
@@ -340,9 +339,9 @@ namespace ALICE
                 throw new Exception(String.Format("File {0} doesn't exist! Cannot read weights.", file.Name));
 
             bool timeIndependent = Regex.IsMatch(file.Name, "timeindependent");
-            Features.Mode featureMode = Regex.IsMatch(file.Name, Features.Mode.Global.ToString())
-                ? Features.Mode.Global
-                : Features.Mode.Local;
+            Features.Mode featureMode = Regex.IsMatch(file.Name, Features.Mode.Local.ToString())
+                ? Features.Mode.Local
+                : Features.Mode.Global;
 
             List<string> header;
             List<string[]> content = CSV.Read(file, out header);
@@ -354,9 +353,12 @@ namespace ALICE
             const int FEATURE = 3;
             const int VALUE = 5;
 
+            var strGlobalFeature = new string[Features.GlobalCount];
+            for (var i = 0; i < Features.GlobalCount; i++)
+                strGlobalFeature[i] = String.Format("phi.{0}", (Features.Global) i);
             var strLocalFeature = new string[Features.LocalCount];
             for (var i = 0; i < Features.LocalCount; i++)
-                strLocalFeature[i] = String.Format("phi.{0}", (Features.Local) i);
+                strLocalFeature[i] = String.Format("phi.{0}", (Features.Local)i);
 
             var models = new List<LinearModel>();
             LinearModel linearWeights = null;
@@ -376,32 +378,68 @@ namespace ALICE
                     featFound = 0;
                 }
 
-                var local = line[FEATURE];
+                var phi = line[FEATURE];
                 if (timeIndependent) // robust model 
                 {
                     var value = Convert.ToDouble(line[VALUE], CultureInfo.InvariantCulture);
-                    for (var i = 0; i < Features.LocalCount; i++)
+                    if (!Char.IsUpper(phi[4]))
                     {
-                        if (String.Compare(local, strLocalFeature[i], StringComparison.InvariantCultureIgnoreCase) != 0)
-                            continue;
-                        if (linearWeights != null) linearWeights.LocalWeights[i][0] = value;
-                        featFound++;
-                        break;
+                        for (var i = 0; i < Features.LocalCount; i++)
+                        {
+                            if (String.Compare(phi, strLocalFeature[i], StringComparison.InvariantCultureIgnoreCase) !=
+                                0)
+                                continue;
+                            if (linearWeights != null) linearWeights.LocalWeights[i][0] = value;
+                            featFound++;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        for (var i = 0; i < Features.GlobalCount; i++)
+                        {
+                            if (String.Compare(phi, strGlobalFeature[i], StringComparison.InvariantCultureIgnoreCase) !=
+                                0)
+                                continue;
+                            if (linearWeights != null) linearWeights.GlobalWeights[i][0] = value;
+                            featFound++;
+                            break;
+                        }
                     }
                 }
                 else
                 {
-                    for (var i = 0; i < Features.LocalCount; i++)
+                    if (!Char.IsUpper(phi[4]))
                     {
-                        if (String.Compare(local, strLocalFeature[i], StringComparison.InvariantCultureIgnoreCase) != 0)
-                            continue;
-                        for (var step = 0; step < uniqueTimeSteps - 1; step++)
+                        for (var i = 0; i < Features.LocalCount; i++)
                         {
-                            var value = Convert.ToDouble(line[VALUE + step], CultureInfo.InvariantCulture);
-                            if (linearWeights != null) linearWeights.LocalWeights[i][step] = value;
+                            if (String.Compare(phi, strLocalFeature[i], StringComparison.InvariantCultureIgnoreCase) !=
+                                0)
+                                continue;
+                            for (var step = 0; step < uniqueTimeSteps - 1; step++)
+                            {
+                                var value = Convert.ToDouble(line[VALUE + step], CultureInfo.InvariantCulture);
+                                if (linearWeights != null) linearWeights.LocalWeights[i][step] = value;
+                            }
+                            featFound++;
+                            break;
                         }
-                        featFound++;
-                        break;
+                    }
+                    else
+                    {
+                        for (var i = 0; i < Features.GlobalCount; i++)
+                        {
+                            if (String.Compare(phi, strGlobalFeature[i], StringComparison.InvariantCultureIgnoreCase) !=
+                                0)
+                                continue;
+                            for (var step = 0; step < uniqueTimeSteps - 1; step++)
+                            {
+                                var value = Convert.ToDouble(line[VALUE + step], CultureInfo.InvariantCulture);
+                                if (linearWeights != null) linearWeights.GlobalWeights[i][step] = value;
+                            }
+                            featFound++;
+                            break;
+                        }
                     }
                 }
             }
@@ -416,7 +454,6 @@ namespace ALICE
             return models.Count == minNum
                 ? models.ToArray()
                 : null;
-
         }
 
         public static int NChooseK(int n, int k)

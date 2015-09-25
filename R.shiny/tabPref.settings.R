@@ -22,7 +22,8 @@ output$tabPref.settings <- renderUI({
           checkboxInput("timedependent","Stepwise dependent:"),
           checkboxInput("varyLMAX","Vary size of preference set:"),
           checkboxInput("adjust2PrefSet","Adjust bias to size of preference set:"),
-          actionButton("create", "Create:")
+          selectInput("featType", "Feature type:", c("Local","Global","SDR")),
+          actionButton("create", "Create")
       ),
       box(title = "Stepwise bias",
           helpText('Features instances are resampled w.r.t. its stepwise bias.'),
@@ -53,6 +54,7 @@ output$output.liblinearModel <- renderPrint({
   bias=isolate(input$bias)
   timedependent=isolate(input$timedependent)
   adjust2PrefSet = isolate(input$adjust2PrefSet)
+  featType = isolate(input$featType)
 
   patTracks=tracks
   ix=grep('IL',patTracks)
@@ -64,10 +66,13 @@ output$output.liblinearModel <- renderPrint({
   }
 
   patTracks=paste0('(',paste(patTracks,collapse='|'),')')
-  fT=list.files(paste0(DataDir,'Training'),paste('^trdat',problem,dimension,patTracks,'Local','diff',rank,'csv',sep='.'))
+  fT=list.files(paste0(DataDir,'Training'),
+                paste('^trdat',problem,dimension,patTracks,ifelse(featType=='Local','Local','Global'),
+                      'diff',rank,'csv',sep='.'))
+  weights=ifelse(featType=='Local','weights',paste0(featType,'weights'))
   fW=list.files(paste0(DataDir,'PREF/weights'),
                 paste(ifelse(exhaustive,'exhaust','full'),problem,dimension,rank,tracks,
-                      ifelse(adjust2PrefSet,paste0('adj',bias),bias),'weights',
+                      ifelse(adjust2PrefSet,paste0('adj',bias),bias),weights,
                       ifelse(timedependent,'timedependent','timeindependent'),'csv',sep='.'))
   if(length(fT)+any(grepl('ALL',tracks))>length(fW)){
 
@@ -78,7 +83,7 @@ output$output.liblinearModel <- renderPrint({
         if(isolate(input$varyLMAX))
           create.prefModel.varyLMAX(problem,dimension,track,rank,bias,adjust2PrefSet)
         else
-          create.prefModel(problem,dimension,track,rank,bias,adjust2PrefSet,timedependent,exhaustive,lmax)
+          create.prefModel(problem,dimension,track,rank,bias,adjust2PrefSet,timedependent,exhaustive,lmax, featType = featType)
       })
   } else { return(paste(length(fW),'LIBLINEAR models exist for current setting')) }
 })

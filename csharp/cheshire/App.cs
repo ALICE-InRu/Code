@@ -85,9 +85,7 @@ namespace Cheshire
         }
 
         #endregion
-
-
-
+        
         private void buttonSDRStart_Click(object sender, EventArgs e)
         {
             RawData[] datas = (from dim in DimensionApply.CheckedItems.Cast<string>()
@@ -98,9 +96,7 @@ namespace Cheshire
                                        Extended.CheckedItems.Count > 0, DataDir)).Union(
                 (from type in ORLIBApply.CheckedItems.Cast<string>()
                  select new RawData(type, DataDir))).ToArray();
-
-
-
+            
             SDRData[] sets = (from data in datas
                 from sdr in SDR.CheckedItems.Cast<string>()
                 select
@@ -521,13 +517,16 @@ namespace Cheshire
 
         #region bkgWorkerRetrace
 
-        private void startAsyncButtonRetrace_Click(object sender, EventArgs e)
+        private Features.Mode FeatureMode()
         {
-            var featureMode = PhiGlobal.Checked
+            return PhiGlobal.Checked
                 ? Features.Mode.Global
                 : PhiLocal.Checked ? Features.Mode.Local : Features.Mode.None;
+        }
 
-            if (featureMode == Features.Mode.None)
+        private void startAsyncButtonRetrace_Click(object sender, EventArgs e)
+        {
+            if (FeatureMode() == Features.Mode.None)
             {
                 textContent.AppendText("\nCannot retrace set:");
                 textContent.AppendText("\n\tPlease choose a feature mode.");
@@ -544,7 +543,7 @@ namespace Cheshire
                 select
                     new RetraceSet(problem, dim,
                         (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track), iter,
-                        Extended.CheckedItems.Count > 0, numFeatures, modelID, stepwiseBias, featureMode, DataDir)).ToArray();
+                        Extended.CheckedItems.Count > 0, numFeatures, modelID, stepwiseBias, FeatureMode(), DataDir)).ToArray();
 
             if (sets.Length == 0)
             {
@@ -615,6 +614,7 @@ namespace Cheshire
 
         #region bkgWorkerPrefSet
 
+        
         private void startAsyncButtonPrefSet_Click(object sender, EventArgs e)
         {
             string stepwiseBias = StepwiseBias.SelectedItem.ToString();
@@ -630,7 +630,7 @@ namespace Cheshire
                     new PreferenceSet(problem, dim,
                         (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track), iter,
                         Extended.CheckedItems.Count > 0, numFeatures, modelID, stepwiseBias,
-                        (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank), DataDir))
+                        (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank), FeatureMode(), DataDir))
                 .ToArray();
 
             if (sets.Length == 0)
@@ -860,7 +860,7 @@ namespace Cheshire
                                 (TrainingSet.Trajectory) Enum.Parse(typeof (TrainingSet.Trajectory), track),
                                 Extended.CheckedItems.Count > 0,
                                 (PreferenceSet.Ranking) Enum.Parse(typeof (PreferenceSet.Ranking), rank), dependentModel,
-                                DataDir, numFeatures, modelID, stepwiseBias, iter)).ToArray();
+                                DataDir, numFeatures, modelID, stepwiseBias, iter, FeatureMode())).ToArray();
                         break;
                     case "PREF-exhaust":
                         models = GetAllPrefModels(stepwiseBias, iter, LinearModel.GetAllExhaustiveModels);
@@ -1053,10 +1053,29 @@ namespace Cheshire
                 sets.Length));
         }
 
+        private void PhiGlobal_CheckedChanged(object sender, EventArgs e)
+        {
+            if (PhiGlobal.Checked)
+            {
+                int cnt = Features.LocalCount + Features.GlobalCount;
+                NumFeatures.Maximum = cnt;
+                NumFeatures.Minimum = cnt - 4;
+                NumFeatures.Value = cnt;
+            }
+            else
+            {
+                NumFeatures.Maximum = Features.LocalCount;
+                NumFeatures.Minimum = 1;
+                NumFeatures.Value = 1;
+            }
+        }
+
         private void NumFeatures_ValueChanged(object sender, EventArgs e)
         {
             ModelIndex.Minimum = 1;
-            ModelIndex.Maximum = LinearModel.NChooseK(16, Convert.ToInt32(NumFeatures.Value));
+            ModelIndex.Maximum = PhiGlobal.Checked
+                ? 1
+                : LinearModel.NChooseK(Features.LocalCount, Convert.ToInt32(NumFeatures.Value));
         }
 
         private void Set_SelectedIndexChanged(object sender, EventArgs e)
@@ -1079,5 +1098,7 @@ namespace Cheshire
             ORLIBApply.SelectedIndex = -1;
             ckb_ClickAllowOnly1(ORLIBApply, e);
         }
+
+        
     }
 }

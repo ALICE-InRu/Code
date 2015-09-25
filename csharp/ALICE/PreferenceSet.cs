@@ -24,10 +24,12 @@ namespace ALICE
         };
 
         public PreferenceSet(string distribution, string dimension, Trajectory track, int iter, 
-            bool extended, int numFeat, int model, string stepwiseBias, Ranking rank, DirectoryInfo data)
-            : base(distribution, dimension, track, iter, extended, numFeat, model, stepwiseBias, Features.Mode.Local, data)
+            bool extended, int numFeat, int model, string stepwiseBias, Ranking rank, Features.Mode featMode, DirectoryInfo data)
+            : base(distribution, dimension, track, iter, extended, numFeat, model, stepwiseBias, featMode, data)
         {
-            FileInfo =
+            FileInfo trainingFileInfo = new FileInfo(FileInfo.FullName);
+
+            this.FileInfo =
                 new FileInfo(string.Format(
                     @"{0}\Training\{1}.diff.{2}.csv", data.FullName,
                     FileInfo.Name.Substring(0, FileInfo.Name.Length - FileInfo.Extension.Length), (char) rank));
@@ -51,13 +53,54 @@ namespace ALICE
                     break;
             }
 
-            ApplyAll(Retrace, null, null);
+            if (FeatureMode == Features.Mode.Local)
+                ApplyAll(Retrace, null, null);
+            else
+                Read(trainingFileInfo);
+
             _diffData = new List<Preference>[NumInstances, NumDimension];
             for (int pid = 1; pid <= AlreadySavedPID; pid++)
                 for (int step = 0; step < NumDimension; step++)
                     _diffData[pid - 1, step] = new List<Preference>();
         }
 
+        private new void Read(FileInfo file)
+        {
+            List<string> header;
+            List<string[]> content = CSV.Read(file, out header);
+            int iPID = header.FindIndex(x => x == "PID");
+            int iStep = header.FindIndex(x => x == "Step");
+            int iDispatch = header.FindIndex(x => x == "Dispatch");
+            var iPhiStart = header.FindIndex(x => x.Substring(0, 3) == "phi");
+            var iPhiEnd = header.FindLastIndex(x => x.Substring(0, 3) == "phi");
+
+            List<string> phiStrings = new List<string>(Features.GlobalCount);
+            for (int i = 0; i < Features.GlobalCount; i++)
+            {
+                phiStrings.Add(String.Format("phi.{0}", (Features.Global) i));
+            }
+
+            foreach (var line in content)
+            {
+                int pid = Convert.ToInt32(line[iPID]);
+                int step = Convert.ToInt32(line[iStep]);
+                string dispatch = line[iDispatch];
+                Preference pref = Preferences[pid - 1, step].Find(x => x.Dispatch.Name == dispatch);
+                if (pref.Feature == null)
+                {
+                    pref.Feature = new Features();
+                    NumFeatures++;    
+                }
+
+                for (int iPhi = iPhiStart; iPhi <= iPhiEnd; iPhi++)
+                {
+                    int phi = Convert.ToInt32(line[iPhi]);
+                    int ix = phiStrings.FindIndex(x => x == header[iPhi]);
+                    pref.Feature.PhiGlobal[ix] = phi;
+                }
+            }
+        }
+        
         public new void Write()
         {
             if (NumApplied == AlreadySavedPID)

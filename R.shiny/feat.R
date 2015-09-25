@@ -104,7 +104,7 @@ plot.StepwiseEvolution <- function(problem,dim,save=NA){
 
 stats.singleFeat <- function(CDR){
   stat <- rho.statistic(CDR,c('FeatureType','Feature','Extremal'))
-  stat2 <- rho.statistic(CDR,c('FeatureType','Feature','Extremal'),rhoValue = 'RhoFortified')
+  stat2 <- rho.statistic(CDR,c('FeatureType','Feature','Extremal'),rhoValue = 'BestRho')
   stat$Training.Fortified=stat2$Training.Rho
   stat$Diff <- stat$Training.Rho-stat$Training.Fortified
   stat$Test.Rho=NULL

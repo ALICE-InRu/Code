@@ -549,6 +549,7 @@ namespace Cheshire
             this.PhiGlobal.TabStop = true;
             this.PhiGlobal.Text = "Global features";
             this.PhiGlobal.UseVisualStyleBackColor = true;
+            this.PhiGlobal.CheckedChanged += new System.EventHandler(this.PhiGlobal_CheckedChanged);
             // 
             // groupBoxDependent
             // 
