@@ -116,7 +116,9 @@ pref.boxplot <- function(CDR,SDR=NULL,ColorVar,xVar='CDR',xText='CDR',tiltText=T
     SDR <- subset(SDR,Name %in% CDR$Name)
     SDR$xVar=SDR$SDR
     levels(SDR$Set)=paste(levels(SDR$Set),'set')
+    SDR$Problem = interaction(SDR$Problem,SDR$Dimension, sep = ', ')
   }
+  CDR$Problem = interaction(CDR$Problem,CDR$Dimension, sep = ', ')
 
   if(is.numeric(CDR$xVar))
     p=ggplot(CDR,aes(x=xVar,group=xVar,y=Rho))

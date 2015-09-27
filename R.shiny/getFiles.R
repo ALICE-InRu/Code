@@ -103,6 +103,10 @@ get.CDR.file_list <- function(problems,dim,tracks,ranks,timedependent,bias='equa
   if(length(problems)>1) problems=paste0('(',paste(problems,collapse='|'),')')
   ix=grepl('IL',tracks)
   if(any(ix)){ tracks[ix]=paste0(substr(tracks[ix],1,2),'[0-9]+',substr(tracks[ix],3,100)) }
+  ix=grepl('ES.Cmax',tracks)
+  if(any(ix)){ tracks[ix]='CMAESMINCMAX' }
+  ix=grepl('ES.Rho',tracks)
+  if(any(ix)){ tracks[ix]='CMAESMINRHO' }
   if(length(tracks)>1) tracks=paste0('(',paste(tracks,collapse='|'),')')
   if(length(ranks)>1) ranks=paste0('(',paste(ranks,collapse='|'),')')
   file_list=list.files(paste0(DataDir,'PREF/CDR/'),paste(problems,dim,ranks,tracks,bias,'weights',ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
@@ -147,7 +151,7 @@ get.many.CDR <- function(file_list,sets,NrFeat=16,ModelID=1){
 get.CDR <- function(file_list,nrFeat=NULL,modelID=NULL,sets=c('train','test')){
 
   get.CDR1 <- function(file,set){
-    model.rex="(?<Problem>[a-z].[a-z_1]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Bias>[a-z0-9]+).(?<Global>[Global]*)weights.time"
+    model.rex="(?<Problem>[a-z].[a-z_1]+).(?<Dimension>[0-9x]+).(?<Rank>[a-z]).(?<Track>[A-Z]{2}[A-Z0-9]+).(?<Bias>[a-z0-9]+).(?<Global>[Global|SDR]*)weights.time"
     m=regexpr(model.rex,file,perl=T)
     problem = getAttribute(file,m,'Problem')
     dim=getAttribute(file,m,'Dimension')
