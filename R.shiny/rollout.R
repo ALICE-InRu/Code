@@ -1,10 +1,9 @@
-source('global.R')
-
 get.CDR.Rollout <- function(problems,dimension){
   files = list.files(paste(DataDir,'PREF','CDR',sep='/'),'Globalweights|SDRweights')
   files = files[grepl(paste(paste(problems,dimension,sep='.'),collapse = '|'),files)]
   CDR <- get.CDR(files)
   CDR$BestRho <- factorRho(CDR,'BestFoundMakespan')
+  CDR$CDR = factor(CDR$CDR, levels=sort(levels(CDR$CDR)))
   return(CDR)
 }
 
@@ -47,7 +46,7 @@ boxplot.rollout <- function(CDR,CDR.compare=NULL){
   return(p)
 }
 
-get.CDR.Rollout.Compare <- function(CDR.global,dim){
+get.CDR.Rollout.Compare <- function(CDR.global,dim,singleCnt=3){
 
   CDR.global=droplevels(CDR.global)
   tracks = levels(CDR.global$Track)
@@ -79,48 +78,12 @@ get.CDR.Rollout.Compare <- function(CDR.global,dim){
   best=ddply(CDR.single, ~Problem+Dimension, function(x){
     tmp=ddply(subset(x,Set=='train'), ~Track,summarise,mu=mean(Rho))
     tmp=arrange(tmp,mu)
-    return(as.character(tmp$Track[1:3]))
+    return(as.character(tmp$Track[1:singleCnt]))
   })
   best=melt(best,c('Problem','Dimension'),value.name = 'Track')
   CDR.single = subset(CDR.single, Track %in% best$Track & Problem %in% best$Problem)
 
   CDR=rbind(CDR.global,CDR.local,CDR.single[,colnames(CDR.single) %in% colnames(CDR.global)])
-
-  return(droplevels(CDR))
+  return(CDR)
 }
-
-input <- list(problems=c('j.rnd','f.rnd'))
-
-CDR.global.6x5=get.CDR.Rollout(input$problems,'6x5')
-CDR.global.10x10=get.CDR.Rollout(input$problems[1],'10x10')
-
-source('pref.trajectories.R'); source('cmaes.R'); source('feat.R')
-tracks=c('SPT','CMAESMINCMAX'); #c('LWR','MWR','CMAESMINRHO','CMAESMINCMAX')
-CDR.compare.6x5 <- get.CDRTracksRanksComparison(input$problems,'6x5',tracks)
-CDR.compare.10x10 <- get.CDRTracksRanksComparison(input$problems[1],'10x10',tracks)
-
-#CDR.compare <- subset(CDR.compare, SDR %in% c('ES.rho','ES.Cmax','SPT') |
-#                        (stringr::str_sub(Problem,1,1)=='j' & SDR=='MWR')|
-#                        (stringr::str_sub(Problem,1,1)=='f' & SDR=='LWR'))
-
-CDR.full.6x5 = get.CDR.Rollout.Compare(CDR.global.6x5, '6x5')
-CDR.full.10x10 = get.CDR.Rollout.Compare(CDR.global.10x10, '10x10')
-
-colorPalette='Greys';factor=1.1
-
-p=boxplot.rollout(subset(rbind(CDR.full.6x5,CDR.full.10x10),NrFeat==1),
-                  subset(rbind(CDR.compare.6x5,CDR.compare.10x10),SDR=='SPT'))
-ggsave(paste('../../Thesis/figures/ALL/boxplot.singleFeat','ALL','pdf',sep='.'),width=Width, height=Height.half,dpi=dpi,units=units)
-
-p=boxplot.rollout(CDR.full.6x5,CDR.compare.6x5)
-ggsave(paste('../../Thesis/figures/ALL/boxplot.rollout','6x5','pdf',sep='.'),width=Width*factor, height=Height.third*2*factor,dpi=dpi,units=units)
-
-p=boxplot.rollout(CDR.full.10x10,CDR.compare.10x10)
-p=p+facet_grid(Problem~Set)+theme(legend.position="none")
-ggsave(paste('../../Thesis/figures/j.rnd/boxplot.rollout','10x10','pdf',sep='.'),width=Width*factor, height=Height.third*factor,dpi=dpi,units=units)
-
-#stat.Rollout(CDR.global)
-print(xtable(stat.Rollout(subset(CDR.full.6x5,NrFeat==1))),include.rownames=F)
-print(xtable(stat.Rollout(subset(CDR.full.10x10,NrFeat==1))),include.rownames=F)
-
 

@@ -99,7 +99,7 @@ get.files.TRDAT <- function(problems,dim,tracks,rank='p',useDiff=F,Global=F){
   return(trdat)
 }
 
-get.CDR.file_list <- function(problems,dim,tracks,ranks,timedependent,bias='equal',lmax=F){
+get.CDR.file_list <- function(problems,dim,tracks,ranks,timedependent,bias='equal',lmax=F,weight='Local'){
   if(length(problems)>1) problems=paste0('(',paste(problems,collapse='|'),')')
   ix=grepl('IL',tracks)
   if(any(ix)){ tracks[ix]=paste0(substr(tracks[ix],1,2),'[0-9]+',substr(tracks[ix],3,100)) }
@@ -110,6 +110,7 @@ get.CDR.file_list <- function(problems,dim,tracks,ranks,timedependent,bias='equa
   if(length(tracks)>1) tracks=paste0('(',paste(tracks,collapse='|'),')')
   if(length(ranks)>1) ranks=paste0('(',paste(ranks,collapse='|'),')')
   file_list=list.files(paste0(DataDir,'PREF/CDR/'),paste(problems,dim,ranks,tracks,bias,'weights',ifelse(timedependent,'timedependent','timeindependent'),sep='.'))
+  file_list = file_list[grep('SDRweights|Globalweights',file_list,invert = (weight=='Local'))]
   file_list=file_list[grep('lmax',file_list,invert = !lmax)]
   return(file_list)
 }
@@ -227,7 +228,7 @@ ks.CDR <- function(CDR,variable,id.vars,set='train'){
 
 better.CDR <- function(CDR,variable,id.vars,set='train',ID){
   id.vars=setdiff(id.vars,variable)
-  vars = levels(factor(CDR$variable))
+  vars = levels(factor(CDR[,variable]))
   y <- format.CDR.comparison(CDR,variable,id.vars,set)
   ks2 <- function(i,j){
     suppressWarnings(
