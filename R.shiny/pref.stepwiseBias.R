@@ -28,6 +28,7 @@ plot.CDR.stepwiseBias <- function(CDR,save=NA){
 
 table.CDR.stepwiseBias <- function(CDR){
   stat <- rho.statistic(CDR,c('Bias','Adjusted'))
+  stat$Problem <- factorProblem(stat, F)
   stat <- arrange(stat, Problem, Training.Rho, Test.Rho) # order w.r.t. lowest mean
   return(xtable(stat))
 }
