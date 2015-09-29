@@ -161,7 +161,12 @@ get.CDR <- function(file_list,nrFeat=NULL,modelID=NULL,sets=c('train','test')){
     Bias=getAttribute(file,m,'Bias')
     lmax=grepl('lmax',file)
 
-    fname=paste(DataDir,'PREF/CDR/',file,paste(problem,dim,set,'csv',sep='.'),sep='/')
+    if(set != 'ORLIB'){
+      fname=paste(DataDir,'PREF/CDR/',file,paste(problem,dim,set,'csv',sep='.'),sep='/')
+    } else {
+      fname=paste(DataDir,'PREF/CDR/',file,sep='/')
+    }
+
     if(!file.exists(fname)){return(NULL)}
     dat=read_csv(fname)
     dat$Bias=Bias
