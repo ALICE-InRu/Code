@@ -166,9 +166,13 @@ get.CDR <- function(file_list,nrFeat=NULL,modelID=NULL,sets=c('train','test')){
     } else {
       fname=paste(DataDir,'PREF/CDR/',file,sep='/')
     }
-
     if(!file.exists(fname)){return(NULL)}
     dat=read_csv(fname)
+
+    dat$TrainingData <- problem
+    dat$TrainingData <- factorProblem(dat, simple = F, 'TrainingData')
+    dat$TrainingData <- interaction(dat$TrainingData,dim,sep=' ')
+
     dat$Bias=Bias
     dat$Rank=Rank
     dat$Track=Track
