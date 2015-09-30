@@ -74,6 +74,7 @@ get.CDR.Rollout.Compare <- function(CDR.global,dim,singleCnt=3){
   CDR.single$CDR=paste0('1.',CDR.single$ID)
   CDR.single$Extended=F
   CDR.single <- subset(CDR.single, ID>20 | Fortified==F)
+  CDR.single$TrainingData <- interaction(CDR.single$Problem,CDR.single$Dimension,sep=' ')
 
   best=ddply(CDR.single, ~Problem+Dimension, function(x){
     tmp=ddply(subset(x,Set=='train'), ~Track,summarise,mu=mean(Rho))

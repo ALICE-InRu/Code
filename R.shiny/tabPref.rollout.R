@@ -23,7 +23,7 @@ print(xtable(arrange(stat.Rollout(CDR.global),Dimension,Problem,Track,Bias)),inc
 
 CDR=subset(rbind(CDR.full.6x5,CDR.full.10x10),NrFeat>1&Set=='train')
 p=boxplot.rollout(CDR,NULL)
-ggsave(paste('../../Thesis/figures/ALL/boxplot.multi.rollout','ALL','pdf',sep='.'),width=Width, height=Height.half,dpi=dpi,units=units)
+ggsave(paste('../../Thesis/figures/ALL/boxplot.multi.rollout','ALL','pdf',sep='.'),width=Width, height=Height.third*2,dpi=dpi,units=units)
 
 mdat=ddply(CDR,~Problem+Dimension+Fortified+Track+Bias+NrFeat,summarise,mu=median(Rho))
 dat=tidyr::spread(mdat,NrFeat,mu)
