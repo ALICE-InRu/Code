@@ -28,13 +28,22 @@ get.CDR.IL <- function(problems,dim,bias){
 }
 
 stats.imitationLearning <- function(CDR){
-  stat <- rho.statistic(CDR,c('Track','Extended','Supervision','Iter'))
+  stat <- rho.statistic(CDR,c('Track','Bias','Extended','Supervision','Iter'))
   stat <- arrange(stat, Training.Rho, Test.Rho) # order w.r.t. lowest mean
   return(stat)
 }
 
-plot.imitationLearning.boxplot <- function(CDR){
-  p <- pref.boxplot(CDR,NULL,'Supervision','Track',expression(beta[i]),F,ifelse(any(CDR$Extended),'Extended',NA))
+plot.imitationLearning.boxplot <- function(CDR,SDR=NULL){
+  nBias = length(unique(CDR$Bias))
+  nSup = length(unique(CDR$Supervision))
+  if(nBias>1){
+    p <- pref.boxplot(CDR,SDR,'Bias','Track','Bias',
+                      F,ifelse(any(CDR$Extended),'Extended',NA))
+    if(nSup>1){p <- p+facet_grid(Set~Supervision,scales = 'free',space = 'free')}
+  } else {
+    p <- pref.boxplot(CDR,SDR,'Supervision','Track',expression(beta[i]),
+                      F,ifelse(any(CDR$Extended),'Extended',NA))
+  }
   return(p)
 }
 
