@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 
 namespace ALICE
 {
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
     public class CMAESData : OPTData
     {
         private static readonly int NUM_FEATURES = Features.LocalCount;

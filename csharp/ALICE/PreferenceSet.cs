@@ -64,7 +64,7 @@ namespace ALICE
                     _diffData[pid - 1, step] = new List<Preference>();
         }
 
-        private new void Read(FileInfo file)
+        private void Read(FileInfo file)
         {
             List<string> header;
             List<string[]> content = CSV.Read(file, out header);

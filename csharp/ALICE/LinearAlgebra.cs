@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace ALICE
 {
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
     public class LinearAlgebra
     {
         private static readonly Random RandomGenerator = new Random();
