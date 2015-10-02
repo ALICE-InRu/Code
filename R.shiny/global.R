@@ -26,7 +26,7 @@ ks.test2 <- function(x1,x2,alpha=0.05){
   # same underlying continuous population. H indicates the result of the hypothesis test:
   #       H = 0 => Do not reject the null hypothesis at the 5% significance level.
   #       H = 1 => Reject the null hypothesis at the 5% significance level.
-  pValue <- ks.test(x1,x2)$p
+  suppressWarnings(pValue <- ks.test(x1,x2)$p)
   H  =  (alpha >= pValue)
   return(H)
 }
