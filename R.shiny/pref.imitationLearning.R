@@ -190,3 +190,15 @@ tmp <- function(problems,dim,iterT=7,save=NA){
   plot.imitationLearning.weights(problem,dimension,bias=bias)
 }
 
+compare.IL.Iter <- function(CDR,problem,sup='Unsupervised',EXT=T,bias='equal'){
+  CDR = subset(CDR,Problem==problem & Set=='train' & Bias==bias)
+  suppressMessages(
+    for(iter in 1:7){
+      CDR0=subset(CDR,Iter==iter-1)
+      CDR1=droplevels(subset(CDR,Iter==iter))
+      CDR0a = subset(CDR0, (Supervision==sup & Extended==EXT) | (iter==1 & Extended==F & Track=='OPT')); nrow(CDR0a)
+      CDR1a = subset(CDR1, Supervision==sup & Extended==EXT);nrow(CDR1a)
+      print(paste(iter,sup,ifelse(ks.test2(CDR0a$Rho,CDR1a$Rho),
+                                  ifelse(mean(CDR0a$Rho)<=mean(CDR1a$Rho),'worse','better'),'Same')))
+    })
+}
