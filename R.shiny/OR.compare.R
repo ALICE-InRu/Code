@@ -107,15 +107,15 @@ all$Problem <- factorProblem(all,F)
 all$CDR<-factor(all$CDR,levels=sort(as.numeric(levels(all$CDR))))
 
 if(F){
-  ggplot(all,aes(x=CDR,y=Rho))+
+  p=ggplot(all,aes(x=CDR,y=Rho))+
     geom_boxplot(data=subset(all,Type=='PREF'),aes(color=Track,linetype=Bias))+
     geom_boxplot(data=subset(all,Type=='CMA-ES'),aes(color=Model))+
     scale_linetype_manual(values=c(2,1))+
-    ggplotColor('Policy',length(levels(PREF.local$Track)))+themeBoxplot+ylab(bksLabel)+
+    ggplotColor('Policy',length(levels(all$Track)))+themeBoxplot+ylab(bksLabel)+
     guides(color=guide_legend(nrow=2,byrow=TRUE),
            linetype=guide_legend(nrow=2,byrow=TRUE))+
     facet_grid(Problem~Type,scales='free',space = 'free')
-  ggsave('../../Thesis/figures/boxplot.ORLIB.png',width = Width,height = Height.half,dpi=dpi,units=units)
+  ggsave('tmp.png',width = Width,height = Height.half,dpi=dpi,units=units)
 }
 
 all <- ddply(all,~GivenName,mutate,minRho=min(Rho))
