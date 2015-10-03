@@ -12,9 +12,7 @@ pickBest <- function(dat,cnt=1){
                function(x) head(x[x$Rho==min(x$Rho),],cnt))
   } else { best=subset(dat,!is.nan(Rho)) }
   best=join(OR.opt,best,type='right',by = c('Name','Problem','Set','PID','GivenName'))
-  #fix = subset(best,Rho<0)
-  #print(fix[,c(or.vars,'Problem','TrainingData','ObjFun','Makespan','Rho')])
-  return(subset(best,Rho>=0))
+  return(best)
 }
 
 CDR.CMA.orlib <- subset(get.CDR.CMA('j.rnd','10x10',times = F, testProblems = 'ORLIB'),Rho>=0)
@@ -36,22 +34,43 @@ ddply(CDR.CMA.orlib,c('Problem',cma.vars),function(x) nrow(x))
 pref.vars = c('Track','Bias','CDR')
 levels(PREF.local$Supervision)=c('','UNSUP')
 PREF.local$Track=interaction(PREF.local$Track,PREF.local$Supervision,sep='')
-ddply(PREF.local,c('Problem',pref.loc.vars),function(x) nrow(x))
-ddply(PREF.global,c('Problem',pref.glo.vars),function(x) nrow(x))
+ddply(PREF.local,c('Problem',pref.vars),function(x) nrow(x))
+
+PREF.global=subset(PREF.global,CDR=='20.1' | Track=='ES.Cmax')
+ddply(PREF.global,c('Problem',pref.vars),function(x) nrow(x))
 
 best.CMA <- pickBest(CDR.CMA.orlib)[,c(or.vars,c(cma.vars,'Rho'))]
-head(best.CMA)
-best.loc <- pickBest(PREF.local)[,c(or.vars,c(pref.vars,'Rho'))]
-head(best.loc)
-best.glo <- pickBest(PREF.global)[,c(or.vars,c(pref.vars,'RhoFort'))]
-head(best.glo)
+best.loc16 <- pickBest(subset(PREF.local,CDR=='16.1'))[,c(or.vars,c(pref.vars,'Rho'))]
+best.loc3 <- pickBest(subset(PREF.local,CDR!='16.1'))[,c(or.vars,c(pref.vars,'Rho'))]
+best.sdr <- pickBest(subset(PREF.global,CDR=='20.1'))[,c(or.vars,c(pref.vars,'RhoFort'))]
+best.rnd <- pickBest(subset(PREF.global,CDR=='24.1'))[,c(or.vars,c(pref.vars,'RhoFort'))]
 
-
-best=merge(best.loc,best.glo,by=or.vars,suffixes = c('Local','Global'))
+bestGlo=merge(best.sdr,best.rnd,by=or.vars,suffixes = c('SDR','RND'))
+bestLoc=merge(best.loc16,best.loc3,by=or.vars,suffixes = c('16','3'))
+best=merge(bestLoc,bestGlo,by=or.vars,suffixes = c('Local','Global'))
 best=merge(best.CMA,best,by=or.vars,suffixes = c('CMA','PREF'))
 head(best)
 
 best$Dimension=stringr::str_replace_all(best$Dimension,'x','&')
+best=subset(best,Rho>=0 & Rho3>=0 & Rho16>=0 & RhoFortSDR>=0 & RhoFortRND>=0)
+
+summary(best)
+for(col in colnames(best)){
+  tmp=best[,col]
+  n=length(unique(tmp))
+  if(n<=1){
+    print(paste('Remove',col))
+    best[,col]=NULL
+  }
+}
+
+colRho=grep('Rho',colnames(best))
+best$minRho=matrixStats::rowMins(as.matrix(best[,colRho]))
+for(col in colRho){
+  isMin=best[,col]==best$minRho
+  best[,col]=paste0(ifelse(isMin,'textbf{',''),best[,col],ifelse(isMin,'}',''))
+}
+best$minRho=NULL
 print(xtable(arrange(best,ORSet,GivenName)),include.rownames=F)
 
 PREF.local=pickBest(PREF.local,0)
@@ -82,7 +101,8 @@ all <- rbind(data.frame(Type='PREF',
                         Bias='equal',
                         Model=CDR.CMA.orlib$ObjFun,
                         Rho=CDR.CMA.orlib$Rho))
-all=subset(all,Rho>=0)
+
+all=subset(all,GivenName%in%best$GivenName)
 all$Problem <- factorProblem(all,F)
 all$CDR<-factor(all$CDR,levels=sort(as.numeric(levels(all$CDR))))
 
