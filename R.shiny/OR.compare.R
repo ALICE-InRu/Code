@@ -119,7 +119,14 @@ if(F){
 }
 
 all <- ddply(all,~GivenName,mutate,minRho=min(Rho))
-ddply(all,~Type+CDR+Model,summarise,best_pct=round(100*mean(Rho==minRho),2),
-      pct1=round(100*mean(Rho<=minRho+1),2),
-      pct5=round(100*mean(Rho<=minRho+5),2),
-      pct10=round(100*mean(Rho<=minRho+10),2))
+mdat=ddply(all,~Problem+Type+CDR+Model,summarise,N=sum(Rho>=0),
+           BKS=round(100*mean(Rho==0),2),
+           best_pct=round(100*mean(Rho==minRho),2),
+           pct1=round(100*mean(Rho<=minRho+1),2),
+           pct5=round(100*mean(Rho<=minRho+5),2),
+           pct10=round(100*mean(Rho<=minRho+10),2))
+print(xtable(mdat),include.rownames=F)
+
+mdat=ddply(all,~Problem+Type+CDR+Model,summarise,N=sum(Rho>=0),
+           BKS=sum(Rho==0),
+           best_pct=sum(Rho==minRho))
