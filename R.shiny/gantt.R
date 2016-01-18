@@ -25,9 +25,9 @@ plot.raw <- function(problems=c('f.rnd','f.rndn','f.jc','f.mc','f.mxc'), PID=0){
 get.gantt <- function(problem,dim,SDR='ALL',plotPID=-1,all.trdat=NULL){
   if(is.null(all.trdat)){
     trdat <- get.files.TRDAT(problem,dim,SDR)
-  } else {
+  } else if (SDR!='ALL') {
     trdat=subset(all.trdat,Track==SDR)
-  }
+  } else { trdat=all.trdat }
 
   if(plotPID>0){ trdat <- subset(trdat,PID==plotPID) }
   if(nrow(trdat)<1){return(NULL)}
