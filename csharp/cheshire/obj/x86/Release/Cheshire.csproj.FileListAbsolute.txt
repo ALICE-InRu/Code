@@ -1,0 +1,12 @@
+C:\Users\helga\Documents\GitHub\alice\Code\csharp\cheshire\bin\Release\Cheshire.exe
+C:\Users\helga\Documents\GitHub\alice\Code\csharp\cheshire\bin\Release\Cheshire.pdb
+C:\Users\helga\Documents\GitHub\alice\Code\csharp\cheshire\bin\Release\alglibnet2.dll
+C:\Users\helga\Documents\GitHub\alice\Code\csharp\cheshire\bin\Release\ALICE.dll
+C:\Users\helga\Documents\GitHub\alice\Code\csharp\cheshire\bin\Release\Gurobi60.NET.dll
+C:\Users\helga\Documents\GitHub\alice\Code\csharp\cheshire\bin\Release\ALICE.pdb
+C:\Users\helga\Documents\GitHub\alice\Code\csharp\cheshire\obj\x86\Release\Cheshire.csprojResolveAssemblyReference.cache
+C:\Users\helga\Documents\GitHub\alice\Code\csharp\cheshire\obj\x86\Release\Cheshire.App.resources
+C:\Users\helga\Documents\GitHub\alice\Code\csharp\cheshire\obj\x86\Release\Cheshire.Properties.Resources.resources
+C:\Users\helga\Documents\GitHub\alice\Code\csharp\cheshire\obj\x86\Release\Cheshire.csproj.GenerateResource.Cache
+C:\Users\helga\Documents\GitHub\alice\Code\csharp\cheshire\obj\x86\Release\Cheshire.exe
+C:\Users\helga\Documents\GitHub\alice\Code\csharp\cheshire\obj\x86\Release\Cheshire.pdb

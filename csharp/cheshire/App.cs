@@ -11,7 +11,7 @@ namespace Cheshire
 {
     public partial class App : Form
     {
-        private static readonly string AliceDirectory = String.Format(@"{0}\..\..\..\..\..\..\",Directory.GetCurrentDirectory());
+        private static readonly string AliceDirectory = String.Format(@"{0}\..\..\..\..\..\",Directory.GetCurrentDirectory());
         private const int AUTOSAVE = 5; // minutes
         private static readonly DirectoryInfo DataDir = new DirectoryInfo(String.Format(@"{0}\Data", AliceDirectory));
 
