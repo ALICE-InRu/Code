@@ -114,7 +114,7 @@ factorTrack <- function(x){
 }
 
 factorSDR <- function(SDR, simple=T){
-  if(simple) { lbs=sdrs } else { lbs = c('Shortest Processing Time','Largest Processing Time','Least Work Remaining','Most Work Remaining','Random dispatches') }
+  if(simple) { lbs=sdrs } else { lbs = c('Shortest Processing Time','Longest Processing Time','Least Work Remaining','Most Work Remaining','Random dispatches') }
   droplevels(factor(SDR,levels=sdrs, labels=lbs))
 }
 
