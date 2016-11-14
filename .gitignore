@@ -18,6 +18,8 @@
 # R data files from past sessions
 *.Rdata
 
+# Passwords
+R.shiny/psw.R
 
 ################################################## Local user settings #################################################
 # Code: C#

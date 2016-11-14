@@ -14,6 +14,7 @@ source('getFiles.R')
 source('formatData.R')
 source('myFigures.R')
 DataDir = '../../Data/'
+source('RMySQL.R')
 
 sdrs=c('SPT','LPT','LWR','MWR','RND');
 
