@@ -2,11 +2,12 @@ plot.SDR <- function(SDR,type='boxplot',save=NA){
 
   SDR$Problem=factorProblem(SDR,F)
   SDR$Names=droplevels(factorSDR(SDR$SDR,F))
+  SDR$PD <- interaction(SDR$Problem, SDR$Dimension, sep = ', ')
   p=ggplot(SDR,aes(fill=SDR,linetype=Set))+
     scale_linetype("Data set")+
     ggplotFill("Simple dispatching rule",length(sdrs),levels(SDR$Names))+
     xlab(NULL)+
-    facet_wrap(ncol=2,~Problem+Dimension,scales='free_y')
+    facet_wrap(ncol=2,~PD,scales='free_y')
 
   p=p+switch(type,
              'boxplot'=geom_boxplot(aes(x=SDR,y=Rho)),

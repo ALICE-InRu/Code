@@ -48,9 +48,10 @@ plot.stepwiseBiases <- function(problems,dim,biases,track='OPT',rank='p',adjust2
     }))}))
 
   dat$Problem <- factorProblem(dat,F)
+  dat$factor <- interaction(dat$Problem, dim, sep=', ')
   p=ggplot(dat,aes(x=Step,y=log(Probability),color=Bias))+
     geom_line()+
-    axisCompact+facet_grid(~Problem)+
+    axisCompact+facet_grid(~factor)+
     ggplotColor('Bias',length(biases))
 
   if(!is.na(save)){

@@ -46,6 +46,8 @@ plot.gantt <- function(gantt,step,plotPhi=F,
   NumJobs=max(gantt$Job)
   NumMacs=max(gantt$Mac)
 
+  gantt$factor = interaction(gantt$Problem,gantt$Dimension,gantt$Track,sep=', ')
+
   fdat <- subset(gantt,Followed==T & Step<step)
   pdat <- subset(gantt,Step==step)
 
@@ -57,7 +59,7 @@ plot.gantt <- function(gantt,step,plotPhi=F,
     ggplotFill('Job',NumJobs)+
     scale_y_continuous(ylabel, breaks=1:NumMacs, limits = c(0.25, NumMacs+0.5))+
     scale_x_continuous(xlabel, expand=c(0,0), limits = c(0, maxMakespan))+
-    theme(legend.position="none")+facet_wrap(~Problem+Dimension+Track,ncol=2)
+    theme(legend.position="none")+facet_wrap(~factor,ncol=2)
 
   if(nrow(fdat)>0){
     cmax = ddply(fdat,~Problem+Dimension+Track,summarise,x=max(phi.endTime),Mac=0.4)
